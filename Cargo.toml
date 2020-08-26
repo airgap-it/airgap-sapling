@@ -1,0 +1,9 @@
+[package]
+name = "wasm-zcash"
+version = "0.0.1"
+authors = ["Papers.ch <contact@papers.ch>"]
+edition = "2018"
+
+[lib]
+name = "wasmzcash"
+crate-type = ["cdylib", "rlib"]
