@@ -9,3 +9,4 @@ name = "wasm_sapling"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+regex = "1.3.9"
