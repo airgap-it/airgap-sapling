@@ -1,3 +1,8 @@
+use wasm_bindgen::{
+  JsValue,
+  prelude::*,
+};
+
 use zcash_primitives::{
   zip32::ExtendedSpendingKey
 };
@@ -5,13 +10,16 @@ use zcash_primitives::{
 use crate::sapling_keys::derivation::{DerivationPathError, split_derivation_path};
 use super::errors::SpendingKeyError;
 
-pub type SaplingExtendedSpendingKey = ExtendedSpendingKey;
+#[wasm_bindgen(catch)]
+pub fn get_ext_spending_key(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, JsValue> {
+  generate_ext_spending_key(seed, derivation_path).or_else(|err| Err(JsValue::from(err.to_string())))
+}
 
-pub fn get_ext_spending_key(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, SpendingKeyError> {
+fn generate_ext_spending_key(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, SpendingKeyError> {
   let master = ExtendedSpendingKey::master(seed);
   
   let ext_spending_key = derive_ext_spending_key(&master, derivation_path)
-      .or_else(|err| Err(SpendingKeyError::caused_by(err.detailed_message())))?;
+      .or_else(|err| Err(SpendingKeyError::caused_by(err.to_string())))?;
 
   let mut bytes: Vec<u8> = vec![];
   ext_spending_key.write(&mut bytes).or_else(|err| Err(SpendingKeyError::caused_by(err.to_string())))?;
@@ -40,7 +48,7 @@ mod test {
     let mnemonic = Mnemonic::from_phrase(MNEMONIC, Language::English).unwrap();
     let seed = Seed::new(&mnemonic, PASSWORD);
 
-    let bytes = get_ext_spending_key(seed.as_bytes(), DERIVATION_PATH).unwrap();
+    let bytes = get_ext_spending_key(seed.as_bytes(), DERIVATION_PATH);
 
     // TODO
   }

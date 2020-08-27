@@ -18,7 +18,7 @@ impl DerivationPathError {
     DerivationPathError::Unknown(String::from(message))
   }
 
-  pub fn detailed_message(&self) -> String {
+  fn detailed_message(&self) -> String {
     match self {
       DerivationPathError::Empty => String::from("the path can't be empty"),
       DerivationPathError::EmptyJunction => String::from("the path can't contain empty derivation junctions"),

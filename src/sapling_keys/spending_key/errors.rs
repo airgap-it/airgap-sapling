@@ -1,5 +1,8 @@
+use wasm_bindgen::prelude::*;
+
 use std::fmt;
 
+#[wasm_bindgen]
 #[derive(Debug)]
 pub struct SpendingKeyError {
   cause: String,
@@ -13,6 +16,6 @@ impl SpendingKeyError {
 
 impl fmt::Display for SpendingKeyError {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{}", self.cause)
+    write!(f, "SpendingKeyError: {}", self.cause)
   }
 }
