@@ -1,9 +1,11 @@
 [package]
-name = "wasm-zcash"
+name = "wasm-sapling"
 version = "0.0.1"
 authors = ["Papers.ch <contact@papers.ch>"]
 edition = "2018"
 
 [lib]
-name = "wasmzcash"
+name = "wasm_sapling"
 crate-type = ["cdylib", "rlib"]
+
+[dependencies]
