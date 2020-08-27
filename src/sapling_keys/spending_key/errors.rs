@@ -1,21 +1,18 @@
-use wasm_bindgen::prelude::*;
-
 use std::fmt;
 
-#[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct SpendingKeyError {
-  cause: String,
+    cause: String,
 }
 
 impl SpendingKeyError {
-  pub fn caused_by(cause: String) -> SpendingKeyError {
-    SpendingKeyError { cause }
-  }
+    pub fn caused_by(cause: String) -> SpendingKeyError {
+        SpendingKeyError { cause }
+    }
 }
 
 impl fmt::Display for SpendingKeyError {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "SpendingKeyError: {}", self.cause)
-  }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "SpendingKeyError: {}", self.cause)
+    }
 }
