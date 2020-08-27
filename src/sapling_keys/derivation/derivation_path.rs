@@ -1,9 +1,13 @@
+
 use super::{
-  derivation_junction::DerivationJunction,
+  derivation_index::{
+    DerivationIndex,
+    create_derivation_index,
+  },
   errors::DerivationPathError,
 };
 
-pub fn split_derivation_path(derivation_path: &str) -> Result<Vec<DerivationJunction>, DerivationPathError> {
+pub fn split_derivation_path(derivation_path: &str) -> Result<Vec<DerivationIndex>, DerivationPathError> {
   if derivation_path.len() == 0 {
     return Err(DerivationPathError::Empty)
   }
@@ -12,19 +16,21 @@ pub fn split_derivation_path(derivation_path: &str) -> Result<Vec<DerivationJunc
     return Err(DerivationPathError::MissingPrefix)
   }
 
-  let junctions_iterator = derivation_path.split('/')
-    .skip(1)
-    .map(|s| DerivationJunction::from(s));
+  let junctions_iterator = derivation_path
+      .trim_end_matches('/')
+      .split('/')
+      .skip(1)
+      .map(|s| create_derivation_index(s));
 
-  let mut junctions: Vec<DerivationJunction> = vec![];
+  let mut derivation_indices: Vec<DerivationIndex> = vec![];
   for result in junctions_iterator {
     match result {
-      Ok(junction) => junctions.push(junction),
+      Ok(junction) => derivation_indices.push(junction),
       Err(error) => return Err(error)
     }
   }
 
-  return Ok(junctions)
+  return Ok(derivation_indices)
 }
 
 #[cfg(test)]
@@ -38,17 +44,24 @@ mod test {
     assert_eq!(
       derivation_junctions, 
       Ok(vec![
-        DerivationJunction::new(44, true),
-        DerivationJunction::new(123, true),
-        DerivationJunction::new(0, true),
-        DerivationJunction::new(0, false),
-        DerivationJunction::new(0, false),
+        DerivationIndex::Hardened(44),
+        DerivationIndex::Hardened(123),
+        DerivationIndex::Hardened(0),
+        DerivationIndex::NonHardened(0),
+        DerivationIndex::NonHardened(0),
       ])
     );
   }
 
   #[test]
-  fn fails_to_split_empty_path_with_empty_error() {
+  fn splits_empty_derivation_path() {
+    let empty = split_derivation_path("m/");
+
+    assert_eq!(empty, Ok(vec![]));
+  }
+
+  #[test]
+  fn fails_to_split_empty_string_with_empty_error() {
     let empty = split_derivation_path("");
 
     assert_eq!(empty, Err(DerivationPathError::Empty));
