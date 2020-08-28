@@ -1,7 +1,7 @@
 {
   "name": "@airgap/sapling-wasm",
   "author": "Papers.ch <contact@papers.ch>",
-  "version": "0.0.1-beta.0",
+  "version": "0.0.1",
   "publishConfig": {
     "access": "public"
   },
