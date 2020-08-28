@@ -43,7 +43,8 @@ module.exports = {
     }),
     new WasmPackPlugin({
       crateDirectory: __dirname,
-      outName: 'wasm-sapling'
+      outName: 'wasm-sapling',
+      forceMode: 'production'
     })
   ]
 };
