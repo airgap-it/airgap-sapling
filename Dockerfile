@@ -27,4 +27,4 @@ RUN export NODE_ENV=production
 # build
 RUN npm run build:prod
 
-CMD ["cargo", "test"]
+CMD ["npm", "run", "test"]

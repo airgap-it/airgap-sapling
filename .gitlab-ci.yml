@@ -27,7 +27,7 @@ unit:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
     - docker rm -f unit-$CI_COMMIT_SHA || true
   script:
-    - docker run --name unit-$CI_COMMIT_SHA $IMAGE_TAG_CURRENT /bin/bash -c "cargo test"
+    - docker run --name unit-$CI_COMMIT_SHA $IMAGE_TAG_CURRENT /bin/bash -c "npm run test"
   after_script:
     - docker rm -f unit-$CI_COMMIT_SHA || true
   

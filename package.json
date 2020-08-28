@@ -10,7 +10,8 @@
   "sourceMap": true,
   "scripts": {
     "build": "webpack --mode=development",
-    "build:prod": "webpack --mode=production"
+    "build:prod": "webpack --mode=production",
+    "test": "cargo test"
   },
   "dependencies": {
     "regenerator-runtime": "^0.13.7",
