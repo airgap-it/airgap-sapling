@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "regenerator-runtime": "^0.13.7",
-    "wasm-sapling": "file:pkg/sapling-wasm.js"
+    "wasm-sapling": "file:pkg"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
