@@ -17,7 +17,7 @@ module.exports = {
     descriptionFiles: [path.resolve(__dirname, 'package.json')],
     symlinks: false,
     alias: {
-      'wasm-sapling': path.resolve(__dirname, 'pkg/wasm-sapling.js')
+      'sapling-wasm': path.resolve(__dirname, 'pkg/sapling-wasm.js')
     }
   },
   module: {
@@ -43,7 +43,7 @@ module.exports = {
     }),
     new WasmPackPlugin({
       crateDirectory: __dirname,
-      outName: 'wasm-sapling',
+      outName: 'sapling-wasm',
       forceMode: 'production'
     })
   ]

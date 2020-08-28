@@ -1,11 +1,10 @@
 [package]
-name = "wasm-sapling"
+name = "sapling_wasm"
 version = "0.0.1"
 authors = ["Papers.ch <contact@papers.ch>"]
 edition = "2018"
 
 [lib]
-name = "wasm_sapling"
 crate-type = ["cdylib", "rlib"]
 
 [package.metadata.wasm-pack.profile.release]

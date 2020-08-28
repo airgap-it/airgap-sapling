@@ -1,5 +1,5 @@
 {
-  "name": "@airgap/wasm-sapling",
+  "name": "@airgap/sapling-wasm",
   "author": "Papers.ch <contact@papers.ch>",
   "version": "0.0.1",
   "files": [
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "regenerator-runtime": "^0.13.7",
-    "wasm-sapling": "file:pkg/wasm-sapling.js"
+    "wasm-sapling": "file:pkg/sapling-wasm.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",

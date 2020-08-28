@@ -2,12 +2,12 @@
 import 'regenerator-runtime/runtime'
 
 const saplingPromise = new Promise((resolve, reject) => {
-  import('wasm-sapling')
+  import('sapling-wasm')
   .then((sapling) => {
     resolve(sapling)
   })
   .catch((error) => {
-    reject(`Could not load wasm-sapling: ${error}`)
+    reject(`Could not load sapling-wasm: ${error}`)
   })
 })
 
