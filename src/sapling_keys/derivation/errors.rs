@@ -33,7 +33,7 @@ impl fmt::Display for DerivationPathError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let detailed_message = self.detailed_message();
 
-        write!(f, "{}", format!("invalid derivation path, {}", detailed_message.as_str()))
+        write!(f, "{}", format!("invalid derivation path, {}", &detailed_message))
     }
 }
 

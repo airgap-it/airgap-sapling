@@ -10,4 +10,6 @@ pub use spending_key::{
 pub use viewing_key::{
     get_extended_full_viewing_key,
     get_extended_full_viewing_key_bytes,
+    get_address_from_viewing_key,
+    get_address_from_viewing_key_bytes,
 };

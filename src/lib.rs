@@ -9,6 +9,7 @@ use wasm_bindgen::{
 use sapling_keys::{
     get_extended_spending_key_bytes,
     get_extended_full_viewing_key_bytes,
+    get_address_from_viewing_key_bytes,
 };
 
 #[wasm_bindgen(catch)]
@@ -19,4 +20,11 @@ pub fn get_extended_spending_key(seed: &[u8], derivation_path: &str) -> Result<V
 #[wasm_bindgen(catch)]
 pub fn get_extended_full_viewing_key(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, JsValue> {
     get_extended_full_viewing_key_bytes(seed, derivation_path).or_else(|err| Err(JsValue::from(err.to_string())))
+}
+
+#[wasm_bindgen(catch)]
+pub fn get_address_from_viewing_key(viewing_key: &[u8]) -> Result<Vec<u8>, JsValue> {
+    get_address_from_viewing_key_bytes(viewing_key, None)
+        .map(|addr| [&addr.index[..], &addr.payload[..]].concat())
+        .or_else(|err| Err(JsValue::from(err.to_string())))
 }
