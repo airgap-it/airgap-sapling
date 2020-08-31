@@ -6,30 +6,49 @@ use super::{
     errors::DerivationPathError,
 };
 
-pub fn split_derivation_path(derivation_path: &str) -> Result<Vec<DerivationIndex>, DerivationPathError> {
-    if derivation_path.len() == 0 {
-        return Err(DerivationPathError::Empty);
-    }
+pub fn split_derivation_path(path: &str) -> Result<Vec<DerivationIndex>, DerivationPathError> {
+    assert_path_non_empty(path)?;
+    assert_path_prefixed(path)?;
 
-    if &derivation_path[..1] != "m" {
-        return Err(DerivationPathError::MissingPrefix);
-    }
-
-    let indices_iterator = derivation_path
-        .trim_end_matches('/')
-        .split('/')
-        .skip(1)
+    let indices_iterator = path
+        .trim_end_matches('/') // remove leading and trailing `/`
+        .split('/') // split indices
+        .skip(1) // skip the `m` prefix
         .map(|s| create_derivation_index(s));
 
-    let mut derivation_indices: Vec<DerivationIndex> = vec![];
-    for result in indices_iterator {
+    let indices = unwrap_valid_indices(indices_iterator)?;
+
+    Ok(indices)
+}
+
+fn assert_path_non_empty(path: &str) -> Result<(), DerivationPathError> {
+    if path.is_empty() {
+        Err(DerivationPathError::Empty)
+    } else {
+        Ok(())
+    }
+}
+
+fn assert_path_prefixed(path: &str) -> Result<(), DerivationPathError> {
+    if &path[..1] != "m" {
+        Err(DerivationPathError::MissingPrefix)
+    } else {
+        Ok(())
+    }
+}
+
+fn unwrap_valid_indices<I>(indices: I) -> Result<Vec<DerivationIndex>, DerivationPathError>
+    where I: Iterator<Item = Result<DerivationIndex, DerivationPathError>>
+{
+    let mut valid_indices: Vec<DerivationIndex> = vec![];
+    for result in indices {
         match result {
-            Ok(index) => derivation_indices.push(index),
+            Ok(index) => valid_indices.push(index),
             Err(error) => return Err(error)
         }
     }
 
-    return Ok(derivation_indices);
+    Ok(valid_indices)
 }
 
 #[cfg(test)]

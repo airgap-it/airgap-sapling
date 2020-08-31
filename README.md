@@ -16,12 +16,15 @@ $ npm install --save @airgap/sapling-wasm
 import * as bip39 from 'bip39'
 import * as sapling from '@airgap/sapling-wasm'
 
-// create an extended spending key
-
 const mnemonic: String = bip39.generateMnemonic()
 const seed: Buffer = bip39.mnemonicToSeed(mnemonic, '')
+const derivationPath: String = 'm/'
 
-const spendingKey: Buffer = sapling.getExtendedSpendingKey(seed, 'm/')
-
+// create an extended spending key
+const spendingKey: Buffer = sapling.getExtendedSpendingKey(seed, derivationPath)
 console.log(spendingKey.toString('hex'))
+
+// create an extended full viewing key
+const viewingKey: Buffer = sapling.getExtendedFullViewingKey(seed, derivationPath)
+console.log(viewingKey.toString('hex'))
 ```

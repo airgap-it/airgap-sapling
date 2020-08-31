@@ -1,9 +1,9 @@
-// generate
-pub mod generate;
+mod extended_spending_key;
+mod errors;
 
-pub use generate::{
+pub use extended_spending_key::{
     get_extended_spending_key,
+    get_extended_spending_key_bytes,
 };
 
-// errors
-mod errors;
+pub use errors::SpendingKeyError;
