@@ -17,6 +17,6 @@ pub fn get_extended_spending_key(seed: &[u8], derivation_path: &str) -> Result<V
 }
 
 #[wasm_bindgen(catch)]
-pub fn get_extended_viewing_key(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, JsValue> {
+pub fn get_extended_full_viewing_key(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, JsValue> {
     get_extended_full_viewing_key_bytes(seed, derivation_path).or_else(|err| Err(JsValue::from(err.to_string())))
 }
