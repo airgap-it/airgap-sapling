@@ -6,8 +6,8 @@ pub struct SpendingKeyError {
 }
 
 impl SpendingKeyError {
-    pub fn caused_by(cause: String) -> SpendingKeyError {
-        SpendingKeyError { cause }
+    pub fn caused_by<T: ToString>(cause: T) -> SpendingKeyError {
+        SpendingKeyError { cause: cause.to_string() }
     }
 }
 

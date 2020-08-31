@@ -4,48 +4,72 @@ use zcash_primitives::zip32::ChildIndex;
 use crate::utils::regex_utils::{contains_chars_re, not_contains_chars_re};
 use super::errors::DerivationPathError;
 
-const MASK_HARD_DERIVATION: u32 = 0x80000000;
-const MASK_SOFT_DERIVATION: u32 = 0x00000000;
+const MASK_HARD_DERIVATION: u32 = 0x8000_0000;
+const MASK_SOFT_DERIVATION: u32 = 0x0000_0000;
 
 const VALID_INDEX_CHARACTERS_RE: &str = "0-9";
 const VALID_IS_HARD_CHARACTERS_RE: &str = "'h";
 
 pub type DerivationIndex = ChildIndex;
 
-pub fn create_derivation_index(string: &str) -> Result<DerivationIndex, DerivationPathError> {
-    if string.len() == 0 {
-        return Err(DerivationPathError::EmptyIndex)
+pub fn create_derivation_index(index: &str) -> Result<DerivationIndex, DerivationPathError> {
+    assert_index_non_empty(index)?;
+    assert_index_valid(index)?;
+
+    let is_hard_regex = {
+        let is_hard_re = contains_chars_re(&[VALID_IS_HARD_CHARACTERS_RE]);
+        Regex::new(&is_hard_re).expect("could not create derivation index, invalid `is_hard` regular expression")
+    };
+
+    let is_hard = is_hard_regex.is_match(index);
+    let index_end = get_index_end(index, is_hard);
+
+    let index = &index[..index_end];
+    let index = index.parse::<u32>().or_else(|_| Err(DerivationPathError::unknown("could not parse derivation index")))?;
+    let index = mask_index(index, is_hard);
+
+    Ok(DerivationIndex::from_index(index))
+}
+
+fn assert_index_non_empty(index: &str) -> Result<(), DerivationPathError> {
+    if index.is_empty() {
+        Err(DerivationPathError::EmptyIndex)
+    } else {
+        Ok(())
     }
+}
 
-    let invalid_regex = Regex::new(not_contains_chars_re(&[VALID_INDEX_CHARACTERS_RE, VALID_IS_HARD_CHARACTERS_RE]).as_str())
-        .or(Err(DerivationPathError::unknown("could not check derivation index, invalid regular expression")))?;
+fn assert_index_valid(index: &str) -> Result<(), DerivationPathError> {
+    let invalid_regex = {
+        let invalid_re = not_contains_chars_re(&[VALID_INDEX_CHARACTERS_RE, VALID_IS_HARD_CHARACTERS_RE]);
+        Regex::new(&invalid_re).expect("could not check derivation index, invalid regular expression")
+    };
 
-    if invalid_regex.is_match(string) {
-        let invalid = invalid_regex.find_iter(string).map(|m| &string[m.start()..m.end()]).collect();
-        return Err(DerivationPathError::invalid_character(invalid))
+    if invalid_regex.is_match(index) {
+        let invalid = invalid_regex.find_iter(index).map(|m| &index[m.start()..m.end()]).collect();
+        Err(DerivationPathError::invalid_character(invalid))
+    } else {
+        Ok(())
     }
+}
 
-    let is_hard_regex = Regex::new(contains_chars_re(&[VALID_IS_HARD_CHARACTERS_RE]).as_str())
-        .or(Err(DerivationPathError::unknown("could not create derivation index, invalid `is_hard` regular expression")))?;
-
-    let len = string.len();
-    let is_hard = is_hard_regex.is_match(string);
-    let index_end = if is_hard {
+fn get_index_end(index: &str, is_hard: bool) -> usize {
+    let len = index.len();
+    if is_hard {
         len - 1
     } else {
         len
-    };
+    }
+}
 
-    let index = &string[..index_end];
-    let index = index.parse::<u32>().or(Err(DerivationPathError::unknown("could not parse derivation index")))?;
-
+fn mask_index(index: u32, is_hard: bool) -> u32 {
     let mask = if is_hard {
         MASK_HARD_DERIVATION
     } else {
         MASK_SOFT_DERIVATION
     };
 
-    Ok(DerivationIndex::from_index(index | mask))
+    index | mask
 }
 
 #[cfg(test)]
