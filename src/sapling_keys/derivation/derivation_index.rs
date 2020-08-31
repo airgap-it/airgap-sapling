@@ -16,12 +16,7 @@ pub fn create_derivation_index(index: &str) -> Result<DerivationIndex, Derivatio
     assert_index_non_empty(index)?;
     assert_index_valid(index)?;
 
-    let is_hard_regex = {
-        let is_hard_re = contains_chars_re(&[VALID_IS_HARD_CHARACTERS_RE]);
-        Regex::new(&is_hard_re).expect("could not create derivation index, invalid `is_hard` regular expression")
-    };
-
-    let is_hard = is_hard_regex.is_match(index);
+    let is_hard = is_hard_index(index);
     let index_end = get_index_end(index, is_hard);
 
     let index = &index[..index_end];
@@ -51,6 +46,15 @@ fn assert_index_valid(index: &str) -> Result<(), DerivationPathError> {
     } else {
         Ok(())
     }
+}
+
+fn is_hard_index(index: &str) -> bool {
+    let is_hard_regex = {
+        let is_hard_re = contains_chars_re(&[VALID_IS_HARD_CHARACTERS_RE]);
+        Regex::new(&is_hard_re).expect("could not create derivation index, invalid `is_hard` regular expression")
+    };
+
+    is_hard_regex.is_match(index)
 }
 
 fn get_index_end(index: &str, is_hard: bool) -> usize {
