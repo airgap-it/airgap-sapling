@@ -8,7 +8,7 @@ use zcash_primitives::jubjub::JubjubEngine;
 
 pub struct SaplingAddress {
     pub index: [u8; 11],
-    pub payload: [u8; 43],
+    pub raw: [u8; 43],
 }
 
 impl SaplingAddress {
@@ -18,7 +18,7 @@ impl SaplingAddress {
     ) -> SaplingAddress {
         SaplingAddress {
             index: diversifier_index.0,
-            payload: payment_address.to_bytes(),
+            raw: payment_address.to_bytes(),
         }
     }
 }
@@ -78,8 +78,8 @@ mod test {
 
 
         for (actual, actual_from_bytes, expected) in actual_expected {
-            assert_eq!(actual.payload[..11], expected);
-            assert_eq!(actual_from_bytes.payload[..11], expected);
+            assert_eq!(actual.raw[..11], expected);
+            assert_eq!(actual_from_bytes.raw[..11], expected);
         }
     }
 }
