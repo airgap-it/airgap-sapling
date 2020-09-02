@@ -4,8 +4,7 @@ use crate::sapling_keys::get_extended_spending_key;
 use super::errors::ViewingKeyError;
 
 pub fn get_extended_full_viewing_key(seed: &[u8], derivation_path: &str) -> Result<ExtendedFullViewingKey, ViewingKeyError> {
-    let spending_key = get_extended_spending_key(seed, derivation_path)
-        .or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
+    let spending_key = get_extended_spending_key(seed, derivation_path).or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
 
     let viewing_key = ExtendedFullViewingKey::from(&spending_key);
 

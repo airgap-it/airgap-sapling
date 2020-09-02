@@ -28,8 +28,7 @@ pub fn get_address_from_viewing_key(
     index: Option<[u8; 11]>
 ) -> Result<SaplingAddress, ViewingKeyError> {
     let diversifier_index = index.map_or(DiversifierIndex::new(), DiversifierIndex);
-    let (diversifier_index, payment_address) = viewing_key.address(diversifier_index)
-        .or_else(|_| Err(ViewingKeyError::new()))?;
+    let (diversifier_index, payment_address) = viewing_key.address(diversifier_index).or_else(|_| Err(ViewingKeyError::new()))?;
 
     Ok(SaplingAddress::new(diversifier_index, payment_address))
 }
@@ -38,8 +37,7 @@ pub fn get_address_from_viewing_key_bytes(
     bytes: &[u8],
     index: Option<[u8; 11]>
 ) -> Result<SaplingAddress, ViewingKeyError> {
-    let viewing_key = ExtendedFullViewingKey::read(bytes)
-        .or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
+    let viewing_key = ExtendedFullViewingKey::read(bytes).or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
 
     get_address_from_viewing_key(&viewing_key, index)
 }

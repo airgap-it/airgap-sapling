@@ -37,6 +37,7 @@ pub fn get_default_payment_address_from_viewing_key(viewing_key: &[u8]) -> Resul
 #[wasm_bindgen(catch)]
 pub fn get_payment_address_from_viewing_key(viewing_key: &[u8], index: &[u8]) -> Result<Vec<u8>, JsValue> {
     let index: [u8; 11] = index.try_into().expect("get_address_from_viewing_key: index must be an array of 11 bytes");
+
     get_address_from_viewing_key(viewing_key, Some(index))
 }
 
