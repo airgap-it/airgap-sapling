@@ -1,9 +1,10 @@
-mod extended_spending_key;
+mod xsk;
 mod errors;
 
-pub use extended_spending_key::{
-    get_extended_spending_key,
-    get_extended_spending_key_bytes,
+pub use xsk::{
+    get_xsk,
+    xsk_to_bytes,
+    xsk_from_bytes,
 };
 
 pub use errors::SpendingKeyError;

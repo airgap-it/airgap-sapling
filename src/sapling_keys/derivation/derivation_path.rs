@@ -57,48 +57,54 @@ mod test {
 
     #[test]
     fn splits_valid_derivation_path() {
-        let indices_apostrophes = split_derivation_path("m/44'/123'/0'/0/0");
-        let indices_hs = split_derivation_path("m/44h/123h/0h/0/0");
+        let test_data = vec![
+            ("m/", vec![]),
+            ("m/44'/123'/0'/0/0", vec![
+                DerivationIndex::Hardened(44),
+                DerivationIndex::Hardened(123),
+                DerivationIndex::Hardened(0),
+                DerivationIndex::NonHardened(0),
+                DerivationIndex::NonHardened(0),
+            ]),
+            ("m/44h/123h/0h/0/0", vec![
+                DerivationIndex::Hardened(44),
+                DerivationIndex::Hardened(123),
+                DerivationIndex::Hardened(0),
+                DerivationIndex::NonHardened(0),
+                DerivationIndex::NonHardened(0),
+            ]),
+        ];
 
-        let expected = Ok(vec![
-            DerivationIndex::Hardened(44),
-            DerivationIndex::Hardened(123),
-            DerivationIndex::Hardened(0),
-            DerivationIndex::NonHardened(0),
-            DerivationIndex::NonHardened(0),
-        ]);
+        let actual_expected = test_data.iter()
+            .map(|(path, v)| {
+                let actual = split_derivation_path(path).unwrap();
 
-        assert_eq!(indices_apostrophes, expected);
-        assert_eq!(indices_hs, expected);
-    }
+                (actual, v)
+            });
 
-    #[test]
-    fn splits_empty_derivation_path() {
-        let empty = split_derivation_path("m/");
-
-        assert_eq!(empty, Ok(vec![]));
-    }
-
-    #[test]
-    fn fails_to_split_empty_string_with_empty_error() {
-        let empty = split_derivation_path("");
-
-        assert_eq!(empty, Err(DerivationPathError::Empty));
-    }
-
-    #[test]
-    fn fails_to_split_missing_prefix_path_with_missing_prefix_error() {
-        let missing_prefix = split_derivation_path("44'/123'/0'/0/0");
-
-        assert_eq!(missing_prefix, Err(DerivationPathError::MissingPrefix));
+        for (actual, expected) in actual_expected {
+            assert_eq!(actual, *expected);
+        }
     }
 
     #[test]
     fn fails_to_split_invalid_path_with_error() {
-        let empty = split_derivation_path("m/44'//0'/0/0");
-        let invalid = split_derivation_path("m/44'/123a/0'/0/0");
+        let test_data = vec![
+            ("", DerivationPathError::Empty),
+            ("44'/123'/0'/0/0", DerivationPathError::MissingPrefix),
+            ("m/44'//0'/0/0", DerivationPathError::EmptyIndex),
+            ("m/44'/123a/0'/0/0", DerivationPathError::InvalidCharacter(vec!["a".to_owned()])),
+        ];
 
-        assert_eq!(empty, Err(DerivationPathError::EmptyIndex));
-        assert_eq!(invalid, Err(DerivationPathError::InvalidCharacter(vec!["a".to_owned()])));
+        let actual_expected = test_data.iter()
+            .map(|(path, v)| {
+                let actual = split_derivation_path(path).unwrap_err();
+
+                (actual, v)
+            });
+
+        for (actual, expected) in actual_expected {
+            assert_eq!(actual, *expected);
+        }
     }
 }

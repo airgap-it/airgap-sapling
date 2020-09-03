@@ -3,11 +3,21 @@ mod viewing_key;
 mod derivation;
 
 pub use spending_key::{
-    get_extended_spending_key,
-    get_extended_spending_key_bytes,
+    SpendingKeyError,
+
+    get_xsk,
+    xsk_to_bytes,
+    xsk_from_bytes
 };
 
 pub use viewing_key::{
-    get_extended_full_viewing_key,
-    get_extended_full_viewing_key_bytes,
+    SaplingAddress,
+    ViewingKeyError,
+
+    get_xfvk,
+    xfvk_to_bytes,
+    xfvk_from_bytes,
+
+    get_xfvk_address,
+    get_next_xfvk_address,
 };

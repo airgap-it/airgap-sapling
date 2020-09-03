@@ -82,15 +82,22 @@ mod test {
 
    #[test]
    fn creates_derivation_index_from_valid_string() {
-      let hard_44 = create_derivation_index("44'").unwrap();
-      let hard_0 = create_derivation_index("0h").unwrap();
+       let test_data = vec![
+           ("44'", DerivationIndex::Hardened(44)),
+           ("0h", DerivationIndex::Hardened(0)),
+           ("0", DerivationIndex::NonHardened(0)),
+       ];
 
-      let soft_0 = create_derivation_index("0").unwrap();
+       let actual_expected = test_data.iter()
+           .map(|(i, expected)| {
+               let actual = create_derivation_index(i).unwrap();
 
-      assert_eq!(hard_44, DerivationIndex::Hardened(44));
-      assert_eq!(hard_0, DerivationIndex::Hardened(0));
+               (actual, expected)
+           });
 
-      assert_eq!(soft_0, DerivationIndex::NonHardened(0));
+       for (actual, expected) in actual_expected {
+           assert_eq!(actual, *expected);
+       }
    }
 
    #[test]
@@ -102,17 +109,28 @@ mod test {
    
    #[test]
    fn fails_with_invalid_character_error_if_string_contains_illegal_characters() {
-       let negative = create_derivation_index("-44");
-       let not_a_number = create_derivation_index("abc");
+       let test_data = vec![
+           ("-44", DerivationPathError::invalid_character(vec!["-"])),
+           ("abc", DerivationPathError::invalid_character(vec!["a", "b", "c"])),
+           ("1hg", DerivationPathError::invalid_character(vec!["g"])),
+       ];
 
-       assert_eq!(negative, Err(DerivationPathError::invalid_character(vec!["-"])));
-       assert_eq!(not_a_number, Err(DerivationPathError::invalid_character(vec!["a", "b", "c"])));
+       let actual_expected = test_data.iter()
+           .map(|(i, err)| {
+               let actual = create_derivation_index(i).unwrap_err();
+
+               (actual, err)
+           });
+
+       for (actual, expected) in actual_expected {
+           assert_eq!(actual, *expected);
+       }
    }
 
     #[test]
     fn fails_with_parsing_error_if_index_is_too_big() {
         let too_big = create_derivation_index(&(std::u64::MAX).to_string()[..]);
 
-        assert_eq!(too_big, Err(DerivationPathError::unknown("could not parse derivation index")))
+        assert_eq!(too_big, Err(DerivationPathError::unknown("could not parse derivation index")));
     }
 }

@@ -21,10 +21,31 @@ const seed: Buffer = bip39.mnemonicToSeed(mnemonic, '')
 const derivationPath: String = 'm/'
 
 // create an extended spending key
-const spendingKey: Buffer = sapling.getExtendedSpendingKey(seed, derivationPath)
-console.log(spendingKey.toString('hex'))
+const spendingKey: Buffer = await sapling.getExtendedSpendingKey(seed, derivationPath)
+console.log('spendingKey =', spendingKey.toString('hex'))
 
 // create an extended full viewing key
-const viewingKey: Buffer = sapling.getExtendedFullViewingKey(seed, derivationPath)
-console.log(viewingKey.toString('hex'))
+const viewingKey: Buffer = await sapling.getExtendedFullViewingKey(seed, derivationPath)
+console.log('viewingKey =', viewingKey.toString('hex'))
+
+// get default address
+const defaultAddress: SaplingPaymentAddress = await sapling.getPaymentAddressFromViewingKey(viewingKey)
+console.log(
+  'defaultAddress.index =', defaultAddress.index.toString('hex'),
+  'defaultAddress.raw =', defaultAddress.raw.toString('hex')
+)
+
+// get indexed address
+const address: SaplingPaymentAddress = await sapling.getPaymentAddressFromViewingKey(viewingKey, 1)
+console.log(
+  'address.index =', address.index.toString('hex'),
+  'address.raw =', address.raw.toString('hex')
+)
+
+// get next valid address
+const nextAddress: SaplingPaymentAddress = await sapling.getNextPaymentAddressFromViewingKey(viewingKey, address.index)
+console.log(
+  'nextAddress.index =', nextAddress.index.toString('hex'),
+  'nextAddress.raw =', nextAddress.raw.toString('hex')
+)
 ```
