@@ -1,8 +1,9 @@
 image: docker:latest
 
 variables:
-  IMAGE_TAG_LATEST: $CI_REGISTRY_IMAGE:latest
-  IMAGE_TAG_CURRENT: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  GOOGLE_TAG: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHA
+  GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+
 
 stages:
   - build
@@ -11,23 +12,17 @@ stages:
 
 build:
   stage: build
-  before_script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
-    - docker build --cache-from $IMAGE_TAG_LATEST -t $IMAGE_TAG_LATEST .
-    - docker tag $IMAGE_TAG_LATEST $IMAGE_TAG_CURRENT
-    - docker push $IMAGE_TAG_CURRENT
-    - docker push $IMAGE_TAG_LATEST
+    - docker build -t $GOOGLE_TAG .
   tags:
     - docker
 
 unit: 
   stage: test
   before_script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
     - docker rm -f unit-$CI_COMMIT_SHA || true
   script:
-    - docker run --name unit-$CI_COMMIT_SHA $IMAGE_TAG_CURRENT /bin/bash -c "npm run test"
+    - docker run --name unit-$CI_COMMIT_SHA $GOOGLE_TAG /bin/bash -c "npm run test"
   after_script:
     - docker rm -f unit-$CI_COMMIT_SHA || true
   tags:
@@ -38,10 +33,8 @@ publish:
   only:
     - master
   when: manual
-  before_script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
-    - docker run --env NPM_AUTH_TOKEN --name publish-$CI_COMMIT_SHA $IMAGE_TAG_CURRENT ./npm-ci-publish.sh
+    - docker run --env NPM_AUTH_TOKEN --name publish-$CI_COMMIT_SHA $GOOGLE_TAG ./npm-ci-publish.sh
   after_script:
     - docker rm -f publish-$CI_COMMIT_SHA || true
   tags:
@@ -50,10 +43,8 @@ publish:
 publish_beta:
   stage: publish
   when: manual
-  before_script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
   script:
-    - docker run --env NPM_AUTH_TOKEN --name publish-$CI_COMMIT_SHA $IMAGE_TAG_CURRENT ./npm-ci-publish-beta-only.sh
+    - docker run --env NPM_AUTH_TOKEN --name publish-$CI_COMMIT_SHA $GOOGLE_TAG ./npm-ci-publish-beta-only.sh
   after_script:
     - docker rm -f publish-$CI_COMMIT_SHA || true
   tags:
