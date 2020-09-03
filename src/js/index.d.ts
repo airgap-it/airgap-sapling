@@ -9,3 +9,7 @@ export function getPaymentAddressFromViewingKey(
   viewingKey: Buffer | Int8Array | string, 
   index?: Buffer | Int8Array | string | number
 ): Promise<SaplingPaymentAddress>
+export function getNextPaymentAddressFromViewingKey(
+  viewingKey: Buffer | Int8Array, string,
+  index: Buffer | Int8Array | string | number
+): Promise<SaplingPaymentAddress>

@@ -41,4 +41,11 @@ console.log(
   'address.index =', address.index.toString('hex'),
   'address.raw =', address.raw.toString('hex')
 )
+
+// get next valid address
+const nextAddress: SaplingPaymentAddress = await sapling.getNextPaymentAddressFromViewingKey(viewingKey, address.index)
+console.log(
+  'nextAddress.index =', nextAddress.index.toString('hex'),
+  'nextAddress.raw =', nextAddress.raw.toString('hex')
+)
 ```

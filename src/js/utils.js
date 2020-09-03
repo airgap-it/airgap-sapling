@@ -54,3 +54,8 @@ const hexRe = /^(0x)?[0-9a-fA-F]*$/
 export function isHexString(string) {
   return typeof string === 'string' && hexRe.test(string)
 }
+
+// Error
+export function ifTypeErrorElseUnknown(error, message) {
+  return error instanceof TypeError ? message : 'unknown error'
+}

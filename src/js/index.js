@@ -1,7 +1,7 @@
 
 import 'regenerator-runtime/runtime'
 
-import { bufferFrom } from './utils'
+import { bufferFrom, ifTypeErrorElseUnknown } from './utils'
 
 const saplingPromise = new Promise((resolve, reject) => {
   import('sapling-wasm')
@@ -28,11 +28,9 @@ export async function getExtendedSpendingKey(seed, derivationPath) {
   try {
     seedBuffer = bufferFrom(seed)
   } catch (error) {
-    let details = error instanceof TypeError 
-      ? '`seed` is of an invalid type, expected `Buffer`, `Int8Array` or hex string'
-      : 'unknown error'
+    const details = ifTypeErrorElseUnknown(error, '`seed` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
 
-      return Promise.reject(`getExtendedSpendingKey: ${details}`)
+    return Promise.reject(`getExtendedSpendingKey: ${details}`)
   }
 
   return Buffer.from(sapling.get_extended_spending_key(seedBuffer, derivationPath))
@@ -53,11 +51,9 @@ export async function getExtendedFullViewingKey(seed, derivationPath) {
   try {
     seedBuffer = bufferFrom(seed)
   } catch (error) {
-    let details = error instanceof TypeError 
-      ? '`seed` is of an invalid type, expected `Buffer`, `Int8Array` or hex string'
-      : 'unknown error'
+    const details = ifTypeErrorElseUnknown(error, '`seed` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
 
-      return Promise.reject(`getExtendedFullViewingKey: ${details}`)
+    return Promise.reject(`getExtendedFullViewingKey: ${details}`)
   }
 
   return Buffer.from(sapling.get_extended_full_viewing_key(seedBuffer, derivationPath))
@@ -82,11 +78,9 @@ export async function getPaymentAddressFromViewingKey(viewingKey, index) {
   try {
     viewingKeyBuffer = bufferFrom(viewingKey)
   } catch (error) {
-    let details = error instanceof TypeError 
-      ? '`viewingKey` is of an invalid type, expected `Buffer`, `Int8Array` or hex string'
-      : 'unknown error'
+    const details = ifTypeErrorElseUnknown(error, '`viewingKey` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
 
-      return Promise.reject(`getPaymentAddressFromViewingKey: ${details}`)
+    return Promise.reject(`getPaymentAddressFromViewingKey: ${details}`)
   }
 
   let indexBuffer
@@ -95,16 +89,55 @@ export async function getPaymentAddressFromViewingKey(viewingKey, index) {
       ? bufferFrom(index, 11).reverse() // LE
       : undefined
   } catch (error) {
-    let details = error instanceof TypeError 
-      ? '`index` is of an invalid type, expected `Buffer`, `Int8Array`, hex string or number'
-      : 'unknown error'
+    const details = ifTypeErrorElseUnknown(error, '`index` is of an invalid type, expected `Buffer`, `Int8Array`, hex string or number')
 
-      return Promise.reject(`getPaymentAddressFromViewingKey: ${details}`)
+    return Promise.reject(`getPaymentAddressFromViewingKey: ${details}`)
   }
 
   const address = Buffer.from(indexBuffer !== undefined 
     ? sapling.get_payment_address_from_viewing_key(viewingKeyBuffer, indexBuffer)
     : sapling.get_default_payment_address_from_viewing_key(viewingKeyBuffer))
+
+  return {
+    index: address.slice(0, 11),
+    raw: address.slice(11)
+  }
+}
+
+/**
+ * Derive next valid payment address from the given extended full viewing key and current diversifier index.
+ * 
+ * @typedef {Object} SaplingPaymentAddress
+ * @property {Buffer} index An 11-byte diversifier index stored as a list of bytes in a little-endian (LE) format
+ * @property {Buffer} raw A 32-byte raw address value
+ * 
+ * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
+ * @param {Buffer|Int8Array|string|number} index The last used 11-byte diversifier index. If provided as bytes, it is expected to be in the little-endian (LE) format.
+ * @returns {SaplingPaymentAddress} The derived payment address
+ */
+
+export async function getNextPaymentAddressFromViewingKey(viewingKey, index) {
+  const sapling = await saplingPromise
+
+  let viewingKeyBuffer
+  try {
+    viewingKeyBuffer = bufferFrom(viewingKey)
+  } catch (error) {
+    const details = ifTypeErrorElseUnknown(error, '`viewingKey` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
+
+    return Promise.reject(`getNextPaymentAddressFromViewingKey: ${details}`)
+  }
+
+  let indexBuffer
+  try {
+    indexBuffer = bufferFrom(index, 11).reverse() // LE
+  } catch (error) {
+    const details = ifTypeErrorElseUnknown(error, '`index` is of an invalid type, expected `Buffer`, `Int8Array`, hex string or number')
+
+    return Promise.reject(`getNextPaymentAddressFromViewingKey: ${details}`)
+  }
+
+  const address = Buffer.from(sapling.get_next_payment_address_from_viewing_key(viewingKeyBuffer, indexBuffer))
 
   return {
     index: address.slice(0, 11),
