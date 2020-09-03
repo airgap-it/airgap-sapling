@@ -3,22 +3,23 @@ use zcash_primitives::zip32::ExtendedSpendingKey;
 use crate::sapling_keys::derivation::split_derivation_path;
 use super::errors::SpendingKeyError;
 
-pub fn get_extended_spending_key(seed: &[u8], derivation_path: &str) -> Result<ExtendedSpendingKey, SpendingKeyError> {
+pub fn get_xsk(seed: &[u8], derivation_path: &str) -> Result<ExtendedSpendingKey, SpendingKeyError> {
     let master_key = ExtendedSpendingKey::master(seed);
     let derivation_indices = split_derivation_path(derivation_path).or_else(|err| Err(SpendingKeyError::caused_by(err)))?;
+    let xsk = ExtendedSpendingKey::from_path(&master_key, &derivation_indices);
 
-    let spending_key = ExtendedSpendingKey::from_path(&master_key, &derivation_indices);
-
-    Ok(spending_key)
+    Ok(xsk)
 }
 
-pub fn get_extended_spending_key_bytes(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, SpendingKeyError> {
-    let spending_key = get_extended_spending_key(seed, derivation_path)?;
-
+pub fn xsk_to_bytes(xsk: &ExtendedSpendingKey) -> Result<Vec<u8>, SpendingKeyError> {
     let mut bytes: Vec<u8> = vec![];
-    spending_key.write(&mut bytes).or_else(|err| Err(SpendingKeyError::caused_by(err)))?;
+    xsk.write(&mut bytes).or_else(|err| Err(SpendingKeyError::caused_by(err)))?;
 
     Ok(bytes)
+}
+
+pub fn xsk_from_bytes(bytes: &[u8]) -> Result<ExtendedSpendingKey, SpendingKeyError> {
+    ExtendedSpendingKey::read(bytes).or_else(|err| Err(SpendingKeyError::caused_by(err)))
 }
 
 #[cfg(test)]
@@ -68,7 +69,8 @@ mod test {
 
         let actual_expected = test_data.iter()
             .map(|(path, v)| {
-                let actual = get_extended_spending_key_bytes(&SEED, path).unwrap();
+                let xsk = get_xsk(&SEED, path).unwrap();
+                let actual = xsk_to_bytes(&xsk).unwrap();
                 let expected: Vec<u8> = v.iter().flat_map(|&s| hex::decode(s).unwrap()).collect();
 
                 (actual, expected)
@@ -91,15 +93,22 @@ mod test {
 
         let actual_expected = test_data.iter()
             .map(|(path, err)| {
-                let actual = get_extended_spending_key(&SEED, path).unwrap_err();
-                let actual_bytes = get_extended_spending_key_bytes(&SEED, path).unwrap_err();
+                let actual = get_xsk(&SEED, path).unwrap_err();
 
-                (actual, actual_bytes, err)
+                (actual, err)
             });
 
-        for (actual, actual_bytes, expected) in actual_expected {
+        for (actual, expected) in actual_expected {
             assert_eq!(actual, *expected);
-            assert_eq!(actual_bytes, *expected);
         }
+    }
+    
+    #[test]
+    fn reads_extended_spending_key_from_bytes() {
+        let expected = get_xsk(&SEED, "m/").unwrap();
+        let bytes = xsk_to_bytes(&expected).unwrap();
+        let actual = xsk_from_bytes(&bytes).unwrap();
+        
+        assert_eq!(actual, expected);
     }
 }

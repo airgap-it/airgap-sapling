@@ -17,3 +17,4 @@ zcash_primitives = "0.2"
 
 [dev-dependencies]
 hex = "0.4.2"
+wasm-bindgen-test = "0.3.17"

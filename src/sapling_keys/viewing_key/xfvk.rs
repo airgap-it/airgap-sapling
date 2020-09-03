@@ -1,23 +1,24 @@
 use zcash_primitives::zip32::ExtendedFullViewingKey;
 
-use crate::sapling_keys::get_extended_spending_key;
+use crate::sapling_keys::get_xsk;
 use super::errors::ViewingKeyError;
 
-pub fn get_extended_full_viewing_key(seed: &[u8], derivation_path: &str) -> Result<ExtendedFullViewingKey, ViewingKeyError> {
-    let spending_key = get_extended_spending_key(seed, derivation_path).or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
+pub fn get_xfvk(seed: &[u8], derivation_path: &str) -> Result<ExtendedFullViewingKey, ViewingKeyError> {
+    let xsk = get_xsk(seed, derivation_path).or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
+    let xfvk = ExtendedFullViewingKey::from(&xsk);
 
-    let viewing_key = ExtendedFullViewingKey::from(&spending_key);
-
-    Ok(viewing_key)
+    Ok(xfvk)
 }
 
-pub fn get_extended_full_viewing_key_bytes(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, ViewingKeyError> {
-    let viewing_key = get_extended_full_viewing_key(seed, derivation_path)?;
-
+pub fn xfvk_to_bytes(xfvk: &ExtendedFullViewingKey) -> Result<Vec<u8>, ViewingKeyError> {
     let mut bytes: Vec<u8> = vec![];
-    viewing_key.write(&mut bytes).or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
+    xfvk.write(&mut bytes).or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
 
     Ok(bytes)
+}
+
+pub fn xfvk_from_bytes(bytes: &[u8]) -> Result<ExtendedFullViewingKey, ViewingKeyError> {
+    ExtendedFullViewingKey::read(bytes).or_else(|err| Err(ViewingKeyError::caused_by(err)))
 }
 
 #[cfg(test)]
@@ -60,7 +61,8 @@ mod test {
 
         let actual_expected = test_data.iter()
             .map(|(path, v)| {
-                let actual = get_extended_full_viewing_key_bytes(&SEED, path).unwrap();
+                let xfvk = get_xfvk(&SEED, path).unwrap();
+                let actual = xfvk_to_bytes(&xfvk).unwrap();
                 let expected: Vec<u8> = v.iter().flat_map(|&s| hex::decode(s).unwrap()).collect();
 
                 (actual, expected)
@@ -99,15 +101,22 @@ mod test {
 
         let actual_expected = test_data.iter()
             .map(|(path, err)| {
-                let actual = get_extended_full_viewing_key(&SEED, path).unwrap_err();
-                let actual_bytes = get_extended_full_viewing_key_bytes(&SEED, path).unwrap_err();
+                let actual = get_xfvk(&SEED, path).unwrap_err();
 
-                (actual, actual_bytes, err)
+                (actual, err)
             });
 
-        for (actual, actual_bytes, expected) in actual_expected {
+        for (actual, expected) in actual_expected {
             assert_eq!(actual, *expected);
-            assert_eq!(actual_bytes, *expected);
         }
+    }
+
+    #[test]
+    fn reads_extended_full_viewing_key_from_bytes() {
+        let expected = get_xfvk(&SEED, "m/").unwrap();
+        let bytes = xfvk_to_bytes(&expected).unwrap();
+        let actual = xfvk_from_bytes(&bytes).unwrap();
+
+        assert_eq!(actual, expected);
     }
 }

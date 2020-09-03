@@ -1,13 +1,18 @@
 mod address;
-mod extended_full_viewing_key;
+mod xfvk;
 mod errors;
 
 pub use address::{
-    get_address_from_viewing_key,
-    get_address_from_viewing_key_bytes,
+    SaplingAddress,
+
+    get_xfvk_address,
+    get_next_xfvk_address,
 };
 
-pub use extended_full_viewing_key::{
-    get_extended_full_viewing_key,
-    get_extended_full_viewing_key_bytes,
+pub use xfvk::{
+    get_xfvk,
+    xfvk_to_bytes,
+    xfvk_from_bytes,
 };
+
+pub use errors::ViewingKeyError;
