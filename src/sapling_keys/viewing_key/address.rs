@@ -36,8 +36,10 @@ pub fn get_xfvk_address(
     xfvk: &ExtendedFullViewingKey,
     index: Option<[u8; 11]>
 ) -> Result<SaplingAddress, ViewingKeyError> {
-    let index = index.map_or(DiversifierIndex::new(), DiversifierIndex);
-    let (index, payment_address) = xfvk.address(index).or_else(|_| Err(ViewingKeyError::new()))?;
+    let (index, payment_address) = match index {
+        Some(index) => xfvk.address(DiversifierIndex(index)),
+        None => xfvk.default_address()
+    }.or_else(|_| Err(ViewingKeyError::new()))?;
 
     Ok(SaplingAddress::new(index, payment_address))
 }
