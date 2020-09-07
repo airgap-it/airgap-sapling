@@ -11,13 +11,9 @@ pub use spending_key::{
 };
 
 pub use viewing_key::{
-    SaplingAddress,
     ViewingKeyError,
 
     get_xfvk,
     xfvk_to_bytes,
     xfvk_from_bytes,
-
-    get_xfvk_address,
-    get_next_xfvk_address,
 };

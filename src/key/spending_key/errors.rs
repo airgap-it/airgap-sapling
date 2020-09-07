@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::errors::DetailedError;
 
 #[derive(Debug, PartialEq)]
 pub struct SpendingKeyError {
@@ -15,11 +16,17 @@ impl SpendingKeyError {
     }
 }
 
+impl DetailedError for SpendingKeyError {
+    fn details(&self) -> String {
+        match &self.cause {
+            Some(cause) => format!("SpendingKeyError: {}", cause),
+            None => String::from("SpendingKeyError")
+        }
+    }
+}
+
 impl fmt::Display for SpendingKeyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.cause {
-            Some(cause) => write!(f, "SpendingKeyError: {}", cause),
-            None => write!(f, "SpendingKeyError")
-        }
+        write!(f, "{}", self.details())
     }
 }

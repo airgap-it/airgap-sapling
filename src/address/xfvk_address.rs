@@ -1,45 +1,16 @@
-use std::convert::TryInto;
-use zcash_primitives::{
-    jubjub::JubjubEngine,
-    primitives::PaymentAddress,
-    zip32::{ExtendedFullViewingKey, DiversifierIndex},
-};
+use zcash_primitives::zip32::{ExtendedFullViewingKey, DiversifierIndex};
 
-use super::errors::ViewingKeyError;
-
-#[derive(Debug)]
-pub struct SaplingAddress {
-    pub index: [u8; 11],
-    pub diversifier: [u8; 11],
-    pub pkd: [u8; 32],
-}
-
-impl SaplingAddress {
-    pub fn new<T: JubjubEngine>(
-        index: DiversifierIndex,
-        payment_address: PaymentAddress<T>
-    ) -> SaplingAddress {
-        let bytes = payment_address.to_bytes();
-
-        let diversifier: [u8; 11] = bytes[..11].try_into().unwrap();
-        let pkd: [u8; 32] = bytes[11..].try_into().unwrap();
-
-        SaplingAddress {
-            index: index.0,
-            diversifier,
-            pkd,
-        }
-    }
-}
+use super::errors::SaplingAddressError;
+use super::SaplingAddress;
 
 pub fn get_xfvk_address(
     xfvk: &ExtendedFullViewingKey,
     index: Option<[u8; 11]>
-) -> Result<SaplingAddress, ViewingKeyError> {
+) -> Result<SaplingAddress, SaplingAddressError> {
     let (index, payment_address) = match index {
         Some(index) => xfvk.address(DiversifierIndex(index)),
         None => xfvk.default_address()
-    }.or_else(|_| Err(ViewingKeyError::new()))?;
+    }.or_else(|_| Err(SaplingAddressError::new()))?;
 
     Ok(SaplingAddress::new(index, payment_address))
 }
@@ -47,9 +18,9 @@ pub fn get_xfvk_address(
 pub fn get_next_xfvk_address(
     xfvk: &ExtendedFullViewingKey,
     index: [u8; 11]
-) -> Result<SaplingAddress, ViewingKeyError> {
+) -> Result<SaplingAddress, SaplingAddressError> {
     let mut index = DiversifierIndex(index);
-    index.increment().or_else(|_| Err(ViewingKeyError::caused_by("diversifier index overflow")))?;
+    index.increment().or_else(|_| Err(SaplingAddressError::caused_by("diversifier index overflow")))?;
 
     get_xfvk_address(xfvk, Some(index.0))
 }
@@ -79,10 +50,10 @@ mod test {
             }),
             ("m/1/2h", None,
              SaplingAddress {
-                index: [0; 11],
-                diversifier: [0xe8, 0xd0, 0x37, 0x93, 0xcd, 0xd2, 0xba, 0xcc, 0x9c, 0x70, 0x41],
-                pkd: [0; 32] // TODO: set actual expected value
-            }),
+                 index: [0; 11],
+                 diversifier: [0xe8, 0xd0, 0x37, 0x93, 0xcd, 0xd2, 0xba, 0xcc, 0x9c, 0x70, 0x41],
+                 pkd: [0; 32] // TODO: set actual expected value
+             }),
             ("m/1/2h/3", None, SaplingAddress {
                 index: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 diversifier: [0x03, 0x0f, 0xfb, 0x26, 0x3a, 0x93, 0x9e, 0x23, 0x0e, 0x96, 0xdd],
@@ -137,6 +108,6 @@ mod test {
 
         let error = get_next_xfvk_address(&xfvk, max_index).unwrap_err();
 
-        assert_eq!(error, ViewingKeyError::caused_by("diversifier index overflow"))
+        assert_eq!(error, SaplingAddressError::caused_by("diversifier index overflow"))
     }
 }

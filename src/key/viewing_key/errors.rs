@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::errors::DetailedError;
 
 #[derive(Debug, PartialEq)]
 pub struct ViewingKeyError {
@@ -6,20 +7,26 @@ pub struct ViewingKeyError {
 }
 
 impl ViewingKeyError {
-    pub fn new() -> ViewingKeyError {
+    pub fn new() -> Self {
         ViewingKeyError { cause: None }
     }
 
-    pub fn caused_by<T: ToString>(cause: T) -> ViewingKeyError {
+    pub fn caused_by<T: ToString>(cause: T) -> Self {
         ViewingKeyError { cause: Some(cause.to_string()) }
+    }
+}
+
+impl DetailedError for ViewingKeyError {
+    fn details(&self) -> String {
+        match &self.cause {
+            Some(cause) => format!("ViewingKeyError: {}", cause),
+            None => String::from("ViewingKeyError")
+        }
     }
 }
 
 impl fmt::Display for ViewingKeyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.cause {
-            Some(cause) => write!(f, "ViewingKeyError: {}", cause),
-            None => write!(f, "ViewingKeyError")
-        }
+        write!(f, "{}", self.details())
     }
 }

@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::errors::DetailedError;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum DerivationPathError {
@@ -17,8 +18,10 @@ impl DerivationPathError {
     pub fn unknown(message: &str) -> DerivationPathError {
         DerivationPathError::Unknown(String::from(message))
     }
+}
 
-    fn detailed_message(&self) -> String {
+impl DetailedError for DerivationPathError {
+    fn details(&self) -> String {
         match self {
             DerivationPathError::Empty => String::from("the path can't be empty"),
             DerivationPathError::EmptyIndex => String::from("the path can't contain empty derivation indices"),
@@ -31,9 +34,7 @@ impl DerivationPathError {
 
 impl fmt::Display for DerivationPathError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let detailed_message = self.detailed_message();
-
-        write!(f, "{}", format!("invalid derivation path, {}", &detailed_message))
+        write!(f, "invalid derivation path, {}", self.details())
     }
 }
 

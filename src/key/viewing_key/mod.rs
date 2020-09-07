@@ -1,13 +1,5 @@
-mod address;
 mod xfvk;
 mod errors;
-
-pub use address::{
-    SaplingAddress,
-
-    get_xfvk_address,
-    get_next_xfvk_address,
-};
 
 pub use xfvk::{
     get_xfvk,
