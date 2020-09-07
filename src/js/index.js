@@ -5,12 +5,12 @@ import { bufferFrom, ifTypeErrorElseUnknown } from './utils'
 
 const saplingPromise = new Promise((resolve, reject) => {
   import('sapling-wasm')
-  .then((sapling) => {
-    resolve(sapling)
-  })
-  .catch((error) => {
-    reject(`Could not load sapling-wasm: ${error}`)
-  })
+    .then((sapling) => {
+      resolve(sapling)
+    })
+    .catch((error) => {
+      reject(`Could not load sapling-wasm: ${error}`)
+    })
 })
 
 /**
