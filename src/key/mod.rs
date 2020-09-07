@@ -1,6 +1,6 @@
 mod spending_key;
 mod viewing_key;
-mod derivation;
+mod bip32;
 
 pub use spending_key::{
     SpendingKeyError,

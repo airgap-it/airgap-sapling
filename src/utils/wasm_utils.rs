@@ -5,7 +5,7 @@ pub fn js_error_from<O, E: ToString>(error: E) -> Result<O, JsValue> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use std::fmt;
     use wasm_bindgen_test::*;
     use super::*;

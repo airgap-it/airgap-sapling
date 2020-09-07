@@ -22,11 +22,11 @@ pub fn xfvk_from_bytes(bytes: &[u8]) -> Result<ExtendedFullViewingKey, ViewingKe
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
     use crate::key::{
         spending_key::SpendingKeyError,
-        derivation::DerivationPathError,
+        bip32::Bip32Error,
     };
 
     const SEED: [u8; 32] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
@@ -79,22 +79,22 @@ mod test {
         let test_data = vec![
             ("", ViewingKeyError::caused_by(
                 SpendingKeyError::caused_by(
-                    DerivationPathError::Empty.to_string()
+                    Bip32Error::EmptyPath.to_string()
                 ).to_string()
             )),
             ("/44'/123'/0'/0/0", ViewingKeyError::caused_by(
                 SpendingKeyError::caused_by(
-                    DerivationPathError::MissingPrefix.to_string()
+                    Bip32Error::MissingPrefix.to_string()
                 ).to_string()
             )),
             ("m/44'/123q/0'/0/0", ViewingKeyError::caused_by(
                 SpendingKeyError::caused_by(
-                    DerivationPathError::invalid_character(vec!["q"]).to_string()
+                    Bip32Error::invalid_character(vec!["q"]).to_string()
                 ).to_string()
             )),
             ("m/44'//0'/0/0", ViewingKeyError::caused_by(
                 SpendingKeyError::caused_by(
-                    DerivationPathError::EmptyIndex.to_string()
+                    Bip32Error::EmptyIndex.to_string()
                 ).to_string()
             )),
         ];

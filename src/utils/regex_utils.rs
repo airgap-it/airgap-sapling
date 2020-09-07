@@ -7,7 +7,7 @@ pub fn not_contains_chars_re(chars: &[&str]) -> String {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
 
     #[test]
