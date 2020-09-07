@@ -56,7 +56,7 @@ pub fn get_next_xfvk_address(
 
 #[cfg(test)]
 mod test {
-    use crate::sapling_keys::get_xfvk;
+    use crate::key::get_xfvk;
     use super::*;
 
     const SEED: [u8; 32] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,

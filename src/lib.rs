@@ -1,4 +1,4 @@
-mod sapling_keys;
+mod key;
 mod utils;
 
 use std::convert::TryInto;
@@ -8,7 +8,7 @@ use wasm_bindgen::{
 };
 use zcash_primitives::zip32::ExtendedFullViewingKey;
 
-use sapling_keys::{
+use key::{
     SaplingAddress,
     ViewingKeyError,
 

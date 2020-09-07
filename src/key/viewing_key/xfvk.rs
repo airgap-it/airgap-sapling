@@ -1,6 +1,6 @@
 use zcash_primitives::zip32::ExtendedFullViewingKey;
 
-use crate::sapling_keys::get_xsk;
+use crate::key::get_xsk;
 use super::errors::ViewingKeyError;
 
 pub fn get_xfvk(seed: &[u8], derivation_path: &str) -> Result<ExtendedFullViewingKey, ViewingKeyError> {
@@ -24,7 +24,7 @@ pub fn xfvk_from_bytes(bytes: &[u8]) -> Result<ExtendedFullViewingKey, ViewingKe
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::sapling_keys::{
+    use crate::key::{
         spending_key::SpendingKeyError,
         derivation::DerivationPathError,
     };

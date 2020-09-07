@@ -1,6 +1,6 @@
 use zcash_primitives::zip32::ExtendedSpendingKey;
 
-use crate::sapling_keys::derivation::split_derivation_path;
+use crate::key::derivation::split_derivation_path;
 use super::errors::SpendingKeyError;
 
 pub fn get_xsk(seed: &[u8], derivation_path: &str) -> Result<ExtendedSpendingKey, SpendingKeyError> {
@@ -25,7 +25,7 @@ pub fn xsk_from_bytes(bytes: &[u8]) -> Result<ExtendedSpendingKey, SpendingKeyEr
 #[cfg(test)]
 mod test {
     use hex;
-    use crate::sapling_keys::derivation::DerivationPathError;
+    use crate::key::derivation::DerivationPathError;
     use super::*;
 
     const SEED: [u8; 32] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
