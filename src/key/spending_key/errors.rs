@@ -1,32 +1,28 @@
-use std::fmt;
+use std::{io, fmt};
+
 use crate::errors::DetailedError;
 
-#[derive(Debug, PartialEq)]
-pub struct SpendingKeyError {
-    cause: Option<String>,
-}
-
-impl SpendingKeyError {
-    pub fn new() -> SpendingKeyError {
-        SpendingKeyError { cause: None }
-    }
-
-    pub fn caused_by<T: ToString>(cause: T) -> SpendingKeyError {
-        SpendingKeyError { cause: Some(cause.to_string()) }
-    }
+#[derive(Debug)]
+pub enum SpendingKeyError {
+    WriteFailed(io::Error),
+    ReadFailed(io::Error),
 }
 
 impl DetailedError for SpendingKeyError {
     fn details(&self) -> String {
-        match &self.cause {
-            Some(cause) => format!("SpendingKeyError: {}", cause),
-            None => String::from("SpendingKeyError")
+        match self {
+            SpendingKeyError::WriteFailed(err) => err.to_string(),
+            SpendingKeyError::ReadFailed(err) => err.to_string()
         }
     }
 }
 
-impl fmt::Display for SpendingKeyError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.details())
+impl PartialEq for SpendingKeyError {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (SpendingKeyError::WriteFailed(err), SpendingKeyError::WriteFailed(other_err)) => err.to_string() == other_err.to_string(),
+            (SpendingKeyError::ReadFailed(err), SpendingKeyError::ReadFailed(other_err)) => err.to_string() == other_err.to_string(),
+            _ => false
+        }
     }
 }

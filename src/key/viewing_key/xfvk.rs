@@ -1,33 +1,37 @@
 use zcash_primitives::zip32::ExtendedFullViewingKey;
 
+use crate::errors::{CausedBy, SaplingError};
 use crate::key::get_xsk;
+
 use super::errors::ViewingKeyError;
 
-pub fn get_xfvk(seed: &[u8], derivation_path: &str) -> Result<ExtendedFullViewingKey, ViewingKeyError> {
-    let xsk = get_xsk(seed, derivation_path).or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
+pub fn get_xfvk(seed: &[u8], derivation_path: &str) -> Result<ExtendedFullViewingKey, SaplingError> {
+    let xsk = get_xsk(seed, derivation_path)?;
     let xfvk = ExtendedFullViewingKey::from(&xsk);
 
     Ok(xfvk)
 }
 
-pub fn xfvk_to_bytes(xfvk: &ExtendedFullViewingKey) -> Result<Vec<u8>, ViewingKeyError> {
+pub fn xfvk_to_bytes(xfvk: &ExtendedFullViewingKey) -> Result<Vec<u8>, SaplingError> {
     let mut bytes: Vec<u8> = vec![];
-    xfvk.write(&mut bytes).or_else(|err| Err(ViewingKeyError::caused_by(err)))?;
+    xfvk.write(&mut bytes).map_err(|err| SaplingError::caused_by(ViewingKeyError::WriteFailed(err)))?;
 
     Ok(bytes)
 }
 
-pub fn xfvk_from_bytes(bytes: &[u8]) -> Result<ExtendedFullViewingKey, ViewingKeyError> {
-    ExtendedFullViewingKey::read(bytes).or_else(|err| Err(ViewingKeyError::caused_by(err)))
+pub fn xfvk_from_bytes(bytes: &[u8]) -> Result<ExtendedFullViewingKey, SaplingError> {
+    ExtendedFullViewingKey::read(bytes).map_err(|err| SaplingError::caused_by(ViewingKeyError::ReadFailed(err)))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::key::{
+        bip32::Bip32PathError,
         spending_key::SpendingKeyError,
-        bip32::Bip32Error,
     };
+    use crate::key::bip32::Bip32IndexError;
+
+    use super::*;
 
     const SEED: [u8; 32] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
                             17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
@@ -77,26 +81,10 @@ mod tests {
     #[test]
     fn fails_to_generate_extended_spending_key_when_derivation_path_invalid() {
         let test_data = vec![
-            ("", ViewingKeyError::caused_by(
-                SpendingKeyError::caused_by(
-                    Bip32Error::EmptyPath.to_string()
-                ).to_string()
-            )),
-            ("/44'/123'/0'/0/0", ViewingKeyError::caused_by(
-                SpendingKeyError::caused_by(
-                    Bip32Error::MissingPrefix.to_string()
-                ).to_string()
-            )),
-            ("m/44'/123q/0'/0/0", ViewingKeyError::caused_by(
-                SpendingKeyError::caused_by(
-                    Bip32Error::invalid_character(vec!["q"]).to_string()
-                ).to_string()
-            )),
-            ("m/44'//0'/0/0", ViewingKeyError::caused_by(
-                SpendingKeyError::caused_by(
-                    Bip32Error::EmptyIndex.to_string()
-                ).to_string()
-            )),
+            ("", SaplingError::caused_by(Bip32PathError::Empty)),
+            ("/44'/123'/0'/0/0", SaplingError::caused_by(Bip32PathError::MissingPrefix)),
+            ("m/44'/123q/0'/0/0", SaplingError::caused_by(Bip32IndexError::InvalidCharacter(vec!["q".to_string()]))),
+            ("m/44'//0'/0/0", SaplingError::caused_by(Bip32IndexError::Empty)),
         ];
 
         let actual_expected = test_data.iter()

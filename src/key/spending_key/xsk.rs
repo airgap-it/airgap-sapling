@@ -1,31 +1,35 @@
 use zcash_primitives::zip32::ExtendedSpendingKey;
 
+use crate::errors::{CausedBy, SaplingError};
 use crate::key::bip32::split_bip32_path;
+
 use super::errors::SpendingKeyError;
 
-pub fn get_xsk(seed: &[u8], derivation_path: &str) -> Result<ExtendedSpendingKey, SpendingKeyError> {
+pub fn get_xsk(seed: &[u8], derivation_path: &str) -> Result<ExtendedSpendingKey, SaplingError> {
     let master_key = ExtendedSpendingKey::master(seed);
-    let derivation_indices = split_bip32_path(derivation_path).or_else(|err| Err(SpendingKeyError::caused_by(err)))?;
-    let xsk = ExtendedSpendingKey::from_path(&master_key, &derivation_indices);
+    let bip32_path = split_bip32_path(derivation_path)?;
+    let xsk = ExtendedSpendingKey::from_path(&master_key, &bip32_path.indices);
 
     Ok(xsk)
 }
 
-pub fn xsk_to_bytes(xsk: &ExtendedSpendingKey) -> Result<Vec<u8>, SpendingKeyError> {
+pub fn xsk_to_bytes(xsk: &ExtendedSpendingKey) -> Result<Vec<u8>, SaplingError> {
     let mut bytes: Vec<u8> = vec![];
-    xsk.write(&mut bytes).or_else(|err| Err(SpendingKeyError::caused_by(err)))?;
+    xsk.write(&mut bytes).map_err(|err| SaplingError::caused_by(SpendingKeyError::WriteFailed(err)))?;
 
     Ok(bytes)
 }
 
-pub fn xsk_from_bytes(bytes: &[u8]) -> Result<ExtendedSpendingKey, SpendingKeyError> {
-    ExtendedSpendingKey::read(bytes).or_else(|err| Err(SpendingKeyError::caused_by(err)))
+pub fn xsk_from_bytes(bytes: &[u8]) -> Result<ExtendedSpendingKey, SaplingError> {
+    ExtendedSpendingKey::read(bytes).map_err(|err| SaplingError::caused_by(SpendingKeyError::ReadFailed(err)))
 }
 
 #[cfg(test)]
 mod tests {
     use hex;
-    use crate::key::bip32::Bip32Error;
+
+    use crate::key::bip32::{Bip32IndexError, Bip32PathError};
+
     use super::*;
 
     const SEED: [u8; 32] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
@@ -85,10 +89,10 @@ mod tests {
     #[test]
     fn fails_to_generate_extended_spending_key_when_derivation_path_invalid() {
         let test_data = vec![
-            ("", SpendingKeyError::caused_by(Bip32Error::EmptyPath.to_string())),
-            ("/44'/123'/0'/0/0", SpendingKeyError::caused_by(Bip32Error::MissingPrefix.to_string())),
-            ("m/44'/123q/0'/0/0", SpendingKeyError::caused_by(Bip32Error::invalid_character(vec!["q"]).to_string())),
-            ("m/44'//0'/0/0", SpendingKeyError::caused_by(Bip32Error::EmptyIndex.to_string())),
+            ("", SaplingError::caused_by(Bip32PathError::Empty)),
+            ("/44'/123'/0'/0/0", SaplingError::caused_by(Bip32PathError::MissingPrefix)),
+            ("m/44'/123q/0'/0/0", SaplingError::caused_by(Bip32IndexError::InvalidCharacter(vec!["q".to_string()]))),
+            ("m/44'//0'/0/0", SaplingError::caused_by(Bip32IndexError::Empty)),
         ];
 
         let actual_expected = test_data.iter()

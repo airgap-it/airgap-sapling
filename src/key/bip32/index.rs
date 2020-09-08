@@ -1,8 +1,10 @@
 use regex::Regex;
 use zcash_primitives::zip32::ChildIndex;
 
+use crate::errors::{CausedBy, SaplingError};
 use crate::utils::regex_utils::{contains_chars_re, not_contains_chars_re};
-use super::errors::Bip32Error;
+
+use super::errors::Bip32IndexError;
 
 const MASK_HARD_DERIVATION: u32 = 0x8000_0000;
 const MASK_SOFT_DERIVATION: u32 = 0x0000_0000;
@@ -12,7 +14,11 @@ const VALID_IS_HARD_CHARACTERS_RE: &str = "'h";
 
 pub type Bip32Index = ChildIndex;
 
-pub fn create_bip32_index(index: &str) -> Result<Bip32Index, Bip32Error> {
+pub fn create_index(index: &str) -> Result<Bip32Index, SaplingError> {
+    parse_index(index).map_err(SaplingError::caused_by)
+}
+
+fn parse_index(index: &str) -> Result<Bip32Index, Bip32IndexError> {
     assert_index_non_empty(index)?;
     assert_index_valid(index)?;
 
@@ -20,29 +26,29 @@ pub fn create_bip32_index(index: &str) -> Result<Bip32Index, Bip32Error> {
     let index_end = get_index_end(index, is_hard);
 
     let index = &index[..index_end];
-    let index = index.parse::<u32>().or_else(|_| Err(Bip32Error::unknown("could not parse bip32 index")))?;
+    let index = index.parse::<u32>().or_else(|_| Err(Bip32IndexError::ParseError))?;
     let index = mask_index(index, is_hard);
 
     Ok(Bip32Index::from_index(index))
 }
 
-fn assert_index_non_empty(index: &str) -> Result<(), Bip32Error> {
+fn assert_index_non_empty(index: &str) -> Result<(), Bip32IndexError> {
     if index.is_empty() {
-        Err(Bip32Error::EmptyIndex)
+        Err(Bip32IndexError::Empty)
     } else {
         Ok(())
     }
 }
 
-fn assert_index_valid(index: &str) -> Result<(), Bip32Error> {
+fn assert_index_valid(index: &str) -> Result<(), Bip32IndexError> {
     let invalid_regex = {
         let invalid_re = not_contains_chars_re(&[VALID_INDEX_CHARACTERS_RE, VALID_IS_HARD_CHARACTERS_RE]);
         Regex::new(&invalid_re).expect("could not check bip32 index, invalid regular expression")
     };
 
     if invalid_regex.is_match(index) {
-        let invalid = invalid_regex.find_iter(index).map(|m| &index[m.start()..m.end()]).collect();
-        Err(Bip32Error::invalid_character(invalid))
+        let invalid: Vec<String> = invalid_regex.find_iter(index).map(|m| index[m.start()..m.end()].to_string()).collect();
+        Err(Bip32IndexError::InvalidCharacter(invalid))
     } else {
         Ok(())
     }
@@ -78,9 +84,9 @@ fn mask_index(index: u32, is_hard: bool) -> u32 {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+    use super::*;
 
-   #[test]
+    #[test]
    fn creates_bip32_index_from_valid_string() {
        let test_data = vec![
            ("44'", Bip32Index::Hardened(44)),
@@ -90,7 +96,7 @@ mod tests {
 
        let actual_expected = test_data.iter()
            .map(|(i, expected)| {
-               let actual = create_bip32_index(i).unwrap();
+               let actual = create_index(i).unwrap();
 
                (actual, expected)
            });
@@ -102,22 +108,22 @@ mod tests {
 
    #[test]
    fn fails_with_empty_index_error_if_empty_string() {
-      let empty = create_bip32_index("");
+      let empty = create_index("").unwrap_err();
 
-      assert_eq!(empty, Err(Bip32Error::EmptyIndex));
+      assert_eq!(empty, SaplingError::caused_by(Bip32IndexError::Empty));
    }
    
    #[test]
    fn fails_with_invalid_character_error_if_string_contains_illegal_characters() {
        let test_data = vec![
-           ("-44", Bip32Error::invalid_character(vec!["-"])),
-           ("abc", Bip32Error::invalid_character(vec!["a", "b", "c"])),
-           ("1hg", Bip32Error::invalid_character(vec!["g"])),
+           ("-44", SaplingError::caused_by(Bip32IndexError::InvalidCharacter(vec!["-".to_string()]))),
+           ("abc", SaplingError::caused_by(Bip32IndexError::InvalidCharacter(vec!["a".to_string(), "b".to_string(), "c".to_string()]))),
+           ("1hg", SaplingError::caused_by(Bip32IndexError::InvalidCharacter(vec!["g".to_string()]))),
        ];
 
        let actual_expected = test_data.iter()
            .map(|(i, err)| {
-               let actual = create_bip32_index(i).unwrap_err();
+               let actual = create_index(i).unwrap_err();
 
                (actual, err)
            });
@@ -129,8 +135,8 @@ mod tests {
 
     #[test]
     fn fails_with_parsing_error_if_index_is_too_big() {
-        let too_big = create_bip32_index(&(std::u64::MAX).to_string()[..]);
+        let too_big = create_index(&(std::u64::MAX).to_string()[..]).unwrap_err();
 
-        assert_eq!(too_big, Err(Bip32Error::unknown("could not parse bip32 index")));
+        assert_eq!(too_big, SaplingError::caused_by(Bip32IndexError::ParseError));
     }
 }

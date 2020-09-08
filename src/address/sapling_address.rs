@@ -1,9 +1,10 @@
 use std::convert::TryInto;
-use zcash_primitives::{
-    primitives::PaymentAddress,
-    jubjub::JubjubEngine,
-    zip32::{DiversifierIndex, ExtendedFullViewingKey},
-};
+
+use zcash_primitives::primitives::PaymentAddress;
+use zcash_primitives::zip32::{DiversifierIndex, ExtendedFullViewingKey};
+
+use crate::errors::{CausedBy, SaplingError};
+
 use super::errors::SaplingAddressError;
 
 #[derive(Debug)]
@@ -14,9 +15,9 @@ pub struct SaplingAddress {
 }
 
 impl SaplingAddress {
-    pub fn new<T: JubjubEngine>(
+    pub fn new(
         index: DiversifierIndex,
-        payment_address: PaymentAddress<T>
+        payment_address: PaymentAddress
     ) -> SaplingAddress {
         let bytes = payment_address.to_bytes();
 
@@ -34,11 +35,11 @@ impl SaplingAddress {
 pub fn get_xfvk_address(
     xfvk: &ExtendedFullViewingKey,
     index: Option<[u8; 11]>
-) -> Result<SaplingAddress, SaplingAddressError> {
+) -> Result<SaplingAddress, SaplingError> {
     let (index, payment_address) = match index {
         Some(index) => xfvk.address(DiversifierIndex(index)),
         None => xfvk.default_address()
-    }.or_else(|_| Err(SaplingAddressError::new()))?;
+    }.or_else(|_| Err(SaplingError::caused_by(SaplingAddressError::DiversifierSpaceExhausted)))?;
 
     Ok(SaplingAddress::new(index, payment_address))
 }
@@ -46,9 +47,9 @@ pub fn get_xfvk_address(
 pub fn get_next_xfvk_address(
     xfvk: &ExtendedFullViewingKey,
     index: [u8; 11]
-) -> Result<SaplingAddress, SaplingAddressError> {
+) -> Result<SaplingAddress, SaplingError> {
     let mut index = DiversifierIndex(index);
-    index.increment().or_else(|_| Err(SaplingAddressError::caused_by("diversifier index overflow")))?;
+    index.increment().or_else(|_| Err(SaplingError::caused_by(SaplingAddressError::DiversifierSpaceExhausted)))?;
 
     get_xfvk_address(xfvk, Some(index.0))
 }
@@ -56,6 +57,7 @@ pub fn get_next_xfvk_address(
 #[cfg(test)]
 mod tests {
     use crate::key::get_xfvk;
+
     use super::*;
 
     const SEED: [u8; 32] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
@@ -136,6 +138,6 @@ mod tests {
 
         let error = get_next_xfvk_address(&xfvk, max_index).unwrap_err();
 
-        assert_eq!(error, SaplingAddressError::caused_by("diversifier index overflow"))
+        assert_eq!(error, SaplingError::caused_by(SaplingAddressError::DiversifierSpaceExhausted))
     }
 }

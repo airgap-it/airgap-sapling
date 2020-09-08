@@ -1,32 +1,28 @@
-use std::fmt;
+use std::{io, fmt};
+
 use crate::errors::DetailedError;
 
-#[derive(Debug, PartialEq)]
-pub struct ViewingKeyError {
-    cause: Option<String>,
-}
-
-impl ViewingKeyError {
-    pub fn new() -> Self {
-        ViewingKeyError { cause: None }
-    }
-
-    pub fn caused_by<T: ToString>(cause: T) -> Self {
-        ViewingKeyError { cause: Some(cause.to_string()) }
-    }
+#[derive(Debug)]
+pub enum ViewingKeyError {
+    WriteFailed(io::Error),
+    ReadFailed(io::Error),
 }
 
 impl DetailedError for ViewingKeyError {
     fn details(&self) -> String {
-        match &self.cause {
-            Some(cause) => format!("ViewingKeyError: {}", cause),
-            None => String::from("ViewingKeyError")
+        match self {
+            ViewingKeyError::WriteFailed(err) => err.to_string(),
+            ViewingKeyError::ReadFailed(err) => err.to_string()
         }
     }
 }
 
-impl fmt::Display for ViewingKeyError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.details())
+impl PartialEq for ViewingKeyError {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (ViewingKeyError::WriteFailed(err), ViewingKeyError::WriteFailed(other_err)) => err.to_string() == other_err.to_string(),
+            (ViewingKeyError::ReadFailed(err), ViewingKeyError::ReadFailed(other_err)) => err.to_string() == other_err.to_string(),
+            _ => false
+        }
     }
 }

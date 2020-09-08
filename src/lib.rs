@@ -1,33 +1,19 @@
-mod address;
-mod key;
-mod utils;
-mod errors;
-
 use std::convert::TryInto;
-use wasm_bindgen::{
-    JsValue,
-    prelude::*,
-};
+
+use wasm_bindgen::JsValue;
+use wasm_bindgen::prelude::*;
 use zcash_primitives::zip32::ExtendedFullViewingKey;
 
-use crate::{
-    address::{
-        SaplingAddress,
-        SaplingAddressError,
+use crate::address::{get_next_xfvk_address, get_xfvk_address, SaplingAddress};
+use crate::errors::SaplingError;
+use crate::key::{get_xfvk, get_xsk, xfvk_from_bytes, xfvk_to_bytes, xsk_to_bytes};
+use crate::utils::wasm_utils::js_error_from;
 
-        get_xfvk_address,
-        get_next_xfvk_address,
-    },
-    key::{
-        get_xsk,
-        xsk_to_bytes,
+mod address;
+mod key;
 
-        get_xfvk,
-        xfvk_to_bytes,
-        xfvk_from_bytes,
-    },
-    utils::wasm_utils::js_error_from
-};
+mod utils;
+mod errors;
 
 // Extended Spending Key
 
@@ -71,10 +57,9 @@ pub fn get_payment_address_from_viewing_key(xfvk: &[u8], index: &[u8]) -> Result
 }
 
 fn get_payment_address<F>(xfvk: &[u8], xfvk_map: F) -> Result<Vec<u8>, JsValue>
-    where F: Fn(&ExtendedFullViewingKey) -> Result<SaplingAddress, SaplingAddressError> {
+    where F: Fn(&ExtendedFullViewingKey) -> Result<SaplingAddress, SaplingError> {
 
     xfvk_from_bytes(xfvk)
-        .map_err(SaplingAddressError::caused_by)
         .and_then(|xfvk| xfvk_map(&xfvk))
         .map(|addr| [&addr.index[..], &addr.diversifier[..], &addr.pkd[..]].concat())
         .or_else(js_error_from)
