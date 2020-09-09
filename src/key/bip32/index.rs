@@ -5,6 +5,7 @@ use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::utils::regex_utils::{contains_chars_re, not_contains_chars_re};
 
 use super::errors::Bip32IndexError;
+use crate::common::utils::assert_utils::{assert_value_or_error, assert_value};
 
 const MASK_HARD_DERIVATION: u32 = 0x8000_0000;
 const MASK_SOFT_DERIVATION: u32 = 0x0000_0000;
@@ -33,11 +34,7 @@ fn parse_index(index: &str) -> Result<Bip32Index, Bip32IndexError> {
 }
 
 fn assert_index_non_empty(index: &str) -> Result<(), Bip32IndexError> {
-    if index.is_empty() {
-        Err(Bip32IndexError::Empty)
-    } else {
-        Ok(())
-    }
+    assert_value_or_error(!index.is_empty(), Bip32IndexError::Empty)
 }
 
 fn assert_index_valid(index: &str) -> Result<(), Bip32IndexError> {
@@ -45,13 +42,11 @@ fn assert_index_valid(index: &str) -> Result<(), Bip32IndexError> {
         let invalid_re = not_contains_chars_re(&[VALID_INDEX_CHARACTERS_RE, VALID_IS_HARD_CHARACTERS_RE]);
         Regex::new(&invalid_re).expect("could not check bip32 index, invalid regular expression")
     };
-
-    if invalid_regex.is_match(index) {
+    
+    assert_value(!invalid_regex.is_match(index)).map_err(|_| {
         let invalid: Vec<String> = invalid_regex.find_iter(index).map(|m| index[m.start()..m.end()].to_string()).collect();
-        Err(Bip32IndexError::InvalidCharacter(invalid))
-    } else {
-        Ok(())
-    }
+        Bip32IndexError::InvalidCharacter(invalid)
+    })
 }
 
 fn is_hard_index(index: &str) -> bool {

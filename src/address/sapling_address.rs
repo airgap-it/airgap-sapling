@@ -8,7 +8,7 @@ use crate::common::traits::Serializable;
 
 use super::errors::SaplingAddressError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct SaplingAddress {
     pub diversifier: [u8; 11],
     pub pkd: [u8; 32],

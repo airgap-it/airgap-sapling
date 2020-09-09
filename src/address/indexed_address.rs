@@ -9,7 +9,7 @@ use crate::address::SaplingAddress;
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::traits::Serializable;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct IndexedAddress(pub [u8; 11], pub SaplingAddress);
 
 impl IndexedAddress {

@@ -2,6 +2,7 @@ use crate::common::errors::{CausedBy, SaplingError};
 use crate::key::bip32::errors::Bip32PathError;
 use crate::key::bip32::index::Bip32Index;
 use crate::key::bip32::index::create_index;
+use crate::common::utils::assert_utils::assert_value_or_error;
 
 #[derive(Debug, PartialEq)]
 pub struct Bip32Path {
@@ -34,19 +35,11 @@ pub fn split_path(path: &str) -> Result<Bip32Path, SaplingError> {
 }
 
 fn assert_path_non_empty(path: &str) -> Result<(), Bip32PathError> {
-    if path.is_empty() {
-        Err(Bip32PathError::Empty)
-    } else {
-        Ok(())
-    }
+    assert_value_or_error(!path.is_empty(), Bip32PathError::Empty)
 }
 
 fn assert_path_prefixed(path: &str) -> Result<(), Bip32PathError> {
-    if &path[..1] != "m" {
-        Err(Bip32PathError::MissingPrefix)
-    } else {
-        Ok(())
-    }
+    assert_value_or_error(&path[..1] == "m", Bip32PathError::MissingPrefix)
 }
 
 fn unwrap_valid_indices<I>(indices: I) -> Result<Vec<Bip32Index>, SaplingError>

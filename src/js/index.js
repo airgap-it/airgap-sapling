@@ -1,7 +1,10 @@
 
 import 'regenerator-runtime/runtime'
 
-import { bufferFrom, ifTypeErrorElseUnknown } from './utils'
+import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/payment_address'
+import { getXsk } from './internal/spending_key'
+import { getOutputDescriptionFromXfvk } from './internal/transaction'
+import { getXfvk } from './internal/viewing_key'
 
 const saplingPromise = new Promise((resolve, reject) => {
   import('sapling-wasm')
@@ -22,18 +25,13 @@ const saplingPromise = new Promise((resolve, reject) => {
  */
 
 export async function getExtendedSpendingKey(seed, derivationPath) {
-  const sapling = await saplingPromise
-
-  let seedBuffer
   try {
-    seedBuffer = bufferFrom(seed)
+    const sapling = await saplingPromise
+
+    return getXsk(sapling, seed, derivationPath)
   } catch (error) {
-    const details = ifTypeErrorElseUnknown(error, '`seed` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
-
-    return Promise.reject(`getExtendedSpendingKey: ${details}`)
+    return Promise.reject(typeof error === 'string' ? `getExtendedSpendingKey: ${error}` : error)
   }
-
-  return Buffer.from(sapling.get_extended_spending_key(seedBuffer, derivationPath))
 }
 
 /**
@@ -45,71 +43,42 @@ export async function getExtendedSpendingKey(seed, derivationPath) {
  */
 
 export async function getExtendedFullViewingKey(seed, derivationPath) {
-  const sapling = await saplingPromise
-
-  let seedBuffer
   try {
-    seedBuffer = bufferFrom(seed)
+    const sapling = await saplingPromise
+
+    return getXfvk(sapling, seed, derivationPath)
   } catch (error) {
-    const details = ifTypeErrorElseUnknown(error, '`seed` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
-
-    return Promise.reject(`getExtendedFullViewingKey: ${details}`)
+    return Promise.reject(typeof error === 'string' ? `getExtendedFullViewingKey: ${error}` : error)
   }
-
-  return Buffer.from(sapling.get_extended_full_viewing_key(seedBuffer, derivationPath))
 }
 
 /**
- * Derive a payment address from the given extended full viewing key.
+ * A payment address with its diversifier index.
  * 
  * @typedef {Object} SaplingPaymentAddress
  * @property {Buffer} index An 11-byte diversifier index stored as a list of bytes in a little-endian (LE) format
  * @property {Buffer} raw A 32-byte raw address value
- * 
+ */
+
+/**
+ * Derive a payment address from the given extended full viewing key.
+ *
  * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
- * @param {Buffer|Int8Array|string|number} [index] A 11-byte diversifier index used to determine which diversifier should be used to derive the address. If not present, a new diversifier index is created with a default value of [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]. If provided as bytes, it is expected to be in the little-endian (LE) format.
+ * @param {Buffer|Int8Array|string|number|undefined} [index] A 11-byte diversifier index used to determine which diversifier should be used to derive the address. If not present, a new diversifier index is created with a default value of [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]. If provided as bytes, it is expected to be in the little-endian (LE) format.
  * @returns {SaplingPaymentAddress} The derived payment address
  */
 
 export async function getPaymentAddressFromViewingKey(viewingKey, index) {
-  const sapling = await saplingPromise
-
-  let viewingKeyBuffer
   try {
-    viewingKeyBuffer = bufferFrom(viewingKey)
+    const sapling = await saplingPromise
+
+    return getPaymentAddressXfvk(sapling, viewingKey, index)
   } catch (error) {
-    const details = ifTypeErrorElseUnknown(error, '`viewingKey` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
-
-    return Promise.reject(`getPaymentAddressFromViewingKey: ${details}`)
-  }
-
-  let indexBuffer
-  try {
-    indexBuffer = index !== undefined
-      ? bufferFrom(index, 11).reverse() // LE
-      : undefined
-  } catch (error) {
-    const details = ifTypeErrorElseUnknown(error, '`index` is of an invalid type, expected `Buffer`, `Int8Array`, hex string or number')
-
-    return Promise.reject(`getPaymentAddressFromViewingKey: ${details}`)
-  }
-
-  const address = Buffer.from(indexBuffer !== undefined 
-    ? sapling.get_payment_address_from_viewing_key(viewingKeyBuffer, indexBuffer)
-    : sapling.get_default_payment_address_from_viewing_key(viewingKeyBuffer))
-
-  return {
-    index: address.slice(0, 11),
-    raw: address.slice(11)
+    return Promise.reject(typeof error === 'string' ? `getPaymentAddressFromViewingKey: ${error}` : error)
   }
 }
 
-/**
- * Derive next valid payment address from the given extended full viewing key and current diversifier index.
- * 
- * @typedef {Object} SaplingPaymentAddress
- * @property {Buffer} index An 11-byte diversifier index stored as a list of bytes in a little-endian (LE) format
- * @property {Buffer} raw A 32-byte raw address value
+/** Derive next valid payment address from the given extended full viewing key and current diversifier index.
  * 
  * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
  * @param {Buffer|Int8Array|string|number} index The last used 11-byte diversifier index. If provided as bytes, it is expected to be in the little-endian (LE) format.
@@ -117,30 +86,41 @@ export async function getPaymentAddressFromViewingKey(viewingKey, index) {
  */
 
 export async function getNextPaymentAddressFromViewingKey(viewingKey, index) {
-  const sapling = await saplingPromise
-
-  let viewingKeyBuffer
   try {
-    viewingKeyBuffer = bufferFrom(viewingKey)
+    const sapling = await saplingPromise
+
+    return getNextPaymentAddressXfvk(sapling, viewingKey, index)
   } catch (error) {
-    const details = ifTypeErrorElseUnknown(error, '`viewingKey` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
-
-    return Promise.reject(`getNextPaymentAddressFromViewingKey: ${details}`)
+    return Promise.reject(typeof error === 'string' ? `getNextPaymentAddressFromViewingKey: ${error}` : error)
   }
+}
 
-  let indexBuffer
+/**
+ * An output description as defined in the Zcash protocol specification (https://zips.z.cash/protocol/protocol.pdf, par. 4.5)
+ * 
+ * @typedef {Object} SaplingOutputDescription
+ * @property {Buffer} cv
+ * @property {Buffer} cmu
+ * @property {Buffer} encCiphertext
+ * @property {Buffer} outCiphertext
+ * @property {Buffer} zkproof 
+ */
+
+/**
+ * Prepare a sapling output description.
+ * 
+ * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
+ * @param {SaplingPaymentAddress|Buffer|Int8Array|string} destination The destination address
+ * @param {string|number} value The value to transfer
+ * @param {Buffer|Int8Array|string|undefined} [memo] An optional message
+ * @returns {SaplingOutputDescription} The created output description
+ */
+export async function prepareOutputDescription(viewingKey, destination, value, memo) {
   try {
-    indexBuffer = bufferFrom(index, 11).reverse() // LE
+    const sapling = await saplingPromise
+
+    return getOutputDescriptionFromXfvk(sapling, viewingKey, destination, value, memo)
   } catch (error) {
-    const details = ifTypeErrorElseUnknown(error, '`index` is of an invalid type, expected `Buffer`, `Int8Array`, hex string or number')
-
-    return Promise.reject(`getNextPaymentAddressFromViewingKey: ${details}`)
-  }
-
-  const address = Buffer.from(sapling.get_next_payment_address_from_viewing_key(viewingKeyBuffer, indexBuffer))
-
-  return {
-    index: address.slice(0, 11),
-    raw: address.slice(11)
+    return Promise.reject(typeof error === 'string') ? `prepareOutputDescription: ${error}` : error
   }
 }
