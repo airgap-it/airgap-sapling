@@ -1,6 +1,6 @@
-use std::{io, fmt};
+use std::io;
 
-use crate::errors::DetailedError;
+use crate::common::errors::DetailedError;
 
 #[derive(Debug)]
 pub enum SpendingKeyError {

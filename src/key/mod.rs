@@ -1,19 +1,9 @@
+pub use sapling_key::SaplingKey;
+pub use spending_key::SpendingKeyError;
+pub use viewing_key::ViewingKeyError;
+
+mod sapling_key;
 mod spending_key;
 mod viewing_key;
 mod bip32;
 
-pub use spending_key::{
-    SpendingKeyError,
-
-    get_xsk,
-    xsk_to_bytes,
-    xsk_from_bytes
-};
-
-pub use viewing_key::{
-    ViewingKeyError,
-
-    get_xfvk,
-    xfvk_to_bytes,
-    xfvk_from_bytes,
-};

@@ -1,6 +1,4 @@
-use std::fmt;
-
-use crate::errors::{DetailedError, SaplingError};
+use crate::common::errors::DetailedError;
 
 #[derive(Debug, PartialEq)]
 pub enum Bip32PathError {

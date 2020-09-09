@@ -1,8 +1,8 @@
 use regex::Regex;
 use zcash_primitives::zip32::ChildIndex;
 
-use crate::errors::{CausedBy, SaplingError};
-use crate::utils::regex_utils::{contains_chars_re, not_contains_chars_re};
+use crate::common::errors::{CausedBy, SaplingError};
+use crate::common::utils::regex_utils::{contains_chars_re, not_contains_chars_re};
 
 use super::errors::Bip32IndexError;
 

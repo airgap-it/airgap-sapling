@@ -1,27 +1,33 @@
 use zcash_primitives::zip32::ExtendedSpendingKey;
 
-use crate::errors::{CausedBy, SaplingError};
+use crate::common::errors::{CausedBy, SaplingError};
+use crate::common::traits::Serializable;
 use crate::key::bip32::split_bip32_path;
+use crate::key::sapling_key::SaplingKey;
 
 use super::errors::SpendingKeyError;
 
-pub fn get_xsk(seed: &[u8], derivation_path: &str) -> Result<ExtendedSpendingKey, SaplingError> {
-    let master_key = ExtendedSpendingKey::master(seed);
-    let bip32_path = split_bip32_path(derivation_path)?;
-    let xsk = ExtendedSpendingKey::from_path(&master_key, &bip32_path.indices);
+impl SaplingKey for ExtendedSpendingKey {
+    fn from_seed(seed: &[u8], derivation_path: &str) -> Result<Self, SaplingError> where Self: Sized {
+        let master_key = ExtendedSpendingKey::master(seed);
+        let bip32_path = split_bip32_path(derivation_path)?;
+        let xsk = ExtendedSpendingKey::from_path(&master_key, &bip32_path.indices);
 
-    Ok(xsk)
+        Ok(xsk)
+    }
 }
 
-pub fn xsk_to_bytes(xsk: &ExtendedSpendingKey) -> Result<Vec<u8>, SaplingError> {
-    let mut bytes: Vec<u8> = vec![];
-    xsk.write(&mut bytes).map_err(|err| SaplingError::caused_by(SpendingKeyError::WriteFailed(err)))?;
+impl Serializable<SaplingError> for ExtendedSpendingKey {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, SaplingError> where Self: Sized {
+        ExtendedSpendingKey::read(bytes).map_err(|err| SaplingError::caused_by(SpendingKeyError::ReadFailed(err)))
+    }
 
-    Ok(bytes)
-}
+    fn to_bytes(&self) -> Result<Vec<u8>, SaplingError> {
+        let mut bytes: Vec<u8> = vec![];
+        self.write(&mut bytes).map_err(|err| SaplingError::caused_by(SpendingKeyError::WriteFailed(err)))?;
 
-pub fn xsk_from_bytes(bytes: &[u8]) -> Result<ExtendedSpendingKey, SaplingError> {
-    ExtendedSpendingKey::read(bytes).map_err(|err| SaplingError::caused_by(SpendingKeyError::ReadFailed(err)))
+        Ok(bytes)
+    }
 }
 
 #[cfg(test)]
@@ -73,8 +79,8 @@ mod tests {
 
         let actual_expected = test_data.iter()
             .map(|(path, v)| {
-                let xsk = get_xsk(&SEED, path).unwrap();
-                let actual = xsk_to_bytes(&xsk).unwrap();
+                let xsk = ExtendedSpendingKey::from_seed(&SEED, path).unwrap();
+                let actual = xsk.to_bytes().unwrap();
                 let expected: Vec<u8> = v.iter().flat_map(|&s| hex::decode(s).unwrap()).collect();
 
                 (actual, expected)
@@ -97,7 +103,7 @@ mod tests {
 
         let actual_expected = test_data.iter()
             .map(|(path, err)| {
-                let actual = get_xsk(&SEED, path).unwrap_err();
+                let actual = ExtendedSpendingKey::from_seed(&SEED, path).unwrap_err();
 
                 (actual, err)
             });
@@ -109,9 +115,9 @@ mod tests {
     
     #[test]
     fn reads_extended_spending_key_from_bytes() {
-        let expected = get_xsk(&SEED, "m/").unwrap();
-        let bytes = xsk_to_bytes(&expected).unwrap();
-        let actual = xsk_from_bytes(&bytes).unwrap();
+        let expected = ExtendedSpendingKey::from_seed(&SEED, "m/").unwrap();
+        let bytes = expected.to_bytes().unwrap();
+        let actual = ExtendedSpendingKey::from_bytes(&bytes).unwrap();
         
         assert_eq!(actual, expected);
     }

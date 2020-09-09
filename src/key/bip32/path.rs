@@ -1,5 +1,5 @@
-use crate::errors::{CausedBy, SaplingError};
-use crate::key::bip32::errors::{Bip32IndexError, Bip32PathError};
+use crate::common::errors::{CausedBy, SaplingError};
+use crate::key::bip32::errors::Bip32PathError;
 use crate::key::bip32::index::Bip32Index;
 use crate::key::bip32::index::create_index;
 
@@ -65,6 +65,8 @@ fn unwrap_valid_indices<I>(indices: I) -> Result<Vec<Bip32Index>, SaplingError>
 
 #[cfg(test)]
 mod tests {
+    use crate::key::bip32::Bip32IndexError;
+
     use super::*;
 
     #[test]

@@ -1,12 +1,6 @@
 use std::fmt;
 
-pub trait CausedBy<T> {
-    fn caused_by(cause: T) -> Self;
-}
-
-pub trait DetailedError {
-    fn details(&self) -> String;
-}
+use crate::common::errors::{CausedBy, DetailedError};
 
 #[derive(Debug, PartialEq)]
 pub struct SaplingError(Option<String>);

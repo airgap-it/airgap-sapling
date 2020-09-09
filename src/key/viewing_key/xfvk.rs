@@ -1,35 +1,36 @@
-use zcash_primitives::zip32::ExtendedFullViewingKey;
+use zcash_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
 
-use crate::errors::{CausedBy, SaplingError};
-use crate::key::get_xsk;
+use crate::common::errors::{CausedBy, SaplingError};
+use crate::common::traits::Serializable;
+use crate::key::sapling_key::SaplingKey;
 
 use super::errors::ViewingKeyError;
 
-pub fn get_xfvk(seed: &[u8], derivation_path: &str) -> Result<ExtendedFullViewingKey, SaplingError> {
-    let xsk = get_xsk(seed, derivation_path)?;
-    let xfvk = ExtendedFullViewingKey::from(&xsk);
+impl SaplingKey for ExtendedFullViewingKey {
+    fn from_seed(seed: &[u8], derivation_path: &str) -> Result<Self, SaplingError> where Self: Sized {
+        let xsk = ExtendedSpendingKey::from_seed(seed, derivation_path)?;
+        let xfvk = ExtendedFullViewingKey::from(&xsk);
 
-    Ok(xfvk)
+        Ok(xfvk)
+    }
 }
 
-pub fn xfvk_to_bytes(xfvk: &ExtendedFullViewingKey) -> Result<Vec<u8>, SaplingError> {
-    let mut bytes: Vec<u8> = vec![];
-    xfvk.write(&mut bytes).map_err(|err| SaplingError::caused_by(ViewingKeyError::WriteFailed(err)))?;
+impl Serializable<SaplingError> for ExtendedFullViewingKey {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, SaplingError> where Self: Sized {
+        ExtendedFullViewingKey::read(bytes).map_err(|err| SaplingError::caused_by(ViewingKeyError::ReadFailed(err)))
+    }
 
-    Ok(bytes)
-}
+    fn to_bytes(&self) -> Result<Vec<u8>, SaplingError> {
+        let mut bytes: Vec<u8> = vec![];
+        self.write(&mut bytes).map_err(|err| SaplingError::caused_by(ViewingKeyError::WriteFailed(err)))?;
 
-pub fn xfvk_from_bytes(bytes: &[u8]) -> Result<ExtendedFullViewingKey, SaplingError> {
-    ExtendedFullViewingKey::read(bytes).map_err(|err| SaplingError::caused_by(ViewingKeyError::ReadFailed(err)))
+        Ok(bytes)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::key::{
-        bip32::Bip32PathError,
-        spending_key::SpendingKeyError,
-    };
-    use crate::key::bip32::Bip32IndexError;
+    use crate::key::bip32::{Bip32IndexError, Bip32PathError};
 
     use super::*;
 
@@ -65,8 +66,8 @@ mod tests {
 
         let actual_expected = test_data.iter()
             .map(|(path, v)| {
-                let xfvk = get_xfvk(&SEED, path).unwrap();
-                let actual = xfvk_to_bytes(&xfvk).unwrap();
+                let xfvk = ExtendedFullViewingKey::from_seed(&SEED, path).unwrap();
+                let actual = xfvk.to_bytes().unwrap();
                 let expected: Vec<u8> = v.iter().flat_map(|&s| hex::decode(s).unwrap()).collect();
 
                 (actual, expected)
@@ -89,7 +90,7 @@ mod tests {
 
         let actual_expected = test_data.iter()
             .map(|(path, err)| {
-                let actual = get_xfvk(&SEED, path).unwrap_err();
+                let actual = ExtendedFullViewingKey::from_seed(&SEED, path).unwrap_err();
 
                 (actual, err)
             });
@@ -101,9 +102,9 @@ mod tests {
 
     #[test]
     fn reads_extended_full_viewing_key_from_bytes() {
-        let expected = get_xfvk(&SEED, "m/").unwrap();
-        let bytes = xfvk_to_bytes(&expected).unwrap();
-        let actual = xfvk_from_bytes(&bytes).unwrap();
+        let expected = ExtendedFullViewingKey::from_seed(&SEED, "m/").unwrap();
+        let bytes = expected.to_bytes().unwrap();
+        let actual = ExtendedFullViewingKey::from_bytes(&bytes).unwrap();
 
         assert_eq!(actual, expected);
     }
