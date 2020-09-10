@@ -3,19 +3,19 @@ use wasm_bindgen::JsValue;
 use crate::common::traits::Serializable;
 
 pub fn js_serialize<S, E>(value: Result<S, E>) -> Result<Vec<u8>, JsValue>
-    where S: Serializable<E>,
+    where S: Serializable<Vec<u8>, E>,
           E: ToString {
 
     value
-        .and_then(|s| s.to_bytes())
+        .and_then(|s| s.serialize())
         .map_err(|err| JsValue::from(err.to_string()))
 }
 
 pub fn js_deserialize<S, E>(bytes: &[u8]) -> Result<S, JsValue>
-    where S: Serializable<E>,
+    where S: Serializable<Vec<u8>, E>,
           E: ToString {
 
-    S::from_bytes(bytes).map_err(|err| JsValue::from(err.to_string()))
+    S::deserialize(bytes.to_vec()).map_err(|err| JsValue::from(err.to_string()))
 }
 
 pub fn js_error_from<O, E: ToString>(error: E) -> Result<O, JsValue> {
@@ -33,25 +33,25 @@ mod tests {
     #[derive(Debug, PartialEq, Copy, Clone)]
     struct TestSerializable([u8; 3]);
 
-    impl Serializable<String> for TestSerializable {
-        fn from_bytes(bytes: &[u8]) -> Result<Self, String> where Self: Sized {
+    impl Serializable<Vec<u8>, String> for TestSerializable {
+        fn deserialize(serialized: Vec<u8>) -> Result<Self, String> {
             {
-               if bytes.len() != 3 {
+               if serialized.len() != 3 {
                    Err("invalid length")
                } else {
                    Ok(())
                }
             }?;
 
-            let mut bytes_copy: [u8; 3] = [0; 3];
-            bytes_copy.copy_from_slice(bytes);
+            let mut bytes_copy = [0u8; 3];
+            bytes_copy.copy_from_slice(&serialized);
             bytes_copy.reverse();
 
             Ok(TestSerializable(bytes_copy))
         }
 
-        fn to_bytes(&self) -> Result<Vec<u8>, String> {
-            let mut bytes: [u8; 3] = [0; 3];
+        fn serialize(&self) -> Result<Vec<u8>, String> {
+            let mut bytes = [0u8; 3];
             bytes.clone_from_slice(&self.0);
             bytes.reverse();
 

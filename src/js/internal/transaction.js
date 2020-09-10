@@ -41,5 +41,7 @@ export function getOutputDescriptionFromXfvk(sapling, xfvk, to, value, memo) {
     return Promise.reject(details)
   }
 
-  const ovk = sapling.get_outgoing_viewing_key_from_xfvk(xfvkBuffer)
+  const rcm = sapling.generate_r()
+  const ovk = sapling.get_outgoing_viewing_key_from_xfvk(xfvkBuffer, valueNum, rcm)
+  
 }

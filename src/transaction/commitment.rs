@@ -20,14 +20,14 @@ impl SaplingCommitment {
     }
 }
 
-impl Serializable<SaplingError> for SaplingCommitment {
-    fn from_bytes(bytes: &[u8]) -> Result<SaplingCommitment, SaplingError> {
-        assert_value_or_error(bytes.len() == 32, SaplingError::caused_by(SaplingCommitmentError::InvalidLength))?;
+impl Serializable<Vec<u8>, SaplingError> for SaplingCommitment {
+    fn deserialize(serialized: Vec<u8>) -> Result<SaplingCommitment, SaplingError> {
+        assert_value_or_error(serialized.len() == 32, SaplingError::caused_by(SaplingCommitmentError::InvalidLength))?;
 
-        Ok(SaplingCommitment(bytes.try_into().unwrap()))
+        Ok(SaplingCommitment(serialized[..32].try_into().unwrap()))
     }
 
-    fn to_bytes(&self) -> Result<Vec<u8>, SaplingError> {
+    fn serialize(&self) -> Result<Vec<u8>, SaplingError> {
         Ok(self.0.to_vec())
     }
 }

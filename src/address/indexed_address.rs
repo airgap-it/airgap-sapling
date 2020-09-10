@@ -8,6 +8,7 @@ use crate::address::errors::IndexedAddressError;
 use crate::address::SaplingAddress;
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::traits::Serializable;
+use crate::common::utils::assert_utils::assert_value_or_error;
 
 #[derive(Debug, PartialEq)]
 pub struct IndexedAddress(pub [u8; 11], pub SaplingAddress);
@@ -18,20 +19,20 @@ impl IndexedAddress {
     }
 }
 
-impl Serializable<SaplingError> for IndexedAddress {
-    fn from_bytes(bytes: &[u8]) -> Result<Self, SaplingError> {
-        assert_byte_length(bytes).map_err(SaplingError::caused_by)?;
+impl Serializable<Vec<u8>, SaplingError> for IndexedAddress {
+    fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> {
+        assert_byte_length(&serialized).map_err(SaplingError::caused_by)?;
 
-        let diversifier_index = bytes[..11].try_into().unwrap();
-        let address = SaplingAddress::from_bytes(&bytes[11..])?;
+        let diversifier_index = serialized[..11].try_into().unwrap();
+        let address = SaplingAddress::deserialize(serialized[11..].to_vec())?;
 
         Ok(IndexedAddress(diversifier_index, address))
     }
 
-    fn to_bytes(&self) -> Result<Vec<u8>, SaplingError> {
+    fn serialize(&self) -> Result<Vec<u8>, SaplingError> {
         let mut bytes: Vec<u8> = vec![];
 
-        let address = &self.1.to_bytes()?;
+        let address = &self.1.serialize()?;
 
         bytes.write_all(&self.0)
             .and_then(|_| bytes.write_all(address))
@@ -44,16 +45,5 @@ impl Serializable<SaplingError> for IndexedAddress {
 
 fn assert_byte_length(bytes: &[u8]) -> Result<(), IndexedAddressError> {
     let len = bytes.len();
-    if len != 43 {
-        Err(IndexedAddressError::InvalidAddressLength(len))
-    } else {
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-// TODO
+    assert_value_or_error(len == 43, IndexedAddressError::InvalidAddressLength(len))
 }

@@ -17,12 +17,12 @@ impl SaplingKey for ExtendedSpendingKey {
     }
 }
 
-impl Serializable<SaplingError> for ExtendedSpendingKey {
-    fn from_bytes(bytes: &[u8]) -> Result<Self, SaplingError> where Self: Sized {
-        ExtendedSpendingKey::read(bytes).map_err(|err| SaplingError::caused_by(SpendingKeyError::ReadFailed(err)))
+impl Serializable<Vec<u8>, SaplingError> for ExtendedSpendingKey {
+    fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> where Self: Sized {
+        ExtendedSpendingKey::read(&serialized[..]).map_err(|err| SaplingError::caused_by(SpendingKeyError::ReadFailed(err)))
     }
 
-    fn to_bytes(&self) -> Result<Vec<u8>, SaplingError> {
+    fn serialize(&self) -> Result<Vec<u8>, SaplingError> {
         let mut bytes: Vec<u8> = vec![];
         self.write(&mut bytes).map_err(|err| SaplingError::caused_by(SpendingKeyError::WriteFailed(err)))?;
 
@@ -80,7 +80,7 @@ mod tests {
         let actual_expected = test_data.iter()
             .map(|(path, v)| {
                 let xsk = ExtendedSpendingKey::from_seed(&SEED, path).unwrap();
-                let actual = xsk.to_bytes().unwrap();
+                let actual = xsk.serialize().unwrap();
                 let expected: Vec<u8> = v.iter().flat_map(|&s| hex::decode(s).unwrap()).collect();
 
                 (actual, expected)
@@ -116,8 +116,8 @@ mod tests {
     #[test]
     fn reads_extended_spending_key_from_bytes() {
         let expected = ExtendedSpendingKey::from_seed(&SEED, "m/").unwrap();
-        let bytes = expected.to_bytes().unwrap();
-        let actual = ExtendedSpendingKey::from_bytes(&bytes).unwrap();
+        let bytes = expected.serialize().unwrap();
+        let actual = ExtendedSpendingKey::deserialize(bytes).unwrap();
         
         assert_eq!(actual, expected);
     }

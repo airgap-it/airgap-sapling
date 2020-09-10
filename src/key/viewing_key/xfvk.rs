@@ -15,12 +15,12 @@ impl SaplingKey for ExtendedFullViewingKey {
     }
 }
 
-impl Serializable<SaplingError> for ExtendedFullViewingKey {
-    fn from_bytes(bytes: &[u8]) -> Result<Self, SaplingError> where Self: Sized {
-        ExtendedFullViewingKey::read(bytes).map_err(|err| SaplingError::caused_by(ViewingKeyError::ReadFailed(err)))
+impl Serializable<Vec<u8>, SaplingError> for ExtendedFullViewingKey {
+    fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> where Self: Sized {
+        ExtendedFullViewingKey::read(&serialized[..]).map_err(|err| SaplingError::caused_by(ViewingKeyError::ReadFailed(err)))
     }
 
-    fn to_bytes(&self) -> Result<Vec<u8>, SaplingError> {
+    fn serialize(&self) -> Result<Vec<u8>, SaplingError> {
         let mut bytes: Vec<u8> = vec![];
         self.write(&mut bytes).map_err(|err| SaplingError::caused_by(ViewingKeyError::WriteFailed(err)))?;
 
@@ -67,7 +67,7 @@ mod tests {
         let actual_expected = test_data.iter()
             .map(|(path, v)| {
                 let xfvk = ExtendedFullViewingKey::from_seed(&SEED, path).unwrap();
-                let actual = xfvk.to_bytes().unwrap();
+                let actual = xfvk.serialize().unwrap();
                 let expected: Vec<u8> = v.iter().flat_map(|&s| hex::decode(s).unwrap()).collect();
 
                 (actual, expected)
@@ -103,8 +103,8 @@ mod tests {
     #[test]
     fn reads_extended_full_viewing_key_from_bytes() {
         let expected = ExtendedFullViewingKey::from_seed(&SEED, "m/").unwrap();
-        let bytes = expected.to_bytes().unwrap();
-        let actual = ExtendedFullViewingKey::from_bytes(&bytes).unwrap();
+        let bytes = expected.serialize().unwrap();
+        let actual = ExtendedFullViewingKey::deserialize(bytes).unwrap();
 
         assert_eq!(actual, expected);
     }
