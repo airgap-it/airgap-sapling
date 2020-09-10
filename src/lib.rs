@@ -7,7 +7,7 @@ use zcash_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
 use crate::address::{get_next_xfvk_address, get_xfvk_address, SaplingAddress};
 use crate::common::utils::wasm_utils::{js_deserialize, js_error_from, js_serialize};
 use crate::key::SaplingKey;
-use crate::transaction::SaplingCommitment;
+use crate::transaction::{SaplingCommitment, generate_random_scalar};
 
 mod address;
 mod key;
@@ -75,6 +75,13 @@ pub fn get_payment_address_from_xfvk(xfvk: &[u8], index: &[u8]) -> Result<Vec<u8
 }
 
 // Transaction
+
+#[wasm_bindgen(catch)]
+pub fn generate_r() -> Result<Vec<u8>, JsValue> {
+    let r = generate_random_scalar();
+
+    js_serialize(r)
+}
 
 #[wasm_bindgen(catch)]
 pub fn compute_cmu(address: &[u8], value: u64, rcm: &[u8]) -> Result<Vec<u8>, JsValue> {
