@@ -1,7 +1,7 @@
 import { isPaymentAddress } from './payment_address'
 import { bufferFrom, ifTypeErrorElseUnknown } from './utils'
 
-export function getOutputDescriptionFromXfvk(sapling, xfvk, to, value, memo) {
+export function getOutputDescriptionFromXfvk(sapling, context, xfvk, to, value, provingKey, memo) {
   let xfvkBuffer
   try {
     xfvkBuffer = bufferFrom(xfvk)
@@ -30,6 +30,15 @@ export function getOutputDescriptionFromXfvk(sapling, xfvk, to, value, memo) {
     return Promise.reject('`value` is of an invalid type, expected `number` or `string`')
   }
 
+  let provingKeyBuffer
+  try {
+    provingKeyBuffer = bufferFrom(provingKey)
+  } catch (error) {
+    const details = ifTypeErrorElseUnknown(error, '`provingKey` is of an invalid type, expected `Buffer`, `Int8Array` or hex string')
+
+    return Promise.reject(details)
+  }
+
   let memoBuffer
   try {
     memoBuffer = memo !== undefined
@@ -41,7 +50,8 @@ export function getOutputDescriptionFromXfvk(sapling, xfvk, to, value, memo) {
     return Promise.reject(details)
   }
 
-  const rcm = sapling.generate_r()
-  const ovk = sapling.get_outgoing_viewing_key_from_xfvk(xfvkBuffer, valueNum, rcm)
-  
+  return Buffer.from(memoBuffer !== undefined 
+      ? sapling.create_output_description_from_xfvk_with_memo(context, xfvkBuffer, toBuffer, valueNum, provingKeyBuffer, memoBuffer)
+      : sapling.create_output_description_from_xfvk(context, xfvkBuffer, toBuffer, valueNum, provingKeyBuffer)
+    )
 }

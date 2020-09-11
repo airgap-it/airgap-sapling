@@ -5,6 +5,7 @@ import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/pay
 import { getXsk } from './internal/spending_key'
 import { getOutputDescriptionFromXfvk } from './internal/transaction'
 import { getXfvk } from './internal/viewing_key'
+import { reject } from './internal/utils'
 
 const saplingPromise = new Promise((resolve, reject) => {
   import('sapling-wasm')
@@ -30,7 +31,7 @@ export async function getExtendedSpendingKey(seed, derivationPath) {
 
     return getXsk(sapling, seed, derivationPath)
   } catch (error) {
-    return Promise.reject(typeof error === 'string' ? `getExtendedSpendingKey: ${error}` : error)
+    reject('getExtendedSpendingKey', error)
   }
 }
 
@@ -48,7 +49,7 @@ export async function getExtendedFullViewingKey(seed, derivationPath) {
 
     return getXfvk(sapling, seed, derivationPath)
   } catch (error) {
-    return Promise.reject(typeof error === 'string' ? `getExtendedFullViewingKey: ${error}` : error)
+    reject('getExtendedFullViewingKey', error)
   }
 }
 
@@ -74,7 +75,7 @@ export async function getPaymentAddressFromViewingKey(viewingKey, index) {
 
     return getPaymentAddressXfvk(sapling, viewingKey, index)
   } catch (error) {
-    return Promise.reject(typeof error === 'string' ? `getPaymentAddressFromViewingKey: ${error}` : error)
+    reject('getPaymentAddressFromViewingKey', error)
   }
 }
 
@@ -91,25 +92,49 @@ export async function getNextPaymentAddressFromViewingKey(viewingKey, index) {
 
     return getNextPaymentAddressXfvk(sapling, viewingKey, index)
   } catch (error) {
-    return Promise.reject(typeof error === 'string' ? `getNextPaymentAddressFromViewingKey: ${error}` : error)
+    reject('getNextPaymentAddressFromViewingKey', error)
+  }
+}
+
+/**
+ * Execute action within a new sapling proving context.
+ * 
+ * @function
+ * @template T
+ * @param {function(Object): T} action An action to be executed
+ * @returns {T} Result returned by the action
+ */
+export async function withProvingContext(action) {
+  try {
+    const sapling = await saplingPromise
+
+    const context = sapling.init_proving_context()
+    const result = action(context)
+    sapling.drop_proving_context(context)
+
+    return result
+  } catch (error) {
+    reject('withSaplingProvingContext', error)
   }
 }
 
 /**
  * Prepare a sapling output description.
  * 
+ * @param {Object} context A sapling proving context
  * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
  * @param {SaplingPaymentAddress|Buffer|Int8Array|string} destination The destination address
  * @param {string|number} value The value to transfer
+ * @param {Buffer|Int8Array|string} provingKey A proving key which should be used to create a proof
  * @param {Buffer|Int8Array|string|undefined} [memo] An optional message
  * @returns {Buffer} The created output description
  */
-export async function prepareOutputDescription(viewingKey, destination, value, memo) {
+export async function prepareOutputDescription(context, viewingKey, destination, value, provingKey, memo) {
   try {
     const sapling = await saplingPromise
 
-    return getOutputDescriptionFromXfvk(sapling, viewingKey, destination, value, memo)
+    return getOutputDescriptionFromXfvk(sapling, context, viewingKey, destination, value, provingKey, memo)
   } catch (error) {
-    return Promise.reject(typeof error === 'string') ? `prepareOutputDescription: ${error}` : error
+    reject('prepareOutputDescription', error)
   }
 }

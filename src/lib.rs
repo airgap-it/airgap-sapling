@@ -90,6 +90,26 @@ pub fn drop_proving_context(ctx: *mut SaplingProvingContext) -> Result<(), JsVal
 }
 
 #[wasm_bindgen(catch)]
+pub fn create_output_description_from_xfvk(ctx: *mut SaplingProvingContext, xfvk: &[u8], to: &[u8], value: u64, proving_key: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
+    let address: PaymentAddress = js_deserialize(to)?;
+
+    let output_description = create_output_description(ctx, Some(xfvk.fvk.ovk), address, value, None, proving_key);
+
+    js_serialize(output_description)
+}
+
+#[wasm_bindgen(catch)]
+pub fn create_output_description_from_xfvk_with_memo(ctx: *mut SaplingProvingContext, xfvk: &[u8], to: &[u8], value: u64, proving_key: &[u8], memo: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
+    let address: PaymentAddress = js_deserialize(to)?;
+
+    let output_description = create_output_description(ctx, Some(xfvk.fvk.ovk), address, value, Some(memo), proving_key);
+
+    js_serialize(output_description)
+}
+
+#[wasm_bindgen(catch)]
 pub fn create_output_description_from_ovk(ctx: *mut SaplingProvingContext, ovk: &[u8], to: &[u8], value: u64, proving_key: &[u8]) -> Result<Vec<u8>, JsValue> {
     let ovk: OutgoingViewingKey = js_deserialize(ovk)?;
     let address: PaymentAddress = js_deserialize(to)?;

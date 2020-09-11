@@ -29,13 +29,17 @@ export function getNextPaymentAddressFromViewingKey(
   index: Buffer | Int8Array | string | number
 ): Promise<SaplingPaymentAddress>
 
+export function withProvingContext<T>(action: (context: Object) => T): T
+
 export function prepareSpendingDescription(
   viewingKey: Buffer | Int8Array | string
 )
 
 export function prepareOutputDescription(
+  context: Object,
   viewingKey: Buffer | Int8Array | string, 
   destination: SaplingPaymentAddress | Buffer | Int8Array | string, 
   value: string | number,
+  provingKey: Buffer | Int8Array | string,
   memo?: Buffer | Int8Array | string | undefined
 ): Promise<Buffer>

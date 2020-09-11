@@ -23,7 +23,8 @@ export async function getPaymentAddressXfvk(sapling, xfvk, index) {
 
   const address = Buffer.from(indexBuffer !== undefined 
     ? sapling.get_payment_address_from_viewing_key(xfvkBuffer, indexBuffer)
-    : sapling.get_default_payment_address_from_viewing_key(xfvkBuffer))
+    : sapling.get_default_payment_address_from_viewing_key(xfvkBuffer)
+  )
 
   return {
     index: address.slice(0, 11),

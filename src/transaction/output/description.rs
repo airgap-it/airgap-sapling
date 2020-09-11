@@ -32,7 +32,7 @@ pub fn create_output_description(
     ovk: Option<OutgoingViewingKey>,
     to: PaymentAddress,
     value: u64,
-    memo: Option<[u8; 512]>,
+    memo: Option<&[u8]>,
     proving_key: &[u8]
 ) -> Result<OutputDescription, SaplingError> {
     let ctx = unsafe { &mut *ctx };
@@ -94,8 +94,8 @@ fn create_note(address: &PaymentAddress, value: u64, rcm: jubjub::Scalar) -> Res
     address.create_note(value, rseed).ok_or_else(SaplingError::new)
 }
 
-fn get_memo(memo: Option<[u8; 512]>) -> Memo {
-    memo.and_then(|m| Memo::from_bytes(&m)).unwrap_or_else(Memo::default)
+fn get_memo(memo: Option<&[u8]>) -> Memo {
+    memo.and_then(|m| Memo::from_bytes(m)).unwrap_or_else(Memo::default)
 }
 
 fn get_epk(encryptor: &SaplingNoteEncryption) -> Result<jubjub::ExtendedPoint, SaplingError> {
