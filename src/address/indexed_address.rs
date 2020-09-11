@@ -5,17 +5,16 @@ use zcash_primitives::primitives::PaymentAddress;
 use zcash_primitives::zip32::DiversifierIndex;
 
 use crate::address::errors::IndexedAddressError;
-use crate::address::SaplingAddress;
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::traits::Serializable;
 use crate::common::utils::assert_utils::assert_value_or_error;
 
 #[derive(Debug, PartialEq)]
-pub struct IndexedAddress(pub [u8; 11], pub SaplingAddress);
+pub struct IndexedAddress(pub [u8; 11], pub PaymentAddress);
 
 impl IndexedAddress {
     pub fn new(diversifier_index: DiversifierIndex, payment_address: PaymentAddress) -> IndexedAddress {
-        IndexedAddress(diversifier_index.0, SaplingAddress::from(payment_address))
+        IndexedAddress(diversifier_index.0, payment_address)
     }
 }
 
@@ -24,7 +23,7 @@ impl Serializable<Vec<u8>, SaplingError> for IndexedAddress {
         assert_byte_length(&serialized).map_err(SaplingError::caused_by)?;
 
         let diversifier_index = serialized[..11].try_into().unwrap();
-        let address = SaplingAddress::deserialize(serialized[11..].to_vec())?;
+        let address = PaymentAddress::deserialize(serialized[11..].to_vec())?;
 
         Ok(IndexedAddress(diversifier_index, address))
     }

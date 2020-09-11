@@ -4,10 +4,13 @@ use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::*;
 use zcash_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
 
-use crate::address::{get_next_xfvk_address, get_xfvk_address, SaplingAddress};
+use crate::address::{get_next_xfvk_address, get_xfvk_address};
 use crate::common::utils::wasm_utils::{js_deserialize, js_error_from, js_serialize};
 use crate::key::SaplingKey;
-use crate::transaction::{SaplingCommitment, generate_random_scalar};
+use crate::transaction::{init_context, drop_context, create_output_description};
+use zcash_primitives::primitives::PaymentAddress;
+use zcash_proofs::sapling::SaplingProvingContext;
+use zcash_primitives::keys::OutgoingViewingKey;
 
 mod address;
 mod key;
@@ -77,16 +80,21 @@ pub fn get_payment_address_from_xfvk(xfvk: &[u8], index: &[u8]) -> Result<Vec<u8
 // Transaction
 
 #[wasm_bindgen(catch)]
-pub fn generate_r() -> Result<Vec<u8>, JsValue> {
-    let r = generate_random_scalar();
-
-    js_serialize(r)
+pub fn init_proving_context() -> Result<*mut SaplingProvingContext, JsValue> {
+    Ok(init_context())
 }
 
 #[wasm_bindgen(catch)]
-pub fn compute_cmu(address: &[u8], value: u64, rcm: &[u8]) -> Result<Vec<u8>, JsValue> {
-    let address: SaplingAddress = js_deserialize(address)?;
-    let cmu = SaplingCommitment::new(&address, value, rcm);
+pub fn drop_proving_context(ctx: *mut SaplingProvingContext) -> Result<(), JsValue> {
+    Ok(drop_context(ctx))
+}
 
-    js_serialize(cmu)
+#[wasm_bindgen(catch)]
+pub fn create_output_description_from_ovk(ctx: *mut SaplingProvingContext, ovk: &[u8], to: &[u8], value: u64, proving_key: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let ovk: OutgoingViewingKey = js_deserialize(ovk)?;
+    let address: PaymentAddress = js_deserialize(to)?;
+
+    let output_description = create_output_description(ctx, Some(ovk), address, value, None, proving_key);
+
+    js_serialize(output_description)
 }

@@ -96,24 +96,13 @@ export async function getNextPaymentAddressFromViewingKey(viewingKey, index) {
 }
 
 /**
- * An output description as defined in the Zcash protocol specification (https://zips.z.cash/protocol/protocol.pdf, par. 4.5)
- * 
- * @typedef {Object} SaplingOutputDescription
- * @property {Buffer} cv
- * @property {Buffer} cmu
- * @property {Buffer} encCiphertext
- * @property {Buffer} outCiphertext
- * @property {Buffer} zkproof 
- */
-
-/**
  * Prepare a sapling output description.
  * 
  * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
  * @param {SaplingPaymentAddress|Buffer|Int8Array|string} destination The destination address
  * @param {string|number} value The value to transfer
  * @param {Buffer|Int8Array|string|undefined} [memo] An optional message
- * @returns {SaplingOutputDescription} The created output description
+ * @returns {Buffer} The created output description
  */
 export async function prepareOutputDescription(viewingKey, destination, value, memo) {
   try {

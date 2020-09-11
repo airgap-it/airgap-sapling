@@ -1,8 +1,8 @@
-pub use commitment::SaplingCommitment;
-pub use scalar::generate_random_scalar;
+pub use output::create_output_description;
+pub use context::{drop_context, init_context};
 
-mod commitment;
-mod note;
+mod output;
+mod spend;
+mod context;
 
-mod errors;
-mod scalar;
+mod rand;

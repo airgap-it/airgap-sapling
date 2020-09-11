@@ -12,15 +12,6 @@ export interface SaplingSpendDescription {
   spendAuthSig: Buffer
 }
 
-export interface SaplingOutputDescription {
-  cv: Buffer
-  cmu: Buffer
-  epk: Buffer
-  encCiphertext: Buffer
-  outCiphertext: Buffer
-  zkproof: Buffer
-}
-
 export interface SaplingTransaction {
   spendDescriptions: SaplingSpendDescription[]
   outputDescriptions: SaplingOutputDescription[]
@@ -47,4 +38,4 @@ export function prepareOutputDescription(
   destination: SaplingPaymentAddress | Buffer | Int8Array | string, 
   value: string | number,
   memo?: Buffer | Int8Array | string | undefined
-): Promise<SaplingOutputDescription>
+): Promise<Buffer>
