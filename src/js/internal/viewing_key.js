@@ -1,12 +1,7 @@
-import { bufferFrom, rejectInvalidTypeOrUnknown } from './utils'
+import { bufferFrom } from './utils'
 
 export function getXfvk(sapling, seed, derivationPath) {
-  let seedBuffer
-  try {
-    seedBuffer = bufferFrom(seed)
-  } catch (error) {
-    return rejectInvalidTypeOrUnknown('seed', '`Buffer`, `Int8Array` or hex string', error)
-  }
+  const seedBuffer = bufferFrom(seed, 'seed', '`Buffer`, `Int8Array` or hex string')
 
   return Buffer.from(sapling.get_extended_full_viewing_key(seedBuffer, derivationPath))
 }

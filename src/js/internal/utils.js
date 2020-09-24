@@ -2,19 +2,22 @@
 
 // Buffer
 
-export function bufferFrom(value, minLength) {
-  let buffer
+export function bufferFrom(value, name, expectedType) {
   if (Buffer.isBuffer(value)) {
-    buffer = value
+    return value
   } else if (isHexString(value)) {
-    buffer = Buffer.from(value, 'hex')
+    return  Buffer.from(value, 'hex')
   } else if (typeof value === 'number') {
-    buffer = numberToBytes(value)
+    return numberToBytes(value)
   } else if (typeof value !== 'string' && value !== undefined && value !== null) {
-    buffer = Buffer.from(value)
+    return Buffer.from(value)
   } else {
-    throw new TypeError()
+    throwInvalidType(name, expectedType)
   }
+}
+
+export function bufferFromOfLength(value, minLength, name, expectedType) {
+  let buffer = bufferFrom(value, name, expectedType)
 
   if (minLength === undefined || minLength <= buffer.byteLength) {
     return buffer
@@ -55,14 +58,28 @@ export function isHexString(string) {
   return typeof string === 'string' && hexRe.test(string)
 }
 
+// Number
+
+export function numberFrom(value, name, expectedType) {
+  if (typeof value === 'number') {
+    return value
+  } else if (typeof value === 'string') {
+    return parseInt(value, 10)
+  } else {
+    throwInvalidType(name, expectedType)
+  }
+}
+
 // Error
 
-export function rejectWithError(methodName, error) {
+export function rejectPromise(methodName, error) {
   return Promise.reject(typeof error === 'string' ? `${methodName}: ${error}` : error)
 }
 
-export function rejectInvalidTypeOrUnknown(paramName, expectedType, error) {
-  const details = error === undefined || error instanceof TypeError ? `\`${paramName}\` is of invalid type, expected ${expectedType}` : 'unknown error'
+export function throwInvalidType(name, expectedType) {
+  const error = name !== undefined && expected !== undefined
+      ? new Error(`\`${paramName}\` is of invalid type, expected ${expectedType}`)
+      : new TypeError()
 
-  return Promise.reject(details)
+    throw error
 }

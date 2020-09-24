@@ -6,7 +6,7 @@ import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/pay
 import { getSpendDescriptionFromXfvk, signSpendDescriptionWithXsk } from './internal/spend_description'
 import { getXsk } from './internal/spending_key'
 import { getXfvk } from './internal/viewing_key'
-import { rejectWithError } from './internal/utils'
+import { rejectPromise } from './internal/utils'
 
 const saplingPromise = new Promise((resolve, reject) => {
   import('sapling-wasm')
@@ -32,7 +32,7 @@ export async function getExtendedSpendingKey(seed, derivationPath) {
 
     return getXsk(sapling, seed, derivationPath)
   } catch (error) {
-    return rejectWithError('getExtendedSpendingKey', error)
+    return rejectPromise('getExtendedSpendingKey', error)
   }
 }
 
@@ -50,7 +50,7 @@ export async function getExtendedFullViewingKey(seed, derivationPath) {
 
     return getXfvk(sapling, seed, derivationPath)
   } catch (error) {
-    return rejectWithError('getExtendedFullViewingKey', error)
+    return rejectPromise('getExtendedFullViewingKey', error)
   }
 }
 
@@ -76,7 +76,7 @@ export async function getPaymentAddressFromViewingKey(viewingKey, index) {
 
     return getPaymentAddressXfvk(sapling, viewingKey, index)
   } catch (error) {
-    return rejectWithError('getPaymentAddressFromViewingKey', error)
+    return rejectPromise('getPaymentAddressFromViewingKey', error)
   }
 }
 
@@ -93,7 +93,7 @@ export async function getNextPaymentAddressFromViewingKey(viewingKey, index) {
 
     return getNextPaymentAddressXfvk(sapling, viewingKey, index)
   } catch (error) {
-    return rejectWithError('getNextPaymentAddressFromViewingKey', error)
+    return rejectPromise('getNextPaymentAddressFromViewingKey', error)
   }
 }
 
@@ -115,7 +115,7 @@ export async function withProvingContext(action) {
 
     return result
   } catch (error) {
-    return rejectWithError('withSaplingProvingContext', error)
+    return rejectPromise('withSaplingProvingContext', error)
   }
 }
 
@@ -140,7 +140,7 @@ export async function prepareSpendDescription(context, spendingKey, address, rcm
 
     return getSpendDescriptionFromXfvk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath, position, provingKey, verifyingKey)
   } catch (error) {
-    return rejectWithError('prepareSpendDescription', error)
+    return rejectPromise('prepareSpendDescription', error)
   }
 }
 
@@ -157,7 +157,7 @@ export async function signSpendDescription(spendDescription, spendingKey, ar, si
 
     return signSpendDescriptionWithXsk(spendDescription, spendingKey, ar, sighash)
   } catch (error) {
-    return rejectWithError('signSpendDescription', error)
+    return rejectPromise('signSpendDescription', error)
   }
 }
 
@@ -179,6 +179,6 @@ export async function prepareOutputDescription(context, viewingKey, destination,
 
     return getOutputDescriptionFromXfvk(sapling, context, viewingKey, destination, rcm, value, provingKey, memo)
   } catch (error) {
-    return rejectWithError('prepareOutputDescription', error)
+    return rejectPromise('prepareOutputDescription', error)
   }
 }
