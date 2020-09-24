@@ -3,20 +3,6 @@ export interface SaplingPaymentAddress {
   raw: Buffer
 }
 
-export interface SaplingSpendDescription {
-  cv: Buffer
-  rt: Buffer
-  nf: Buffer
-  rk: Buffer
-  zkproof: Buffer
-  spendAuthSig: Buffer
-}
-
-export interface SaplingTransaction {
-  spendDescriptions: SaplingSpendDescription[]
-  outputDescriptions: SaplingOutputDescription[]
-}
-
 export function getExtendedSpendingKey(seed: Buffer | Int8Array | string, derivationPath: string): Promise<Buffer>
 export function getExtendedFullViewingKey(seed: Buffer | Int8Array | string, derivationPath: string): Promise<Buffer>
 
@@ -31,14 +17,25 @@ export function getNextPaymentAddressFromViewingKey(
 
 export function withProvingContext<T>(action: (context: Object) => T): T
 
-export function prepareSpendingDescription(
-  viewingKey: Buffer | Int8Array | string
-)
+export function prepareSpendDescription(
+  context: Object,
+  spendingKey: Buffer | Int8Array | string,
+  address: SaplingPaymentAddress | Buffer | Int8Array | string,
+  rcm: Buffer | Int8Array | string,
+  ar: Buffer | Int8Array | string,
+  value: string | number,
+  anchor: Buffer | Int8Array | string,
+  merklePath: Buffer | Int8Array | string,
+  position: number,
+  provingKey: Buffer | Int8Array | string,
+  verifyingKey: Buffer | Int8Array | string
+): Promise<Buffer>
 
 export function prepareOutputDescription(
   context: Object,
   viewingKey: Buffer | Int8Array | string, 
   destination: SaplingPaymentAddress | Buffer | Int8Array | string, 
+  rcm: Buffer | Int8Array | string,
   value: string | number,
   provingKey: Buffer | Int8Array | string,
   memo?: Buffer | Int8Array | string | undefined

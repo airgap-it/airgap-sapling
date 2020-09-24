@@ -1,11 +1,12 @@
 
 import 'regenerator-runtime/runtime'
 
+import { getOutputDescriptionFromXfvk } from './internal/output_description'
 import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/payment_address'
 import { getXsk } from './internal/spending_key'
-import { getOutputDescriptionFromXfvk } from './internal/transaction'
 import { getXfvk } from './internal/viewing_key'
-import { reject } from './internal/utils'
+import { rejectWithError } from './internal/utils'
+import { getSpendDescriptionFromXfvk } from './internal/spend_description'
 
 const saplingPromise = new Promise((resolve, reject) => {
   import('sapling-wasm')
@@ -31,7 +32,7 @@ export async function getExtendedSpendingKey(seed, derivationPath) {
 
     return getXsk(sapling, seed, derivationPath)
   } catch (error) {
-    reject('getExtendedSpendingKey', error)
+    return rejectWithError('getExtendedSpendingKey', error)
   }
 }
 
@@ -49,7 +50,7 @@ export async function getExtendedFullViewingKey(seed, derivationPath) {
 
     return getXfvk(sapling, seed, derivationPath)
   } catch (error) {
-    reject('getExtendedFullViewingKey', error)
+    return rejectWithError('getExtendedFullViewingKey', error)
   }
 }
 
@@ -75,7 +76,7 @@ export async function getPaymentAddressFromViewingKey(viewingKey, index) {
 
     return getPaymentAddressXfvk(sapling, viewingKey, index)
   } catch (error) {
-    reject('getPaymentAddressFromViewingKey', error)
+    return rejectWithError('getPaymentAddressFromViewingKey', error)
   }
 }
 
@@ -92,7 +93,7 @@ export async function getNextPaymentAddressFromViewingKey(viewingKey, index) {
 
     return getNextPaymentAddressXfvk(sapling, viewingKey, index)
   } catch (error) {
-    reject('getNextPaymentAddressFromViewingKey', error)
+    return rejectWithError('getNextPaymentAddressFromViewingKey', error)
   }
 }
 
@@ -114,7 +115,32 @@ export async function withProvingContext(action) {
 
     return result
   } catch (error) {
-    reject('withSaplingProvingContext', error)
+    return rejectWithError('withSaplingProvingContext', error)
+  }
+}
+
+/**
+ * Prepare an unsigned sapling spend description
+ * 
+ * @param {Object} context 
+ * @param {Buffer|Int8Array|string} spendingKey 
+ * @param {SaplingPaymentAddress|Buffer|Int8Array|string} address 
+ * @param {Buffer|Int8Array|string} rcm 
+ * @param {Buffer|Int8Array|string} ar 
+ * @param {string|number} value 
+ * @param {Buffer|Int8Array|string} anchor 
+ * @param {Buffer|Int8Array|string} merklePath 
+ * @param {number} position 
+ * @param {Buffer|Int8Array|string} provingKey 
+ * @param {Buffer|Int8Array|string} verifyingKey 
+ */
+export async function prepareSpendDescription(context, spendingKey, address, rcm, ar, value, anchor, merklePath, position, provingKey, verifyingKey) {
+  try {
+    const sapling = await saplingPromise
+
+    return getSpendDescriptionFromXfvk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath, position, provingKey, verifyingKey)
+  } catch (error) {
+    return rejectWithError('prepareSpendDescription', error)
   }
 }
 
@@ -124,17 +150,18 @@ export async function withProvingContext(action) {
  * @param {Object} context A sapling proving context
  * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
  * @param {SaplingPaymentAddress|Buffer|Int8Array|string} destination The destination address
+ * @param {Buffer|Int8Array|string} rcm The chosen random commitment trapdoor
  * @param {string|number} value The value to transfer
  * @param {Buffer|Int8Array|string} provingKey A proving key which should be used to create a proof
  * @param {Buffer|Int8Array|string|undefined} [memo] An optional message
  * @returns {Buffer} The created output description
  */
-export async function prepareOutputDescription(context, viewingKey, destination, value, provingKey, memo) {
+export async function prepareOutputDescription(context, viewingKey, destination, rcm, value, provingKey, memo) {
   try {
     const sapling = await saplingPromise
 
-    return getOutputDescriptionFromXfvk(sapling, context, viewingKey, destination, value, provingKey, memo)
+    return getOutputDescriptionFromXfvk(sapling, context, viewingKey, destination, rcm, value, provingKey, memo)
   } catch (error) {
-    reject('prepareOutputDescription', error)
+    return rejectWithError('prepareOutputDescription', error)
   }
 }

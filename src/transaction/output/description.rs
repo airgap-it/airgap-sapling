@@ -13,6 +13,7 @@ use crate::transaction::note::create_note;
 use crate::transaction::output::errors::OutputDescriptionError;
 use crate::transaction::output::proof::create_output_proof;
 use crate::transaction::proof::prepare_zkproof;
+use group::GroupEncoding;
 
 impl Serializable<Vec<u8>, SaplingError> for OutputDescription {
     fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> {
@@ -44,6 +45,7 @@ pub fn prepare_output_description(
     let (proof, cv) = create_output_proof(ctx, *encryptor.esk(), to, rcm, value, proving_key)?;
     let cmu = note.cmu();
     let ephemeral_key = get_epk(&encryptor)?;
+
     let enc_ciphertext = encryptor.encrypt_note_plaintext();
     let out_ciphertext = encryptor.encrypt_outgoing_plaintext(&cv, &cmu);
     let zkproof = prepare_zkproof(proof)?;

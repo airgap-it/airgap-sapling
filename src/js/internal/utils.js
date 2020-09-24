@@ -57,10 +57,12 @@ export function isHexString(string) {
 
 // Error
 
-export function reject(methodName, error) {
+export function rejectWithError(methodName, error) {
   return Promise.reject(typeof error === 'string' ? `${methodName}: ${error}` : error)
 }
 
-export function ifTypeErrorElseUnknown(error, message) {
-  return error instanceof TypeError ? message : 'unknown error'
+export function rejectInvalidTypeOrUnknown(paramName, expectedType, error) {
+  const details = error === undefined || error instanceof TypeError ? `\`${paramName}\` is of invalid type, expected ${expectedType}` : 'unknown error'
+
+  return Promise.reject(details)
 }
