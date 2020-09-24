@@ -122,17 +122,18 @@ export async function withProvingContext(action) {
 /**
  * Prepare an unsigned sapling spend description
  * 
- * @param {Object} context 
- * @param {Buffer|Int8Array|string} spendingKey 
- * @param {SaplingPaymentAddress|Buffer|Int8Array|string} address 
- * @param {Buffer|Int8Array|string} rcm 
- * @param {Buffer|Int8Array|string} ar 
- * @param {string|number} value 
- * @param {Buffer|Int8Array|string} anchor 
- * @param {Buffer|Int8Array|string} merklePath 
- * @param {number} position 
- * @param {Buffer|Int8Array|string} provingKey 
- * @param {Buffer|Int8Array|string} verifyingKey 
+ * @param {Object} context A sapling proving context
+ * @param {Buffer|Int8Array|string} spendingKey An extended spending key
+ * @param {SaplingPaymentAddress|Buffer|Int8Array|string} address The address to which the input has been linked
+ * @param {Buffer|Int8Array|string} rcm The randomness of the commitment
+ * @param {Buffer|Int8Array|string} ar Re-randomization of the public key
+ * @param {string|number} value The value of the input
+ * @param {Buffer|Int8Array|string} anchor The root of the merkle tree
+ * @param {Buffer|Int8Array|string} merklePath The path of the commitment in the tree
+ * @param {number} position The note position
+ * @param {Buffer|Int8Array|string} provingKey A proving key which should be used to create a proof
+ * @param {Buffer|Int8Array|string} verifyingKey A key used to verify the proof
+ * @returns {Buffer} The created unsinged spend description
  */
 export async function prepareSpendDescription(context, spendingKey, address, rcm, ar, value, anchor, merklePath, position, provingKey, verifyingKey) {
   try {
@@ -145,11 +146,13 @@ export async function prepareSpendDescription(context, spendingKey, address, rcm
 }
 
 /**
+ * Sign an unsinged sapling spend description
  * 
- * @param {Buffer|Int8Array|string} spendDescription 
- * @param {Buffer|Int8Array|string} spendingKey 
- * @param {Buffer|Int8Array|string} ar 
- * @param {Buffer|Int8Array|string} sighash 
+ * @param {Buffer|Int8Array|string} spendDescription An unsigned spend description
+ * @param {Buffer|Int8Array|string} spendingKey An extended spending key
+ * @param {Buffer|Int8Array|string} ar Re-randomization of the public key
+ * @param {Buffer|Int8Array|string} sighash The data to be signed
+ * @return {Buffer} The signed spend description
  */
 export async function signSpendDescription(spendDescription, spendingKey, ar, sighash) {
   try {
@@ -167,7 +170,7 @@ export async function signSpendDescription(spendDescription, spendingKey, ar, si
  * @param {Object} context A sapling proving context
  * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
  * @param {SaplingPaymentAddress|Buffer|Int8Array|string} destination The destination address
- * @param {Buffer|Int8Array|string} rcm The chosen random commitment trapdoor
+ * @param {Buffer|Int8Array|string} rcm The randomness of the commitment
  * @param {string|number} value The value to transfer
  * @param {Buffer|Int8Array|string} provingKey A proving key which should be used to create a proof
  * @param {Buffer|Int8Array|string|undefined} [memo] An optional message
