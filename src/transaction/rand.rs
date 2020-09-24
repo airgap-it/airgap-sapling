@@ -8,16 +8,15 @@ pub fn generate_rand_bytes(len: usize) -> Vec<u8> {
     buffer
 }
 
-pub fn generate_rand_scalar<R: RngCore + CryptoRng>(rng: Option<&mut R>) -> jubjub::Scalar {
+pub fn generate_rand_scalar() -> jubjub::Scalar {
     let mut buffer = [0u8; 64];
 
-    match rng {
-        Some(rng) => rng.fill_bytes(&mut buffer),
-        None => {
-            let mut rng = OsRng;
-            rng.fill_bytes(&mut buffer);
-        },
-    }
+    let mut rng = OsRng;
+    rng.fill_bytes(&mut buffer);
 
     jubjub::Scalar::from_bytes_wide(&buffer)
+}
+
+pub fn generate_rand_scalar_bytes() -> [u8; 32] {
+    generate_rand_scalar().to_bytes()
 }

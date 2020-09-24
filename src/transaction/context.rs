@@ -10,3 +10,7 @@ pub fn drop_context(ctx: *mut SaplingProvingContext) {
     let ctx = unsafe { Box::from_raw(ctx) };
     drop(ctx);
 }
+
+pub fn dereference_context(ctx: *mut SaplingProvingContext) -> &'static mut SaplingProvingContext {
+    unsafe { &mut *ctx }
+}

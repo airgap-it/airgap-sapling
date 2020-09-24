@@ -28,17 +28,16 @@ impl Serializable<Vec<u8>, SaplingError> for OutputDescription {
 }
 
 pub fn create_output_description(
-    ctx: *mut SaplingProvingContext,
+    ctx: &mut SaplingProvingContext,
     ovk: Option<OutgoingViewingKey>,
     to: PaymentAddress,
     value: u64,
     memo: Option<&[u8]>,
     proving_key: &[u8]
 ) -> Result<OutputDescription, SaplingError> {
-    let ctx = unsafe { &mut *ctx };
     let mut rng = OsRng;
 
-    let rcm = generate_rand_scalar(Some(&mut rng));
+    let rcm = generate_rand_scalar();
 
     let ovk = prepare_ovk(ovk)?;
     let note = create_note(&to, value, rcm)?;
