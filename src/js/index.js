@@ -3,10 +3,10 @@ import 'regenerator-runtime/runtime'
 
 import { getOutputDescriptionFromXfvk } from './internal/output_description'
 import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/payment_address'
+import { getSpendDescriptionFromXfvk, signSpendDescriptionWithXsk } from './internal/spend_description'
 import { getXsk } from './internal/spending_key'
 import { getXfvk } from './internal/viewing_key'
 import { rejectWithError } from './internal/utils'
-import { getSpendDescriptionFromXfvk } from './internal/spend_description'
 
 const saplingPromise = new Promise((resolve, reject) => {
   import('sapling-wasm')
@@ -141,6 +141,23 @@ export async function prepareSpendDescription(context, spendingKey, address, rcm
     return getSpendDescriptionFromXfvk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath, position, provingKey, verifyingKey)
   } catch (error) {
     return rejectWithError('prepareSpendDescription', error)
+  }
+}
+
+/**
+ * 
+ * @param {Buffer|Int8Array|string} spendDescription 
+ * @param {Buffer|Int8Array|string} spendingKey 
+ * @param {Buffer|Int8Array|string} ar 
+ * @param {Buffer|Int8Array|string} sighash 
+ */
+export async function signSpendDescription(spendDescription, spendingKey, ar, sighash) {
+  try {
+    const sapling = await saplingPromise
+
+    return signSpendDescriptionWithXsk(spendDescription, spendingKey, ar, sighash)
+  } catch (error) {
+    return rejectWithError('signSpendDescription', error)
   }
 }
 

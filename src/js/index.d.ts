@@ -31,6 +31,13 @@ export function prepareSpendDescription(
   verifyingKey: Buffer | Int8Array | string
 ): Promise<Buffer>
 
+export function signSpendDescription(
+  spendDescription: Buffer | Int8Array | string,
+  spendingKey: Buffer | Int8Array | string,
+  ar: Buffer | Int8Array | string,
+  sighash: Buffer | Int8Array | string
+): Promise<Buffer>
+
 export function prepareOutputDescription(
   context: Object,
   viewingKey: Buffer | Int8Array | string, 

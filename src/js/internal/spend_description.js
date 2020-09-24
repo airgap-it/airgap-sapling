@@ -86,3 +86,35 @@ export function getSpendDescriptionFromXsk(sapling, context, xsk, address, rcm, 
     )
   )
 }
+
+export function signSpendDescriptionWithXsk(description, xsk, ar, sighash) {
+  let descriptionBuffer
+  try {
+    descriptionBuffer = bufferFrom(description)
+  } catch (error) {
+    return rejectInvalidTypeOrUnknown('spendDescription', '`Buffer`, `Int8Array` or hex string', error)
+  }
+
+  let xskBuffer
+  try {
+    xskBuffer = bufferFrom(xsk)
+  } catch (error) {
+    return rejectInvalidTypeOrUnknown('spendingKey', '`Buffer`, `Int8Array` or hex string', error)
+  }
+
+  let arBuffer
+  try {
+    arBuffer = bufferFrom(ar)
+  } catch (error) {
+    return rejectInvalidTypeOrUnknown('ar', '`Buffer`, `Int8Array` or hex string', error)
+  }
+
+  let sighashBuffer
+  try {
+    sighashBuffer = bufferFrom(sighash)
+  } catch (error) {
+    return rejectInvalidTypeOrUnknown('sighash', '`Buffer`, `Int8Array` or hex string', error)
+  }
+
+  return Buffer.from(sapling.sign_spend_description_with_xsk(descriptionBuffer, xskBuffer, arBuffer, sighashBuffer))
+} 
