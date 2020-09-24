@@ -1,4 +1,5 @@
-pub use description::create_output_description;
+pub use description::prepare_output_description;
 
 mod description;
+mod proof;
 mod errors;

@@ -1,19 +1,20 @@
 use std::convert::TryInto;
 
-use bellman::groth16::{Parameters, PreparedVerifyingKey, Proof, VerifyingKey};
-use bls12_381::Bls12;
-use zcash_primitives::keys::FullViewingKey;
+use rand_core::OsRng;
 use zcash_primitives::merkle_tree::MerklePath;
-use zcash_primitives::primitives::{Diversifier, Note, PaymentAddress, ProofGenerationKey, Rseed, ViewingKey};
-use zcash_primitives::sapling::Node;
-use zcash_primitives::transaction::components::{GROTH_PROOF_SIZE, SpendDescription};
+use zcash_primitives::primitives::{PaymentAddress, ViewingKey};
+use zcash_primitives::redjubjub::{PrivateKey, Signature};
+use zcash_primitives::sapling::{Node, spend_sig};
+use zcash_primitives::transaction::components::SpendDescription;
 use zcash_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
 use zcash_proofs::sapling::SaplingProvingContext;
 
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::traits::Serializable;
-use crate::transaction::rand::generate_rand_scalar;
+use crate::transaction::note::create_note;
+use crate::transaction::proof::prepare_zkproof;
 use crate::transaction::spend::errors::SpendDescriptionError;
+use crate::transaction::spend::proof::create_spend_proof;
 
 impl Serializable<Vec<u8>, SaplingError> for SpendDescription {
     fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> {
@@ -28,11 +29,12 @@ impl Serializable<Vec<u8>, SaplingError> for SpendDescription {
     }
 }
 
-pub fn create_spend_description(
+pub fn prepare_spend_description(
     ctx: &mut SaplingProvingContext,
     xsk: ExtendedSpendingKey,
     payment_address: PaymentAddress,
     rcm: jubjub::Scalar,
+    ar: jubjub::Scalar,
     value: u64,
     anchor: bls12_381::Scalar,
     merkle_path: MerklePath<Node>,
@@ -40,33 +42,22 @@ pub fn create_spend_description(
     proving_key: &[u8],
     verifying_key: &[u8]
 ) -> Result<SpendDescription, SaplingError> {
-    let xfvk = ExtendedFullViewingKey::from(&xsk);
-
-    let proof_generation_key = ProofGenerationKey {
-        ak: xfvk.fvk.vk.ak.clone(),
-        nsk: xsk.expsk.nsk.clone(),
-    };
-
-    let rseed = Rseed::BeforeZip212(rcm);
-    let ar = generate_rand_scalar();
-
-    let proving_key = prepare_proving_key(proving_key)?;
-    let verifying_key = prepare_verifying_key(verifying_key)?;
-
-    let (proof, cv, rk) = ctx.spend_proof(
-        proof_generation_key,
-        payment_address.diversifier().clone(),
-        rseed,
+    let (proof, cv, rk) = create_spend_proof(
+        ctx,
+        &xsk,
+        &payment_address,
+        rcm,
         ar,
         value,
         anchor,
         merkle_path,
-        &proving_key,
-        &verifying_key
-    ).map_err(|_| SaplingError::new())?;
+        proving_key,
+        verifying_key
+    )?;
 
+    let xfvk = ExtendedFullViewingKey::from(&xsk);
     let nullifier = compute_nullifier(&xfvk.fvk.vk, &payment_address, value, rcm, position)?;
-    let zkproof = get_zkproof(proof)?;
+    let zkproof = prepare_zkproof(proof)?;
 
     let spend_description = SpendDescription {
         cv,
@@ -80,31 +71,32 @@ pub fn create_spend_description(
     Ok(spend_description)
 }
 
-fn prepare_proving_key(proving_key: &[u8]) -> Result<Parameters<Bls12>, SaplingError> {
-    Parameters::read(proving_key, false).map_err(|_| SaplingError::new())
-}
+pub fn sign_spend_description(spend_description: SpendDescription, xsk: ExtendedSpendingKey, ar: jubjub::Scalar, sighash: [u8; 32]) -> Result<SpendDescription, SaplingError> {
+    let spend_sig = compute_spend_sig(&xsk, ar, sighash)?;
 
-fn prepare_verifying_key(verifying_key: &[u8]) -> Result<PreparedVerifyingKey<Bls12>, SaplingError> {
-    let vk = VerifyingKey::<Bls12>::read(verifying_key).map_err(|_| SaplingError::new())?;
+    let spend_description = SpendDescription {
+        cv: spend_description.cv,
+        anchor: spend_description.anchor,
+        nullifier: spend_description.nullifier,
+        rk: spend_description.rk,
+        zkproof: spend_description.zkproof,
+        spend_auth_sig: Some(spend_sig)
+    };
 
-    Ok(bellman::groth16::prepare_verifying_key(&vk))
+    Ok(spend_description)
 }
 
 fn compute_nullifier(vk: &ViewingKey, payment_address: &PaymentAddress, value: u64, rcm: jubjub::Scalar, position: u64) -> Result<[u8; 32], SaplingError> {
     let note = create_note(payment_address, value, rcm)?;
-    let nullifier: [u8; 32] = note.nf(vk, position).try_into().map_err(|_| SaplingError::new())?;
+    let nullifier: [u8; 32] = note.nf(vk, position)[..32].try_into().map_err(|_| SaplingError::new())?;
 
     Ok(nullifier)
 }
 
-fn create_note(payment_address: &PaymentAddress, value: u64, rcm: jubjub::Scalar) -> Result<Note, SaplingError> {
-    let rseed = Rseed::BeforeZip212(rcm);
-    payment_address.create_note(value, rseed).ok_or_else(SaplingError::new)
-}
+fn compute_spend_sig(xsk: &ExtendedSpendingKey, ar: jubjub::Scalar, sighash: [u8; 32]) -> Result<Signature, SaplingError> {
+    let mut rng = OsRng;
+    let ask = PrivateKey::read(&xsk.expsk.ask.to_bytes()[..]).map_err(|_| SaplingError::new())?;
+    let signature = spend_sig(ask, ar, &sighash, &mut rng);
 
-fn get_zkproof(proof: Proof<Bls12>) -> Result<[u8; GROTH_PROOF_SIZE], SaplingError> {
-    let mut zkproof = [0u8; GROTH_PROOF_SIZE];
-    proof.write(&mut zkproof[..]).map_err(|_| SaplingError::new())?;
-
-    Ok(zkproof)
+    Ok(signature)
 }

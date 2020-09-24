@@ -1,18 +1,18 @@
 use std::convert::TryInto;
 
-use bellman::groth16::{Parameters, Proof};
-use bls12_381::Bls12;
 use rand_core::OsRng;
-use zcash_primitives::keys::{FullViewingKey, OutgoingViewingKey};
+use zcash_primitives::keys::OutgoingViewingKey;
 use zcash_primitives::note_encryption::{Memo, SaplingNoteEncryption};
-use zcash_primitives::primitives::{Note, PaymentAddress, Rseed};
-use zcash_primitives::transaction::components::{GROTH_PROOF_SIZE, OutputDescription};
+use zcash_primitives::primitives::{Note, PaymentAddress};
+use zcash_primitives::transaction::components::OutputDescription;
 use zcash_proofs::sapling::SaplingProvingContext;
 
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::traits::Serializable;
+use crate::transaction::note::create_note;
 use crate::transaction::output::errors::OutputDescriptionError;
-use crate::transaction::rand::{generate_rand_bytes, generate_rand_scalar};
+use crate::transaction::output::proof::create_output_proof;
+use crate::transaction::proof::prepare_zkproof;
 
 impl Serializable<Vec<u8>, SaplingError> for OutputDescription {
     fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> {
@@ -27,38 +27,26 @@ impl Serializable<Vec<u8>, SaplingError> for OutputDescription {
     }
 }
 
-pub fn create_output_description(
+pub fn prepare_output_description(
     ctx: &mut SaplingProvingContext,
-    ovk: Option<OutgoingViewingKey>,
+    ovk: OutgoingViewingKey,
     to: PaymentAddress,
+    rcm: jubjub::Scalar,
     value: u64,
     memo: Option<&[u8]>,
     proving_key: &[u8]
 ) -> Result<OutputDescription, SaplingError> {
-    let mut rng = OsRng;
-
-    let rcm = generate_rand_scalar();
-
-    let ovk = prepare_ovk(ovk)?;
     let note = create_note(&to, value, rcm)?;
     let memo = get_memo(memo);
 
-    let encryptor = SaplingNoteEncryption::new(
-        ovk,
-        note.clone(),
-        to.clone(),
-        memo,
-        &mut rng,
-    );
+    let encryptor = create_encryptor(ovk, &note, &to, memo)?;
 
-    let proving_key = prepare_proving_key(proving_key)?;
-
-    let (proof, cv) = ctx.output_proof(*encryptor.esk(), to, rcm, value, &proving_key);
+    let (proof, cv) = create_output_proof(ctx, *encryptor.esk(), to, rcm, value, proving_key)?;
     let cmu = note.cmu();
     let ephemeral_key = get_epk(&encryptor)?;
     let enc_ciphertext = encryptor.encrypt_note_plaintext();
     let out_ciphertext = encryptor.encrypt_outgoing_plaintext(&cv, &cmu);
-    let zkproof = get_zkproof(proof)?;
+    let zkproof = prepare_zkproof(proof)?;
 
     let output_description = OutputDescription {
         cv,
@@ -72,38 +60,24 @@ pub fn create_output_description(
     Ok(output_description)
 }
 
-fn prepare_proving_key(proving_key: &[u8]) -> Result<Parameters<Bls12>, SaplingError> {
-    Parameters::read(proving_key, false).map_err(|_| SaplingError::new())
-}
-
-fn prepare_ovk(ovk: Option<OutgoingViewingKey>) -> Result<OutgoingViewingKey, SaplingError> {
-    match ovk {
-        Some(ovk) => Ok(ovk),
-        None => {
-            let ovk: [u8; 32] = generate_rand_bytes(32)[..32].try_into().map_err(|_| SaplingError::new())?;
-            let ovk = OutgoingViewingKey(ovk);
-
-            Ok(ovk)
-        },
-    }
-}
-
-fn create_note(address: &PaymentAddress, value: u64, rcm: jubjub::Scalar) -> Result<Note, SaplingError> {
-    let rseed = Rseed::BeforeZip212(rcm);
-    address.create_note(value, rseed).ok_or_else(SaplingError::new)
-}
-
 fn get_memo(memo: Option<&[u8]>) -> Memo {
     memo.and_then(|m| Memo::from_bytes(m)).unwrap_or_else(Memo::default)
 }
 
-fn get_epk(encryptor: &SaplingNoteEncryption) -> Result<jubjub::ExtendedPoint, SaplingError> {
-    encryptor.epk().clone().try_into().map_err(|_| SaplingError::new())
+fn create_encryptor(ovk: OutgoingViewingKey, note: &Note, to: &PaymentAddress, memo: Memo) -> Result<SaplingNoteEncryption, SaplingError> {
+    let mut rng = OsRng;
+
+    let encryptor = SaplingNoteEncryption::new(
+        ovk,
+        note.clone(),
+        to.clone(),
+        memo,
+        &mut rng,
+    );
+
+    Ok(encryptor)
 }
 
-fn get_zkproof(proof: Proof<Bls12>) -> Result<[u8; GROTH_PROOF_SIZE], SaplingError> {
-    let mut zkproof = [0u8; GROTH_PROOF_SIZE];
-    proof.write(&mut zkproof[..]).map_err(|_| SaplingError::new())?;
-
-    Ok(zkproof)
+fn get_epk(encryptor: &SaplingNoteEncryption) -> Result<jubjub::ExtendedPoint, SaplingError> {
+    encryptor.epk().clone().try_into().map_err(|_| SaplingError::new())
 }
