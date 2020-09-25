@@ -3,7 +3,7 @@ import 'regenerator-runtime/runtime'
 
 import { getOutputDescriptionFromXfvk } from './internal/output_description'
 import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/payment_address'
-import { getSpendDescriptionFromXfvk, signSpendDescriptionWithXsk } from './internal/spend_description'
+import { getSpendDescriptionFromXsk, signSpendDescriptionWithXsk } from './internal/spend_description'
 import { getXsk } from './internal/spending_key'
 import { getXfvk } from './internal/viewing_key'
 import { rejectPromise } from './internal/utils'
@@ -139,7 +139,7 @@ export async function prepareSpendDescription(context, spendingKey, address, rcm
   try {
     const sapling = await saplingPromise
 
-    return getSpendDescriptionFromXfvk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath, position, provingKey, verifyingKey)
+    return getSpendDescriptionFromXsk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath, position, provingKey, verifyingKey)
   } catch (error) {
     return rejectPromise('prepareSpendDescription', error)
   }
