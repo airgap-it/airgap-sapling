@@ -109,9 +109,9 @@ export async function withProvingContext(action) {
   try {
     const sapling = await saplingPromise
 
-    const context = sapling.init_proving_context()
+    const context = sapling.wasm_init_proving_context()
     const result = action(context)
-    sapling.drop_proving_context(context)
+    sapling.wasm_drop_proving_context(context)
 
     return result
   } catch (error) {

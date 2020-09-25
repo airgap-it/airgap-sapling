@@ -1,6 +1,35 @@
 use std::io;
 use crate::common::errors::DetailedError;
 
+#[derive(Debug)]
+pub enum SignatureError {
+    PrivateKeyReadFailed(io::Error),
+    ValueBalanceInvalid,
+    ValueBalanceOutsideRange,
+    WriteFailed(io::Error),
+    ReadFailed(io::Error),
+}
+
+impl DetailedError for SignatureError {
+    fn details(&self) -> String {
+        use SignatureError::*;
+
+        match self {
+            PrivateKeyReadFailed(err) => err.to_string(),
+            ValueBalanceInvalid => String::from("Value balance is invalid"),
+            ValueBalanceOutsideRange => String::from("Value balance is outside the range"),
+            WriteFailed(err) => err.to_string(),
+            ReadFailed(err) => err.to_string(),
+        }
+    }
+}
+
+impl PartialEq for SignatureError {
+    fn eq(&self, other: &Self) -> bool {
+        self.details() == other.details()
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum MerklePathError {
     CannotWrite,

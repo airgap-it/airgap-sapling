@@ -2,6 +2,7 @@ pub use wasm_bindings::{
     output_description::*,
     payment_address::*,
     proving_context::*,
+    signature::*,
     spend_description::*,
     spending_key::*,
     viewing_key::*,

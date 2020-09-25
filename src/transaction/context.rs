@@ -11,6 +11,6 @@ pub fn drop_context(ctx: *mut SaplingProvingContext) {
     drop(ctx);
 }
 
-pub fn dereference_context(ctx: *mut SaplingProvingContext) -> &'static mut SaplingProvingContext {
+pub fn deref_context(ctx: *mut SaplingProvingContext) -> &'static mut SaplingProvingContext {
     unsafe { &mut *ctx }
 }

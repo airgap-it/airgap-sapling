@@ -1,10 +1,8 @@
 use std::convert::TryInto;
 
-use rand_core::OsRng;
 use zcash_primitives::merkle_tree::MerklePath;
 use zcash_primitives::primitives::{PaymentAddress, ViewingKey};
-use zcash_primitives::redjubjub::{PrivateKey, Signature};
-use zcash_primitives::sapling::{Node, spend_sig};
+use zcash_primitives::sapling::Node;
 use zcash_primitives::transaction::components::SpendDescription;
 use zcash_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
 use zcash_proofs::sapling::SaplingProvingContext;
@@ -13,6 +11,7 @@ use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::traits::Serializable;
 use crate::transaction::note::create_note;
 use crate::transaction::proof::prepare_zkproof;
+use crate::transaction::signature::create_spend_sig;
 use crate::transaction::spend::errors::SpendDescriptionError;
 use crate::transaction::spend::proof::create_spend_proof;
 
@@ -72,7 +71,7 @@ pub fn prepare_spend_description(
 }
 
 pub fn sign_spend_description(spend_description: SpendDescription, xsk: ExtendedSpendingKey, ar: jubjub::Scalar, sighash: [u8; 32]) -> Result<SpendDescription, SaplingError> {
-    let spend_sig = compute_spend_sig(&xsk, ar, sighash)?;
+    let spend_sig = create_spend_sig(&xsk, ar, sighash)?;
 
     let spend_description = SpendDescription {
         cv: spend_description.cv,
@@ -91,14 +90,4 @@ fn compute_nullifier(vk: &ViewingKey, payment_address: &PaymentAddress, value: u
     let nullifier: [u8; 32] = note.nf(vk, position)[..32].try_into().unwrap();
 
     Ok(nullifier)
-}
-
-fn compute_spend_sig(xsk: &ExtendedSpendingKey, ar: jubjub::Scalar, sighash: [u8; 32]) -> Result<Signature, SaplingError> {
-    let mut rng = OsRng;
-    let ask = PrivateKey::read(&xsk.expsk.ask.to_bytes()[..])
-        .map_err(SpendDescriptionError::PrivateKeyReadFailed)
-        .map_err(SaplingError::caused_by)?;
-    let signature = spend_sig(ask, ar, &sighash, &mut rng);
-
-    Ok(signature)
 }
