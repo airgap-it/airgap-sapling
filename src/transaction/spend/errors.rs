@@ -4,6 +4,8 @@ use crate::common::errors::DetailedError;
 
 #[derive(Debug)]
 pub enum SpendDescriptionError {
+    CreateSpendProofFailed,
+    PrivateKeyReadFailed(io::Error),
     WriteFailed(io::Error),
     ReadFailed(io::Error),
 }
@@ -13,20 +15,16 @@ impl DetailedError for SpendDescriptionError {
         use SpendDescriptionError::*;
 
         match self {
+            CreateSpendProofFailed => String::from("Could not create a spend proof"),
+            PrivateKeyReadFailed(err) => err.to_string(),
             WriteFailed(err) => err.to_string(),
-            ReadFailed(err) => err.to_string()
+            ReadFailed(err) => err.to_string(),
         }
     }
 }
 
 impl PartialEq for SpendDescriptionError {
     fn eq(&self, other: &Self) -> bool {
-        use SpendDescriptionError::*;
-
-        match (self, other) {
-            (WriteFailed(err), WriteFailed(other_err)) => err.to_string() == other_err.to_string(),
-            (ReadFailed(err), ReadFailed(other_err)) => err.to_string() == other_err.to_string(),
-            _ => false
-        }
+        self.details() == other.details()
     }
 }

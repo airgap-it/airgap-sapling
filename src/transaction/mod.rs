@@ -12,3 +12,5 @@ mod note;
 mod proof;
 mod rand;
 mod scalar;
+
+mod errors;

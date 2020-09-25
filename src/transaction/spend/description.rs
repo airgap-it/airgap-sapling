@@ -88,14 +88,16 @@ pub fn sign_spend_description(spend_description: SpendDescription, xsk: Extended
 
 fn compute_nullifier(vk: &ViewingKey, payment_address: &PaymentAddress, value: u64, rcm: jubjub::Scalar, position: u64) -> Result<[u8; 32], SaplingError> {
     let note = create_note(payment_address, value, rcm)?;
-    let nullifier: [u8; 32] = note.nf(vk, position)[..32].try_into().map_err(|_| SaplingError::new())?;
+    let nullifier: [u8; 32] = note.nf(vk, position)[..32].try_into().unwrap();
 
     Ok(nullifier)
 }
 
 fn compute_spend_sig(xsk: &ExtendedSpendingKey, ar: jubjub::Scalar, sighash: [u8; 32]) -> Result<Signature, SaplingError> {
     let mut rng = OsRng;
-    let ask = PrivateKey::read(&xsk.expsk.ask.to_bytes()[..]).map_err(|_| SaplingError::new())?;
+    let ask = PrivateKey::read(&xsk.expsk.ask.to_bytes()[..])
+        .map_err(SpendDescriptionError::PrivateKeyReadFailed)
+        .map_err(SaplingError::caused_by)?;
     let signature = spend_sig(ask, ar, &sighash, &mut rng);
 
     Ok(signature)

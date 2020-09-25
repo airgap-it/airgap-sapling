@@ -7,8 +7,9 @@ use zcash_primitives::sapling::Node;
 use zcash_primitives::zip32::ExtendedSpendingKey;
 use zcash_proofs::sapling::SaplingProvingContext;
 
-use crate::common::errors::SaplingError;
+use crate::common::errors::{CausedBy, SaplingError};
 use crate::transaction::proof::{prepare_proof_generation_key, prepare_proving_key, prepare_verifying_key};
+use crate::transaction::spend::errors::SpendDescriptionError;
 
 pub fn create_spend_proof(
     ctx: &mut SaplingProvingContext,
@@ -39,5 +40,5 @@ pub fn create_spend_proof(
         merkle_path,
         &proving_key,
         &verifying_key
-    ).map_err(|_| SaplingError::new())
+    ).map_err(|_| SpendDescriptionError::CreateSpendProofFailed).map_err(SaplingError::caused_by)
 }

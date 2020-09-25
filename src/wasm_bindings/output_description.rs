@@ -21,7 +21,7 @@ pub fn prepare_output_description_from_xfvk(ctx: *mut SaplingProvingContext, xfv
 }
 
 #[wasm_bindgen(catch)]
-pub fn prepare_output_description_from_xfvk_with_memo(ctx: *mut SaplingProvingContext, xfvk: &[u8], to: &[u8], , rcm: &[u8], value: u64, proving_key: &[u8], memo: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn prepare_output_description_from_xfvk_with_memo(ctx: *mut SaplingProvingContext, xfvk: &[u8], to: &[u8], rcm: &[u8], value: u64, proving_key: &[u8], memo: &[u8]) -> Result<Vec<u8>, JsValue> {
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let address: PaymentAddress = js_deserialize(to)?;
     let rcm: jubjub::Scalar = js_deserialize(rcm)?;
