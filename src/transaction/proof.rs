@@ -20,8 +20,8 @@ pub fn prepare_proof_generation_key(xsk: &ExtendedSpendingKey) -> ProofGeneratio
     let xfvk = ExtendedFullViewingKey::from(xsk);
 
     ProofGenerationKey {
-        ak: xfvk.fvk.vk.ak.clone(),
-        nsk: xsk.expsk.nsk.clone(),
+        ak: xfvk.fvk.vk.ak,
+        nsk: xsk.expsk.nsk,
     }
 }
 

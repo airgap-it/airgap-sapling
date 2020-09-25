@@ -13,7 +13,6 @@ use crate::transaction::note::create_note;
 use crate::transaction::output::errors::OutputDescriptionError;
 use crate::transaction::output::proof::create_output_proof;
 use crate::transaction::proof::prepare_zkproof;
-use group::GroupEncoding;
 
 impl Serializable<Vec<u8>, SaplingError> for OutputDescription {
     fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> {
