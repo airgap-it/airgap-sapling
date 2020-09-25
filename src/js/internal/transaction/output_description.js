@@ -1,5 +1,5 @@
-import { isPaymentAddress } from './payment_address'
-import { bufferFrom, numberFrom } from './utils'
+import { isPaymentAddress } from '../account/payment_address'
+import { bufferFrom, numberFrom } from '../utils'
 
 export function getOutputDescriptionFromXfvk(sapling, context, xfvk, to, rcm, value, provingKey, memo) {
   const xfvkBuffer = bufferFrom(xfvk, 'viewingKey', '`Buffer`, `Int8Array` or hex string')

@@ -1,4 +1,4 @@
-import { bufferFrom, bufferFromOfLength } from './utils'
+import { bufferFrom, bufferFromOfLength } from '../utils'
 
 export async function getPaymentAddressXfvk(sapling, xfvk, index) {
   const xfvkBuffer = bufferFrom(xfvk, 'viewingKey', '`Buffer`, `Int8Array` or hex string')

@@ -1,11 +1,12 @@
 
 import 'regenerator-runtime/runtime'
 
-import { getOutputDescriptionFromXfvk } from './internal/output_description'
-import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/payment_address'
-import { getSpendDescriptionFromXsk, signSpendDescriptionWithXsk } from './internal/spend_description'
-import { getXsk } from './internal/spending_key'
-import { getXfvk } from './internal/viewing_key'
+import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/account/account/payment_address'
+import { getXsk } from './internal/account/spending_key'
+import { getXfvk } from './internal/account/viewing_key'
+import { createBindingSignatureForTx } from './internal/transaction/binding_signature'
+import { getOutputDescriptionFromXfvk } from './internal/transaction/output_description'
+import { getSpendDescriptionFromXsk, signSpendDescriptionWithXsk } from './internal/transaction/spend_description'
 import { rejectPromise } from './internal/utils'
 
 const saplingPromise = new Promise((resolve, reject) => {
@@ -116,6 +117,41 @@ export async function withProvingContext(action) {
     return result
   } catch (error) {
     return rejectPromise('withSaplingProvingContext', error)
+  }
+}
+
+/**
+ * Create a random scalar
+ * 
+ * @returns {Buffer} The generated scalar
+ */
+export async function randR() {
+  try {
+    const sapling = await saplingPromise
+
+    return Buffer.from(sapling.wasm_rand_r())
+  } catch (error) {
+    return rejectPromise('randR', error)
+  }
+}
+
+/**
+ * Create a binding signature
+ * 
+ * Must be called after all spend and output description has been created
+ * 
+ * @param {Object} context 
+ * @param {string|number} valueBalance 
+ * @param {Buffer|Int8Array|string} sighash 
+ * @returns {Buffer} The created binding signature
+ */
+export async function createBindingSignature(context, valueBalance, sighash) {
+  try {
+    const sapling = await saplingPromise
+
+    return createBindingSignatureForTx(sapling, context, valueBalance, sighash)
+  } catch (error) {
+    return rejectPromise('createBindingSignature', error)
   }
 }
 

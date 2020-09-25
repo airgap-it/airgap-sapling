@@ -17,6 +17,14 @@ export function getNextPaymentAddressFromViewingKey(
 
 export function withProvingContext<T>(action: (context: Object) => T): T
 
+export function randR(): Promise<Buffer>
+
+export function createBindingSignature(
+  context: Object, 
+  valueBalance: string | number, 
+  sighash: Buffer | Int8Array | string
+): Promise<Buffer>
+
 export function prepareSpendDescription(
   context: Object,
   spendingKey: Buffer | Int8Array | string,
