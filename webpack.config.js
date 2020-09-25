@@ -4,7 +4,7 @@ const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin')
 const path = require('path')
 
 module.exports = {
-  entry: path.resolve(__dirname, 'src/js/index.js'),
+  entry: path.resolve(__dirname, 'src/js/index.ts'),
   target: 'node',
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -22,13 +22,14 @@ module.exports = {
   },
   module: {
     rules: [
-      {
-        use: {
-          loader: 'babel-loader'
-        },
-        exclude: [
-          /\.wasm$/
-        ]
+      { 
+        test: /\.ts$/, 
+        loader: "awesome-typescript-loader" 
+      },
+
+      { 
+        test: /\.js$/, 
+        loader: "source-map-loader" 
       }
     ]
   },
@@ -36,7 +37,7 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, 'src/js/index.d.ts'),
+          from: path.resolve(__dirname, 'package.json'),
           to: path.resolve(__dirname, 'dist')
         }
       ]

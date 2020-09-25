@@ -2,7 +2,11 @@
 
 // Buffer
 
-export function bufferFrom(value, name, expectedType) {
+export function bufferFrom(
+  value: Buffer | Int8Array | string | number, 
+  name?: string, 
+  expectedType?: string
+): Buffer {
   if (Buffer.isBuffer(value)) {
     return value
   } else if (isHexString(value)) {
@@ -12,11 +16,16 @@ export function bufferFrom(value, name, expectedType) {
   } else if (typeof value !== 'string' && value !== undefined && value !== null) {
     return Buffer.from(value)
   } else {
-    throwInvalidType(name, expectedType)
+    throw invalidTypeError(name, expectedType)
   }
 }
 
-export function bufferFromOfLength(value, minLength, name, expectedType) {
+export function bufferFromOfLength(
+  value: Buffer | Int8Array | string | number,
+  minLength: number, 
+  name?: string, 
+  expectedType?: string
+): Buffer {
   let buffer = bufferFrom(value, name, expectedType)
 
   if (minLength === undefined || minLength <= buffer.byteLength) {
@@ -29,11 +38,7 @@ export function bufferFromOfLength(value, minLength, name, expectedType) {
   return Buffer.concat([leadingBuffer, buffer])
 }
 
-export function numberToBytes(number) {
-  if (typeof number !== 'number') {
-    throw new Error(`numberToBytes: expected a number, got ${typeof number}`)
-  }
-
+export function numberToBytes(number: number): Buffer {
   const buffer = Buffer.alloc(4)
   buffer.fill(0)
   buffer.writeInt32BE(number)
@@ -54,32 +59,34 @@ export function numberToBytes(number) {
 // String
 
 const hexRe = /^(0x)?[0-9a-fA-F]*$/
-export function isHexString(string) {
+export function isHexString(string: any): string is string {
   return typeof string === 'string' && hexRe.test(string)
 }
 
 // Number
 
-export function numberFrom(value, name, expectedType) {
-  if (typeof value === 'number') {
+export function bigIntFrom(
+  value: number | string | BigInt,
+  name?: string,
+  expectedType?: string
+): BigInt {
+  if (typeof value === 'bigint') {
     return value
-  } else if (typeof value === 'string') {
-    return parseInt(value, 10)
+  } else if (typeof value === 'number' || typeof value === 'string') {
+    return BigInt(value)
   } else {
-    throwInvalidType(name, expectedType)
+    throw invalidTypeError(name, expectedType)
   }
 }
 
 // Error
 
-export function rejectPromise(methodName, error) {
+export async function rejectPromise<T>(methodName: string, error: any): Promise<T> {
   return Promise.reject(typeof error === 'string' ? `${methodName}: ${error}` : error)
 }
 
-export function throwInvalidType(name, expectedType) {
-  const error = name !== undefined && expected !== undefined
-      ? new Error(`\`${paramName}\` is of invalid type, expected ${expectedType}`)
+export function invalidTypeError(name?: string, expectedType?: string): Error {
+  return name !== undefined && expectedType !== undefined
+      ? new Error(`\`${name}\` is of invalid type, expected ${expectedType}`)
       : new TypeError()
-
-    throw error
 }

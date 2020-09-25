@@ -1,0 +1,10 @@
+.history
+.dockerignore
+.gitignore
+.prettierignore
+.prettierrc
+.eslintrc.js
+webpack.config.js
+dist
+node_modules
+**/*.js
