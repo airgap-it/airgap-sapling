@@ -146,7 +146,7 @@ export async function prepareSpendDescription(context, spendingKey, address, rcm
 }
 
 /**
- * Sign an unsinged sapling spend description
+ * Sign an unsigned sapling spend description
  * 
  * @param {Buffer|Int8Array|string} spendDescription An unsigned spend description
  * @param {Buffer|Int8Array|string} spendingKey An extended spending key
@@ -158,7 +158,7 @@ export async function signSpendDescription(spendDescription, spendingKey, ar, si
   try {
     const sapling = await saplingPromise
 
-    return signSpendDescriptionWithXsk(spendDescription, spendingKey, ar, sighash)
+    return signSpendDescriptionWithXsk(sapling, spendDescription, spendingKey, ar, sighash)
   } catch (error) {
     return rejectPromise('signSpendDescription', error)
   }
