@@ -13,7 +13,7 @@ export function getSpendDescriptionFromXsk(sapling, context, xsk, address, rcm, 
   const verifyingKeyBuffer = bufferFrom(verifyingKey, 'verifyingKey', '`Buffer`, `Int8Array` or hex string')
 
   return Buffer.from(
-    sapling.prepare_spend_transaction_from_xsk(
+    sapling.wasm_spend_transaction_from_xsk(
       context, 
       xskBuffer, 
       addressBuffer, 
@@ -35,5 +35,5 @@ export function signSpendDescriptionWithXsk(description, xsk, ar, sighash) {
   const arBuffer = bufferFrom(ar, 'ar', '`Buffer`, `Int8Array` or hex string')
   const sighashBuffer = bufferFrom(sighash, 'sighash', '`Buffer`, `Int8Array` or hex string')
 
-  return Buffer.from(sapling.sign_spend_description_with_xsk(descriptionBuffer, xskBuffer, arBuffer, sighashBuffer))
+  return Buffer.from(sapling.wasm_sign_spend_description_with_xsk(descriptionBuffer, xskBuffer, arBuffer, sighashBuffer))
 } 

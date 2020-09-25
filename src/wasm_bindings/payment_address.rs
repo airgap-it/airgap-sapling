@@ -8,7 +8,7 @@ use crate::address::{get_next_xfvk_address, get_xfvk_address};
 use crate::common::utils::wasm_utils::{js_deserialize, js_error_from, js_serialize};
 
 #[wasm_bindgen(catch)]
-pub fn get_default_payment_address_from_xfvk(xfvk: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn wasm_default_payment_address_from_xfvk(xfvk: &[u8]) -> Result<Vec<u8>, JsValue> {
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let xfvk_address = get_xfvk_address(&xfvk, None);
 
@@ -16,9 +16,9 @@ pub fn get_default_payment_address_from_xfvk(xfvk: &[u8]) -> Result<Vec<u8>, JsV
 }
 
 #[wasm_bindgen(catch)]
-pub fn get_next_payment_address_from_xfvk(xfvk: &[u8], index: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn wasm_next_payment_address_from_xfvk(xfvk: &[u8], index: &[u8]) -> Result<Vec<u8>, JsValue> {
     let index: [u8; 11] = index.try_into()
-        .or_else(|_| js_error_from("get_next_payment_address_from_xfvk: index must be an array of 11 bytes"))?;
+        .or_else(|_| js_error_from("wasm_next_payment_address_from_xfvk: index must be an array of 11 bytes"))?;
 
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let xfvk_address = get_next_xfvk_address(&xfvk, index);
@@ -27,9 +27,9 @@ pub fn get_next_payment_address_from_xfvk(xfvk: &[u8], index: &[u8]) -> Result<V
 }
 
 #[wasm_bindgen(catch)]
-pub fn get_payment_address_from_xfvk(xfvk: &[u8], index: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn wasm_payment_address_from_xfvk(xfvk: &[u8], index: &[u8]) -> Result<Vec<u8>, JsValue> {
     let index: [u8; 11] = index.try_into()
-        .or_else(|_| js_error_from("get_payment_address_from_xfvk: index must be an array of 11 bytes"))?;
+        .or_else(|_| js_error_from("wasm_payment_address_from_xfvk: index must be an array of 11 bytes"))?;
 
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let xfvk_address = get_xfvk_address(&xfvk, Some(index));

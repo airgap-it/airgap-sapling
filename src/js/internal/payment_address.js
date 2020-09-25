@@ -7,8 +7,8 @@ export async function getPaymentAddressXfvk(sapling, xfvk, index) {
     : undefined
 
   const address = Buffer.from(indexBuffer !== undefined 
-    ? sapling.get_payment_address_from_viewing_key(xfvkBuffer, indexBuffer)
-    : sapling.get_default_payment_address_from_viewing_key(xfvkBuffer)
+    ? sapling.wasm_payment_address_from_viewing_key(xfvkBuffer, indexBuffer)
+    : sapling.wasm_default_payment_address_from_viewing_key(xfvkBuffer)
   )
 
   return {
@@ -21,7 +21,7 @@ export async function getNextPaymentAddressXfvk(sapling, xfvk, index) {
   const xfvkBuffer = bufferFrom(xfvk, 'viewingKey', '`Buffer`, `Int8Array` or hex string')
   const indexBuffer = bufferFromOfLength(index, 11, 'index', '`Buffer`, `Int8Array` or hex string').reverse() // LE
 
-  const address = Buffer.from(sapling.get_next_payment_address_from_viewing_key(xfvkBuffer, indexBuffer))
+  const address = Buffer.from(sapling.wasm_next_payment_address_from_viewing_key(xfvkBuffer, indexBuffer))
 
   return {
     index: address.slice(0, 11),

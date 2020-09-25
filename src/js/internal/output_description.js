@@ -10,7 +10,7 @@ export function getOutputDescriptionFromXfvk(sapling, context, xfvk, to, rcm, va
   const memoBuffer = bufferFrom(memo, 'memo', '`Buffer`, `Int8Array` or hex string')
 
   return Buffer.from(memoBuffer !== undefined 
-      ? sapling.create_output_description_from_xfvk_with_memo(context, xfvkBuffer, toBuffer, rcmBuffer, valueNum, provingKeyBuffer, memoBuffer)
-      : sapling.create_output_description_from_xfvk(context, xfvkBuffer, toBuffer, rcmBuffer, valueNum, provingKeyBuffer)
+      ? sapling.wasm_output_description_from_xfvk_with_memo(context, xfvkBuffer, toBuffer, rcmBuffer, valueNum, provingKeyBuffer, memoBuffer)
+      : sapling.wasm_output_description_from_xfvk(context, xfvkBuffer, toBuffer, rcmBuffer, valueNum, provingKeyBuffer)
     )
 }

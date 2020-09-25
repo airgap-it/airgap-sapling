@@ -9,10 +9,10 @@ use zcash_primitives::zip32::ExtendedSpendingKey;
 use zcash_proofs::sapling::SaplingProvingContext;
 
 use crate::common::utils::wasm_utils::{js_deserialize, js_error_from, js_serialize};
-use crate::transaction::{dereference_context, prepare_spend_description, sign_spend_description};
+use crate::transaction::{deref_context, prepare_spend_description, sign_spend_description};
 
 #[wasm_bindgen(catch)]
-pub fn prepare_spend_description_from_xsk(
+pub fn wasm_spend_description_from_xsk(
     ctx: *mut SaplingProvingContext,
     xsk: &[u8],
     address: &[u8],
@@ -32,7 +32,7 @@ pub fn prepare_spend_description_from_xsk(
     let anchor: bls12_381::Scalar = js_deserialize(anchor)?;
     let merkle_path: MerklePath<Node> = js_deserialize(merkle_path)?;
 
-    let ctx = dereference_context(ctx);
+    let ctx = deref_context(ctx);
 
     let input_description = prepare_spend_description(
         ctx,
@@ -52,13 +52,13 @@ pub fn prepare_spend_description_from_xsk(
 }
 
 #[wasm_bindgen(catch)]
-pub fn sign_spend_description_with_xsk(spend_description: &[u8], xsk: &[u8], ar: &[u8], sighash: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn wasm_sign_spend_description_with_xsk(spend_description: &[u8], xsk: &[u8], ar: &[u8], sighash: &[u8]) -> Result<Vec<u8>, JsValue> {
     let spend_description: SpendDescription = js_deserialize(spend_description)?;
     let xks: ExtendedSpendingKey = js_deserialize(xsk)?;
     let ar: jubjub::Scalar = js_deserialize(ar)?;
 
     let sighash: [u8; 32] = sighash.try_into()
-        .or_else(|_| js_error_from("sign_spend_description_with_xsk: sighash must be an array of 32 bytes"))?;
+        .or_else(|_| js_error_from("wasm_sign_spend_description_with_xsk: sighash must be an array of 32 bytes"))?;
 
     let spend_description = sign_spend_description(spend_description, xks, ar, sighash);
 
