@@ -2,10 +2,10 @@
  * Create an extended full viewing key from a mnemonic
  */
 
-import * as bip39 from 'bip39'
 import * as sapling from '@airgap/sapling-wasm'
+import * as bip39 from 'bip39'
 
-async function createExtendedFullViewingKey() {
+async function createExtendedFullViewingKey(): Promise<Buffer> {
   const mnemonic: string = bip39.generateMnemonic()
   const seed: Buffer = await bip39.mnemonicToSeed(mnemonic, '')
   const derivationPath: string = 'm/'

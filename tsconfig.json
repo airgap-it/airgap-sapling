@@ -1,5 +1,10 @@
 {
   "compileOnSave": false,
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
   "compilerOptions": {
     "outDir": "./dist",
     "types": ["node"],
@@ -17,6 +22,7 @@
     "downlevelIteration": true, // To enable [].entries()
     "target": "es5",
     "lib": ["es2018", "dom"],
+    "preserveSymlinks": true,
     "allowJs": true,
     /* Strict Type-Checking Options */
     "strict": true /* Enable all strict type-checking options. */,

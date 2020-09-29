@@ -2,11 +2,11 @@
  * For the provided extended full viewing key get a default payment address
  */
 
-import * as bip39 from 'bip39'
 import * as sapling from '@airgap/sapling-wasm'
 import { SaplingPaymentAddress } from '@airgap/sapling-wasm'
+import * as bip39 from 'bip39'
 
-async function createAddress() {
+async function createAddress(): Promise<SaplingPaymentAddress> {
   const mnemonic: string = bip39.generateMnemonic()
   const seed: Buffer = await bip39.mnemonicToSeed(mnemonic, '')
   const derivationPath: string = 'm/'
@@ -20,10 +20,8 @@ async function createAddress() {
 
 createAddress()
   .then((address: SaplingPaymentAddress) => {
-    console.log(
-      'address.index =', address.index.toString('hex'),
-      'address.raw =', address.raw.toString('hex')
-    )
+    console.log('address.index =', address.index.toString('hex'))
+    console.log('address.raw =', address.raw.toString('hex'))
   })
   .catch((error) => {
     console.warn(error)

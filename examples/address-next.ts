@@ -2,11 +2,11 @@
  * For the provided extended full viewing key and index get the next valid address
  */
 
-import * as bip39 from 'bip39'
 import * as sapling from '@airgap/sapling-wasm'
 import { SaplingPaymentAddress } from '@airgap/sapling-wasm'
+import * as bip39 from 'bip39'
 
-async function createNextPaymentAddress() {
+async function createNextPaymentAddress(): Promise<SaplingPaymentAddress> {
   const mnemonic: string = bip39.generateMnemonic()
   const seed: Buffer = await bip39.mnemonicToSeed(mnemonic, '')
   const derivationPath: string = 'm/'
@@ -22,10 +22,8 @@ async function createNextPaymentAddress() {
 
 createNextPaymentAddress()
   .then((nextAddress: SaplingPaymentAddress) => {
-    console.log(
-      'nextAddress.index =', nextAddress.index.toString('hex'),
-      'nextAddress.raw =', nextAddress.raw.toString('hex')
-    )
+    console.log('nextAddress.index =', nextAddress.index.toString('hex'))
+    console.log('nextAddress.raw =', nextAddress.raw.toString('hex'))
   })
   .catch((error) => {
     console.warn(error)
