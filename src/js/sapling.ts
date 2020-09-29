@@ -9,7 +9,7 @@ import { rejectPromise } from './internal/utils'
 import { SaplingPaymentAddress } from './types'
 
 const saplingPromise = new Promise<WasmSapling>((resolve, reject) => {
-  import('sapling-wasm')
+  import('../../pkg')
     .then((sapling) => {
       resolve(sapling)
     })

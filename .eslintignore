@@ -7,4 +7,6 @@
 webpack.config.js
 dist
 node_modules
+pkg
+target
 **/*.js
