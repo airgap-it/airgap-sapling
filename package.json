@@ -14,6 +14,7 @@
   "scripts": {
     "build": "webpack --mode=development",
     "build:prod": "webpack --mode=production",
+    "build:examples": "npm run build && npm link dist && npx tsc examples/*.ts",
     "test": "cargo test"
   },
   "devDependencies": {
