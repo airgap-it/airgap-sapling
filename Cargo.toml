@@ -13,6 +13,8 @@ wasm-opt = ["-Oz", "--enable-mutable-globals"]
 [dependencies]
 bellman = "0.7"
 bls12_381 = "0.2"
+console_error_panic_hook = "0.1.6"
+getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 group = "0.7"
 jubjub = "0.4"
 rand_core = "0.5.1"

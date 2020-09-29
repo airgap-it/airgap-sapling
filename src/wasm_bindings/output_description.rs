@@ -5,7 +5,7 @@ use zcash_primitives::zip32::ExtendedFullViewingKey;
 use zcash_proofs::sapling::SaplingProvingContext;
 
 use crate::common::utils::wasm_utils::{js_deserialize, js_serialize_res};
-use crate::transaction::{deref_context, prepare_output_description, rand_scalar};
+use crate::transaction::{deref_context, prepare_output_description};
 
 #[wasm_bindgen(catch)]
 pub fn wasm_output_description_from_xfvk(ctx: *mut SaplingProvingContext, xfvk: &[u8], to: &[u8], rcm: &[u8], value: u64, proving_key: &[u8]) -> Result<Vec<u8>, JsValue> {
