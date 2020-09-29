@@ -3,7 +3,7 @@ use std::convert::TryInto;
 use wasm_bindgen::prelude::*;
 use zcash_proofs::sapling::SaplingProvingContext;
 
-use crate::common::utils::wasm_utils::{js_error_from, js_serialize};
+use crate::common::utils::wasm_utils::{js_error_from, js_serialize_res};
 use crate::transaction::{create_binding_sig, deref_context};
 
 #[wasm_bindgen(catch)]
@@ -14,5 +14,5 @@ pub fn wasm_binding_sig(ctx: *mut SaplingProvingContext, value_balance: i64, sig
 
     let binding_sig = create_binding_sig(ctx, value_balance, sighash);
 
-    js_serialize(binding_sig)
+    js_serialize_res(binding_sig)
 }

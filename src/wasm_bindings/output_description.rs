@@ -4,7 +4,7 @@ use zcash_primitives::primitives::PaymentAddress;
 use zcash_primitives::zip32::ExtendedFullViewingKey;
 use zcash_proofs::sapling::SaplingProvingContext;
 
-use crate::common::utils::wasm_utils::{js_deserialize, js_serialize};
+use crate::common::utils::wasm_utils::{js_deserialize, js_serialize_res};
 use crate::transaction::{deref_context, prepare_output_description, rand_scalar};
 
 #[wasm_bindgen(catch)]
@@ -17,7 +17,7 @@ pub fn wasm_output_description_from_xfvk(ctx: *mut SaplingProvingContext, xfvk: 
 
     let output_description = prepare_output_description(ctx, xfvk.fvk.ovk, address, rcm, value, None, proving_key);
 
-    js_serialize(output_description)
+    js_serialize_res(output_description)
 }
 
 #[wasm_bindgen(catch)]
@@ -30,7 +30,7 @@ pub fn wasm_output_description_from_xfvk_with_memo(ctx: *mut SaplingProvingConte
 
     let output_description = prepare_output_description(ctx, xfvk.fvk.ovk, address, rcm, value, Some(memo), proving_key);
 
-    js_serialize(output_description)
+    js_serialize_res(output_description)
 }
 
 #[wasm_bindgen(catch)]
@@ -43,5 +43,5 @@ pub fn wasm_output_description_from_ovk(ctx: *mut SaplingProvingContext, ovk: &[
 
     let output_description = prepare_output_description(ctx, ovk, address, rcm, value, None, proving_key);
 
-    js_serialize(output_description)
+    js_serialize_res(output_description)
 }

@@ -8,7 +8,7 @@ use zcash_primitives::transaction::components::SpendDescription;
 use zcash_primitives::zip32::ExtendedSpendingKey;
 use zcash_proofs::sapling::SaplingProvingContext;
 
-use crate::common::utils::wasm_utils::{js_deserialize, js_error_from, js_serialize};
+use crate::common::utils::wasm_utils::{js_deserialize, js_error_from, js_serialize_res};
 use crate::transaction::{deref_context, prepare_spend_description, sign_spend_description};
 
 #[wasm_bindgen(catch)]
@@ -48,7 +48,7 @@ pub fn wasm_spend_description_from_xsk(
         verifying_key
     );
 
-    js_serialize(input_description)
+    js_serialize_res(input_description)
 }
 
 #[wasm_bindgen(catch)]
@@ -62,5 +62,5 @@ pub fn wasm_sign_spend_description_with_xsk(spend_description: &[u8], xsk: &[u8]
 
     let spend_description = sign_spend_description(spend_description, xks, ar, sighash);
 
-    js_serialize(spend_description)
+    js_serialize_res(spend_description)
 }

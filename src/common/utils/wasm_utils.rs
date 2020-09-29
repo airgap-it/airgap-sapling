@@ -2,7 +2,14 @@ use wasm_bindgen::JsValue;
 
 use crate::common::traits::Serializable;
 
-pub fn js_serialize<S, E>(value: Result<S, E>) -> Result<Vec<u8>, JsValue>
+pub fn js_serialize<S, E>(value: S) -> Result<Vec<u8>, JsValue> 
+    where S: Serializable<Vec<u8>, E>,
+          E: ToString {
+
+    value.serialize().map_err(|err| JsValue::from(err.to_string()))
+}
+
+pub fn js_serialize_res<S, E>(value: Result<S, E>) -> Result<Vec<u8>, JsValue>
     where S: Serializable<Vec<u8>, E>,
           E: ToString {
 
@@ -67,7 +74,7 @@ mod tests {
 
         let actual_expected = test_data.iter()
             .map(|(result, bytes)| {
-                let actual = js_serialize(Ok(*result)).unwrap();
+                let actual = js_serialize_res(Ok(*result)).unwrap();
 
                 (actual, bytes)
             });
