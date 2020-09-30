@@ -10,7 +10,6 @@
     "types": ["node"],
     "typeRoots": [
       "node_modules/@types",
-      "pkg"
     ],
     "sourceMap": true,
     "declaration": true,
@@ -23,7 +22,6 @@
     "target": "es5",
     "lib": ["es2018", "dom"],
     "preserveSymlinks": true,
-    "allowJs": true,
     /* Strict Type-Checking Options */
     "strict": true /* Enable all strict type-checking options. */,
     "noImplicitAny": true /* Raise error on expressions and declarations with an implied 'any' type. */,

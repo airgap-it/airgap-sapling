@@ -1,3 +1,3 @@
-import type * as _WasmSapling from '../../../pkg'
+import type * as sapling from '../../../pkg'
 
-export type WasmSapling = typeof _WasmSapling
+export type WasmSapling = typeof sapling
