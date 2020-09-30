@@ -37,10 +37,12 @@ pub fn prepare_spend_description(
     value: u64,
     anchor: bls12_381::Scalar,
     merkle_path: MerklePath<Node>,
-    position: u64,
     proving_key: &[u8],
     verifying_key: &[u8]
 ) -> Result<SpendDescription, SaplingError> {
+    let xfvk = ExtendedFullViewingKey::from(&xsk);
+    let nullifier = compute_nullifier(&xfvk.fvk.vk, &payment_address, value, rcm, merkle_path.position)?;
+
     let (proof, cv, rk) = create_spend_proof(
         ctx,
         &xsk,
@@ -54,8 +56,6 @@ pub fn prepare_spend_description(
         verifying_key
     )?;
 
-    let xfvk = ExtendedFullViewingKey::from(&xsk);
-    let nullifier = compute_nullifier(&xfvk.fvk.vk, &payment_address, value, rcm, position)?;
     let zkproof = prepare_zkproof(proof)?;
 
     let spend_description = SpendDescription {

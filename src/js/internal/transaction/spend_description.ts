@@ -14,7 +14,6 @@ export function getSpendDescriptionFromXsk(
   value: string | number | BigInt, 
   anchor: Buffer | Int8Array | string, 
   merklePath: Buffer | Int8Array | string, 
-  position: number | BigInt, 
   provingKey: Buffer | Int8Array | string, 
   verifyingKey: Buffer | Int8Array | string
 ): Buffer {
@@ -29,7 +28,6 @@ export function getSpendDescriptionFromXsk(
   const valueNum: BigInt = bigIntFrom(value, 'value', '`number` `BigInt` or `string`')
   const anchorBuffer: Buffer = bufferFrom(anchor, 'anchor', '`Buffer`, `Int8Array` or hex string')
   const merklePathBuffer: Buffer = bufferFrom(merklePath, 'merklePath', '`Buffer`, `Int8Array` or hex string')
-  const positionNum: BigInt = bigIntFrom(position, 'position', '`number`')
   const provingKeyBuffer: Buffer = bufferFrom(provingKey, 'provingKey', '`Buffer`, `Int8Array` or hex string')
   const verifyingKeyBuffer: Buffer = bufferFrom(verifyingKey, 'verifyingKey', '`Buffer`, `Int8Array` or hex string')
 
@@ -43,7 +41,6 @@ export function getSpendDescriptionFromXsk(
       valueNum, 
       anchorBuffer, 
       merklePathBuffer, 
-      positionNum, 
       provingKeyBuffer, 
       verifyingKeyBuffer
     )

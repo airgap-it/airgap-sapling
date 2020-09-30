@@ -173,7 +173,6 @@ export async function createBindingSignature(
  * @param {string|number|BigInt} value The value of the input
  * @param {Buffer|Int8Array|string} anchor The root of the merkle tree
  * @param {Buffer|Int8Array|string} merklePath The path of the commitment in the tree
- * @param {number|BigInt} position The note position
  * @param {Buffer|Int8Array|string} provingKey A proving key which should be used to create a proof
  * @param {Buffer|Int8Array|string} verifyingKey A key used to verify the proof
  * @returns {Buffer} The created unsinged spend description
@@ -187,14 +186,13 @@ export async function prepareSpendDescription(
   value: string | number | BigInt,
   anchor: Buffer | Int8Array | string,
   merklePath: Buffer | Int8Array | string,
-  position: number | BigInt,
   provingKey: Buffer | Int8Array | string,
   verifyingKey: Buffer | Int8Array | string
 ): Promise<Buffer> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return getSpendDescriptionFromXsk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath, position, provingKey, verifyingKey)
+    return getSpendDescriptionFromXsk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath, provingKey, verifyingKey)
   } catch (error) {
     return rejectPromise('prepareSpendDescription', error)
   }

@@ -21,7 +21,6 @@ pub fn wasm_spend_description_from_xsk(
     value: u64,
     anchor: &[u8],
     merkle_path: &[u8],
-    position: u64,
     proving_key: &[u8],
     verifying_key: &[u8]
 ) -> Result<Vec<u8>, JsValue> {
@@ -43,7 +42,6 @@ pub fn wasm_spend_description_from_xsk(
         value,
         anchor,
         merkle_path,
-        position,
         proving_key,
         verifying_key
     );
