@@ -1,5 +1,5 @@
 /**
- * For the provided extended full viewing key get a default payment address
+ * For the provided extended full viewing key get the default payment address
  */
 
 import * as sapling from '@airgap/sapling-wasm'
@@ -13,6 +13,8 @@ async function createAddress(): Promise<SaplingPaymentAddress> {
 
   const viewingKey: Buffer = await sapling.getExtendedFullViewingKey(seed, derivationPath)
 
+  // call `sapling#getPaymentAddressFromViewingKey` with an extended full viewing key as the only argument 
+  // to get its default payment address (first valid)
   const address: SaplingPaymentAddress = await sapling.getPaymentAddressFromViewingKey(viewingKey)
 
   return address

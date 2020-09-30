@@ -7,9 +7,11 @@ import * as bip39 from 'bip39'
 
 async function createExtendedSpendingKey(): Promise<Buffer> {
   const mnemonic: string = bip39.generateMnemonic()
-  const seed: Buffer = await bip39.mnemonicToSeed(mnemonic, '')
-  const derivationPath: string = 'm/'
+  const password: string = ''
+  const seed: Buffer = await bip39.mnemonicToSeed(mnemonic, password)
+  const derivationPath = 'm/'
 
+  // call `sapling#getExtendedSpendingKey` with a BIP39 seed and derivation path as arguments to create an extended spending key
   const spendingKey: Buffer = await sapling.getExtendedSpendingKey(seed, derivationPath)
 
   return spendingKey

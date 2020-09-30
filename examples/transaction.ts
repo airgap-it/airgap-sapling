@@ -23,6 +23,7 @@ const TO_TRANSFER: number = 100
 const PROVING_KEY: string = ''
 const VERIFYING_KEY: string = ''
 
+// a sapling transaction consists of a list of spend descriptions, list of output descriptions and a binding signature
 interface Transaction {
   spendDescriptions: Buffer[]
   outputDescriptions: Buffer[]
@@ -32,7 +33,9 @@ interface Transaction {
 async function prepareAndSignTransaction(): Promise<Transaction> {
   const [account, inputs, outputs]: [Account, Input[], Output[]] = await setupAccounts()
   
+  // generate a public key re-randomizer used to pepare and sign spending descriptions
   const ar: Buffer = await sapling.randR()
+
   const unsigned: Transaction = await prepareTransaction(account, inputs, outputs, ar)
   const signed: Transaction = await signTransactionInputs(account, unsigned, ar)
 
@@ -51,6 +54,8 @@ async function setupAccounts(): Promise<[Account, Input[], Output[]]> {
 }
 
 async function prepareTransaction(account: Account, inputs: Input[], outputs: Output[], ar: Buffer): Promise<Transaction> {
+  // all calls to `sapling#prepareSpendDescription`, `sapling#prepareOutputDescription` and `sapling#createBindingSignature` 
+  // must be performed with the same proving context, use `withProvingContext` to safely execute a block of code with a proving context instance
   const transaction: Transaction = await sapling.withProvingContext<Promise<Transaction>>(async (context: number) => {
     const spendDescriptions: Buffer[] = await Promise.all(inputs.map((input: Input) => {
       return sapling.prepareSpendDescription(
@@ -67,6 +72,7 @@ async function prepareTransaction(account: Account, inputs: Input[], outputs: Ou
       )
     }))
 
+    // generate a commitment randomness
     const rcm = await sapling.randR()
     const outputDescriptions: Buffer[] = await Promise.all(outputs.map((output: Output) => {
       return sapling.prepareOutputDescription(
@@ -83,6 +89,7 @@ async function prepareTransaction(account: Account, inputs: Input[], outputs: Ou
     const outputSum: number = outputs.reduce((sum: number, next: Output) => sum + next.value, 0)
     const valueBalance: number = inputSum - outputSum
 
+    // create data to be signed
     const sighash = sighashDescriptions(spendDescriptions, outputDescriptions)
     const bindingSignature = await sapling.createBindingSignature(context, valueBalance, sighash)
 
@@ -98,6 +105,7 @@ async function prepareTransaction(account: Account, inputs: Input[], outputs: Ou
 
 async function signTransactionInputs(account: Account, transaction: Transaction, ar: Buffer): Promise<Transaction> {
   const signedSpendDescrptions: Buffer[] = await Promise.all(transaction.spendDescriptions.map((spendDescription: Buffer) => {
+    // create data to be signed
     const sighash = sighashSpendDescription(spendDescription)
 
     return sapling.signSpendDescription(spendDescription, account.spendingKey, ar, sighash)
@@ -127,7 +135,9 @@ prepareAndSignTransaction()
     console.warn(error)
   })
 
-// utils
+/**
+ * Utils
+ */
 
 type AccountName = 'alice' | 'bob'
 

@@ -12,9 +12,10 @@ async function createNextPaymentAddress(): Promise<SaplingPaymentAddress> {
   const derivationPath: string = 'm/'
 
   const viewingKey: Buffer = await sapling.getExtendedFullViewingKey(seed, derivationPath)
-
   const address: SaplingPaymentAddress = await sapling.getPaymentAddressFromViewingKey(viewingKey)
 
+  // call `sapling#getNextPaymentAddressFromViewingKey` with an extended full viewing key and a specified index
+  // to get a payment address with the next valid index
   const nextAddress: SaplingPaymentAddress = await sapling.getNextPaymentAddressFromViewingKey(viewingKey, address.index)
 
   return nextAddress
