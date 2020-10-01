@@ -1,76 +1,17 @@
-mod sapling_keys;
-mod utils;
-
-use std::convert::TryInto;
-use wasm_bindgen::{
-    JsValue,
-    prelude::*,
-};
-use zcash_primitives::zip32::ExtendedFullViewingKey;
-
-use sapling_keys::{
-    SaplingAddress,
-    ViewingKeyError,
-
-    get_xsk,
-    xsk_to_bytes,
-
-    get_xfvk,
-    xfvk_to_bytes,
-    xfvk_from_bytes,
-
-    get_xfvk_address,
-    get_next_xfvk_address,
+pub use wasm_bindings::{
+    output_description::*,
+    payment_address::*,
+    proving_context::*,
+    rand::*,
+    signature::*,
+    spend_description::*,
+    spending_key::*,
+    viewing_key::*,
 };
 
-use utils::wasm_utils::js_error_from;
+mod address;
+mod common;
+mod key;
+mod transaction;
 
-// Extended Spending Key
-
-#[wasm_bindgen(catch)]
-pub fn get_extended_spending_key(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, JsValue> {
-    get_xsk(seed, derivation_path)
-        .and_then(|xsk| xsk_to_bytes(&xsk))
-        .or_else(js_error_from)
-}
-
-// Extended Full Viewing Key
-
-#[wasm_bindgen(catch)]
-pub fn get_extended_full_viewing_key(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, JsValue> {
-    get_xfvk(seed, derivation_path)
-        .and_then(|xfvk| xfvk_to_bytes(&xfvk))
-        .or_else(js_error_from)
-}
-
-// Payment Address
-
-#[wasm_bindgen(catch)]
-pub fn get_default_payment_address_from_viewing_key(xfvk: &[u8]) -> Result<Vec<u8>, JsValue> {
-    get_payment_address(xfvk, |xfvk| get_xfvk_address(xfvk, None))
-}
-
-#[wasm_bindgen(catch)]
-pub fn get_next_payment_address_from_viewing_key(xfvk: &[u8], index: &[u8]) -> Result<Vec<u8>, JsValue> {
-    let index: [u8; 11] = index.try_into()
-        .or_else(|_| js_error_from("get_next_payment_address_from_viewing_key: index must be an array of 11 bytes"))?;
-
-    get_payment_address(xfvk, |xfvk| get_next_xfvk_address(xfvk, index))
-}
-
-#[wasm_bindgen(catch)]
-pub fn get_payment_address_from_viewing_key(xfvk: &[u8], index: &[u8]) -> Result<Vec<u8>, JsValue> {
-    let index: [u8; 11] = index.try_into()
-        .or_else(|_| js_error_from("get_payment_address_from_viewing_key: index must be an array of 11 bytes"))?;
-
-    get_payment_address(xfvk, |xfvk| get_xfvk_address(xfvk, Some(index)))
-}
-
-fn get_payment_address<F>(xfvk: &[u8], xfvk_map: F) -> Result<Vec<u8>, JsValue>
-    where F: Fn(&ExtendedFullViewingKey) -> Result<SaplingAddress, ViewingKeyError> {
-
-    xfvk_from_bytes(xfvk)
-        .and_then(|xfvk| xfvk_map(&xfvk))
-        .map(|addr| [&addr.index[..], &addr.diversifier[..], &addr.pkd[..]].concat())
-        .or_else(js_error_from)
-}
+mod wasm_bindings;

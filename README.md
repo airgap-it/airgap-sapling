@@ -10,15 +10,16 @@ A Wasm wrapper around [Zcash Rust crates](https://github.com/zcash/librustzcash)
 $ npm install --save @airgap/sapling-wasm
 ```
 
-## Example
+## Examples
 
 ```ts
 import * as bip39 from 'bip39'
 import * as sapling from '@airgap/sapling-wasm'
+import { SaplingPaymentAddress } from '@airgap/sapling-wasm'
 
-const mnemonic: String = bip39.generateMnemonic()
-const seed: Buffer = bip39.mnemonicToSeed(mnemonic, '')
-const derivationPath: String = 'm/'
+const mnemonic: string = bip39.generateMnemonic()
+const seed: Buffer = await bip39.mnemonicToSeed(mnemonic, '')
+const derivationPath: string = 'm/'
 
 // create an extended spending key
 const spendingKey: Buffer = await sapling.getExtendedSpendingKey(seed, derivationPath)
@@ -29,23 +30,11 @@ const viewingKey: Buffer = await sapling.getExtendedFullViewingKey(seed, derivat
 console.log('viewingKey =', viewingKey.toString('hex'))
 
 // get default address
-const defaultAddress: SaplingPaymentAddress = await sapling.getPaymentAddressFromViewingKey(viewingKey)
-console.log(
-  'defaultAddress.index =', defaultAddress.index.toString('hex'),
-  'defaultAddress.raw =', defaultAddress.raw.toString('hex')
-)
-
-// get indexed address
-const address: SaplingPaymentAddress = await sapling.getPaymentAddressFromViewingKey(viewingKey, 1)
+const address: SaplingPaymentAddress = await sapling.getPaymentAddressFromViewingKey(viewingKey)
 console.log(
   'address.index =', address.index.toString('hex'),
   'address.raw =', address.raw.toString('hex')
 )
-
-// get next valid address
-const nextAddress: SaplingPaymentAddress = await sapling.getNextPaymentAddressFromViewingKey(viewingKey, address.index)
-console.log(
-  'nextAddress.index =', nextAddress.index.toString('hex'),
-  'nextAddress.raw =', nextAddress.raw.toString('hex')
-)
 ```
+
+More advanced examples can be found in `/examples`.
