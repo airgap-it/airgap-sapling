@@ -39,7 +39,7 @@ pub fn prepare_output_description(
     let note = create_note(&to, value, rcm)?;
     let memo = get_memo(memo);
 
-    let encryptor = create_encryptor(ovk, &note, &to, memo)?;
+    let mut encryptor = create_encryptor(ovk, &note, &to, memo)?;
 
     let (proof, cv) = create_output_proof(ctx, *encryptor.esk(), to, rcm, value, proving_key)?;
     let cmu = note.cmu();
@@ -65,20 +65,19 @@ fn get_memo(memo: Option<&[u8]>) -> Memo {
     memo.and_then(|m| Memo::from_bytes(m)).unwrap_or_else(Memo::default)
 }
 
-fn create_encryptor(ovk: OutgoingViewingKey, note: &Note, to: &PaymentAddress, memo: Memo) -> Result<SaplingNoteEncryption, SaplingError> {
-    let mut rng = OsRng;
-
+fn create_encryptor(ovk: OutgoingViewingKey, note: &Note, to: &PaymentAddress, memo: Memo) -> Result<SaplingNoteEncryption<OsRng>, SaplingError> {
+    let rng = OsRng;
     let encryptor = SaplingNoteEncryption::new(
-        ovk,
+        Some(ovk),
         note.clone(),
         to.clone(),
         memo,
-        &mut rng,
+        rng,
     );
 
     Ok(encryptor)
 }
 
-fn get_epk(encryptor: &SaplingNoteEncryption) -> Result<jubjub::ExtendedPoint, SaplingError> {
+fn get_epk(encryptor: &SaplingNoteEncryption<OsRng>) -> Result<jubjub::ExtendedPoint, SaplingError> {
     encryptor.epk().clone().try_into().map_err(|_| SaplingError::new())
 }
