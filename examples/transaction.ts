@@ -226,7 +226,7 @@ async function createOuputs(account: Account, to: Account, value: number, inputs
   ]
 }
 
-function getWitness(position: number): string {
+function getWitness(_position: number): string {
   // TODO: return valid witness
   return ''
 }

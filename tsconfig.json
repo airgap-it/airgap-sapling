@@ -1,19 +1,15 @@
 {
   "compileOnSave": false,
-  "ts-node": {
-    "compilerOptions": {
-      "module": "commonjs"
-    }
-  },
   "compilerOptions": {
     "outDir": "./dist",
     "types": ["node"],
     "typeRoots": [
-      "node_modules/@types",
+      "node_modules/@types"
     ],
+    "allowJs": true,
     "sourceMap": true,
     "declaration": true,
-    "module": "es2020",
+    "module": "commonjs",
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

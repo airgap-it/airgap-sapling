@@ -5,6 +5,7 @@ const path = require('path')
 
 module.exports = {
   entry: path.resolve(__dirname, 'src/js/index.ts'),
+  devtool: 'inline-source-map',
   target: 'node',
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -21,12 +22,8 @@ module.exports = {
     rules: [
       { 
         test: /\.ts$/, 
-        loader: "awesome-typescript-loader" 
-      },
-
-      { 
-        test: /\.js$/, 
-        loader: "source-map-loader" 
+        loader: 'ts-loader',
+        exclude: path.resolve(__dirname, 'node_modules')
       }
     ]
   },
@@ -42,7 +39,11 @@ module.exports = {
     new WasmPackPlugin({
       crateDirectory: __dirname,
       outName: 'index',
-      forceMode: 'production'
+      forceMode: 'production',
+      extraArgs: '--target bundler --mode normal'
     })
-  ]
+  ],
+  experiments: {
+    asyncWebAssembly: true
+  }
 };
