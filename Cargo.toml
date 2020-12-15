@@ -1,6 +1,6 @@
 [package]
 name = "sapling_wasm"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Papers.ch <contact@papers.ch>"]
 edition = "2018"
 
