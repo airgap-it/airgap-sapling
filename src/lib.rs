@@ -1,5 +1,17 @@
-// sapling_keys
-pub mod sapling_keys;
+pub use wasm_bindings::{
+    output_description::*,
+    payment_address::*,
+    proving_context::*,
+    rand::*,
+    signature::*,
+    spend_description::*,
+    spending_key::*,
+    viewing_key::*,
+};
 
-// utils
-mod utils;
+mod address;
+mod common;
+mod key;
+mod transaction;
+
+mod wasm_bindings;

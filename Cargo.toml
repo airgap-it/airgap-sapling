@@ -11,9 +11,19 @@ crate-type = ["cdylib", "rlib"]
 wasm-opt = ["-Oz", "--enable-mutable-globals"]
 
 [dependencies]
-wasm-bindgen = "0.2.67"
-regex = "1.3.9"
-zcash_primitives = "0.2"
+bellman = "0.8.1"
+bls12_381 = "0.3.1"
+console_error_panic_hook = "0.1.6"
+getrandom = { version = "0.1.0", features = ["wasm-bindgen"] }
+group = "0.8.0"
+jubjub = "0.5.1"
+rand_core = "0.5.1"
+regex = "1.4.2"
+subtle = "2.3.0"
+wasm-bindgen = "0.2.69"
+zcash_primitives = "0.4.0"
+zcash_proofs = "0.4.0"
 
 [dev-dependencies]
-tiny-bip39 = "0.7.3"
+hex = "0.4.2"
+wasm-bindgen-test = "0.3.19"
