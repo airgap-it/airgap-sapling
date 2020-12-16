@@ -3,7 +3,7 @@ const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin')
 
 const path = require('path')
 
-module.exports = {
+const baseConfig = {
   entry: path.resolve(__dirname, 'src/js/index.ts'),
   devtool: 'inline-source-map',
   target: 'node',
@@ -28,6 +28,24 @@ module.exports = {
     ]
   },
   plugins: [
+    new WasmPackPlugin({
+      crateDirectory: __dirname,
+      outName: 'index',
+      forceMode: 'production',
+      extraArgs: '--target bundler --mode normal'
+    })
+  ],
+  experiments: {
+    asyncWebAssembly: true
+  }
+}
+
+const prodConfig = baseConfig
+
+const devConfig = {
+  ...baseConfig,
+  plugins: [
+    ...baseConfig.plugins,
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -35,14 +53,10 @@ module.exports = {
           to: path.resolve(__dirname, 'dist')
         }
       ]
-    }),
-    new WasmPackPlugin({
-      crateDirectory: __dirname,
-      outName: 'index',
-      extraArgs: '--target bundler --mode normal'
     })
-  ],
-  experiments: {
-    asyncWebAssembly: true
-  }
-};
+  ]
+}
+
+module.exports = (env, argv) => {
+  return (argv.mode === 'development') ? devConfig : prodConfig
+}

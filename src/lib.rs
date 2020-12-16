@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use wasm_bindgen::prelude::*;
 
 pub use wasm_bindings::{

@@ -1,7 +1,7 @@
 /**
  * For the provided viewing key get a payment address with the specified index if valid, or the first valid one otherwise
  *
- * Call `npm run build:for:examples` before running this example.
+ * Call `npm run build` before running this example.
  */
 
 import * as sapling from '@airgap/sapling-wasm'

@@ -1,7 +1,7 @@
 /**
  * For the provided extended full viewing key and index get the next valid address
  *
- * Call `npm run build:for:examples` before running this example.
+ * Call `npm run build` before running this example.
  */
 
 import * as sapling from '@airgap/sapling-wasm'

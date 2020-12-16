@@ -8,7 +8,9 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-Oz", "--enable-mutable-globals"]
+# disabled until [#781](https://github.com/rustwasm/wasm-pack/issues/781) is properly fixed
+#wasm-opt = ["-Oz", "--enable-mutable-globals"]
+wasm-opt = false
 
 [dependencies]
 bellman = { version = "0.8.1", default-features = false, features = ["groth16"] }
