@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 use crate::transaction::rand_scalar;
 use crate::common::utils::wasm_utils::js_serialize;
 
-#[wasm_bindgen(catch)]
+#[wasm_bindgen(catch, js_name = "randR")]
 pub fn wasm_rand_r() -> Result<Vec<u8>, JsValue> {
     console_error_panic_hook::set_once();
 
