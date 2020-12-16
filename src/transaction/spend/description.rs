@@ -14,6 +14,8 @@ use crate::transaction::proof::prepare_zkproof;
 use crate::transaction::signature::create_spend_sig;
 use crate::transaction::spend::errors::SpendDescriptionError;
 use crate::transaction::spend::proof::create_spend_proof;
+use bellman::groth16::{Parameters, PreparedVerifyingKey};
+use bls12_381::Bls12;
 
 impl Serializable<Vec<u8>, SaplingError> for SpendDescription {
     fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> {
@@ -37,8 +39,8 @@ pub fn prepare_spend_description(
     value: u64,
     anchor: bls12_381::Scalar,
     merkle_path: MerklePath<Node>,
-    proving_key: &[u8],
-    verifying_key: &[u8]
+    proving_key: &Parameters<Bls12>,
+    verifying_key: &PreparedVerifyingKey<Bls12>
 ) -> Result<SpendDescription, SaplingError> {
     let xfvk = ExtendedFullViewingKey::from(&xsk);
     let nullifier = compute_nullifier(&xfvk.fvk.vk, &payment_address, value, rcm, merkle_path.position)?;

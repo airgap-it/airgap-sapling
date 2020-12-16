@@ -13,6 +13,8 @@ use crate::transaction::note::create_note;
 use crate::transaction::output::errors::OutputDescriptionError;
 use crate::transaction::output::proof::create_output_proof;
 use crate::transaction::proof::prepare_zkproof;
+use bellman::groth16::Parameters;
+use bls12_381::Bls12;
 
 impl Serializable<Vec<u8>, SaplingError> for OutputDescription {
     fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> {
@@ -34,14 +36,14 @@ pub fn prepare_output_description(
     rcm: jubjub::Scalar,
     value: u64,
     memo: Option<&[u8]>,
-    proving_key: &[u8]
+    proving_key: &Parameters<Bls12>
 ) -> Result<OutputDescription, SaplingError> {
     let note = create_note(&to, value, rcm)?;
     let memo = get_memo(memo);
 
     let mut encryptor = create_encryptor(ovk, &note, &to, memo)?;
 
-    let (proof, cv) = create_output_proof(ctx, *encryptor.esk(), to, rcm, value, proving_key)?;
+    let (proof, cv) = create_output_proof(ctx, *encryptor.esk(), to, rcm, value, proving_key);
     let cmu = note.cmu();
     let ephemeral_key = get_epk(&encryptor)?;
 

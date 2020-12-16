@@ -2,15 +2,11 @@
 
 // Buffer
 
-export function bufferFrom(
-  value: Buffer | Int8Array | string | number, 
-  name?: string, 
-  expectedType?: string
-): Buffer {
+export function bufferFrom(value: Buffer | Int8Array | string | number, name?: string, expectedType?: string): Buffer {
   if (Buffer.isBuffer(value)) {
     return value
   } else if (isHexString(value)) {
-    return  Buffer.from(value, 'hex')
+    return Buffer.from(value, 'hex')
   } else if (typeof value === 'number') {
     return numberToBytes(value)
   } else if (typeof value !== 'string' && value !== undefined && value !== null) {
@@ -22,8 +18,8 @@ export function bufferFrom(
 
 export function bufferFromOfLength(
   value: Buffer | Int8Array | string | number,
-  minLength: number, 
-  name?: string, 
+  minLength: number,
+  name?: string,
   expectedType?: string
 ): Buffer {
   let buffer = bufferFrom(value, name, expectedType)
@@ -51,9 +47,7 @@ export function numberToBytes(number: number): Buffer {
     }
   }
 
-  return firstNonZero > 0
-    ? buffer.slice(firstNonZero)
-    : buffer
+  return firstNonZero > 0 ? buffer.slice(firstNonZero) : buffer
 }
 
 // String
@@ -65,11 +59,7 @@ export function isHexString(string: any): string is string {
 
 // Number
 
-export function bigIntFrom(
-  value: number | string | BigInt,
-  name?: string,
-  expectedType?: string
-): BigInt {
+export function bigIntFrom(value: number | string | BigInt, name?: string, expectedType?: string): BigInt {
   if (typeof value === 'bigint') {
     return value
   } else if (typeof value === 'number' || typeof value === 'string') {
@@ -81,12 +71,16 @@ export function bigIntFrom(
 
 // Error
 
+export function uninitialized(): void {
+  throw new Error('sapling-wasm uninitialized')
+}
+
 export async function rejectPromise<T>(methodName: string, error: any): Promise<T> {
   return Promise.reject(typeof error === 'string' ? `${methodName}: ${error}` : error)
 }
 
 export function invalidTypeError(name?: string, expectedType?: string): Error {
   return name !== undefined && expectedType !== undefined
-      ? new Error(`\`${name}\` is of invalid type, expected ${expectedType}`)
-      : new TypeError()
+    ? new Error(`\`${name}\` is of invalid type, expected ${expectedType}`)
+    : new TypeError()
 }
