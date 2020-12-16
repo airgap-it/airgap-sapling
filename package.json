@@ -1,7 +1,12 @@
 {
   "name": "@airgap/sapling-wasm",
   "author": "Papers.ch <contact@papers.ch>",
-  "version": "0.0.2",
+  "version": "0.0.3",
+  "homepage": "https://www.airgap.it",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/airgap-it/airgap-sapling-wasm"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -12,10 +17,8 @@
   "types": "dist/index.d.ts",
   "sourceMap": true,
   "scripts": {
-    "build": "webpack --mode=development && npm run fix-wbg-require",
-    "build:prod": "webpack --mode=production && npm run fix-wbg-require",
-    "build:for:examples": "npm run build && npm link ./dist",
-    "build:prod:for:examples": "npm run build:prod && npm link ./dist",
+    "build": "rm -rf dist && webpack --mode=development && npm run fix-wbg-require && npm link ./dist",
+    "build:prod": "rm -rf dist && webpack --mode=production && npm run fix-wbg-require",
     "test": "cargo test",
     "fix-wbg-require": "node fix-wbg-require.js"
   },

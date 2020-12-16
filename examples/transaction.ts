@@ -1,7 +1,6 @@
 /**
  * Prepare a sapling transaction
- *
- * Call `npm run build:for:examples` before running this example.
+ * Call `npm run build` before running this example.
  */
 
 import * as sapling from '@airgap/sapling-wasm'
