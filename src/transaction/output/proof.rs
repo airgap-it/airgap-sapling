@@ -1,9 +1,7 @@
-use zcash_proofs::sapling::SaplingProvingContext;
+use bellman::groth16::{Parameters, Proof};
 use bls12_381::Bls12;
-use bellman::groth16::Proof;
-use crate::common::errors::SaplingError;
-use crate::transaction::proof::prepare_proving_key;
 use zcash_primitives::primitives::PaymentAddress;
+use zcash_proofs::sapling::SaplingProvingContext;
 
 pub fn create_output_proof(
     ctx: &mut SaplingProvingContext,
@@ -11,9 +9,7 @@ pub fn create_output_proof(
     to: PaymentAddress,
     rcm: jubjub::Scalar,
     value: u64,
-    proving_key: &[u8]
-) -> Result<(Proof<Bls12>, jubjub::ExtendedPoint), SaplingError> {
-    let proving_key = prepare_proving_key(proving_key)?;
-
-    Ok(ctx.output_proof(esk, to, rcm, value, &proving_key))
+    proving_key: &Parameters<Bls12>
+) -> (Proof<Bls12>, jubjub::ExtendedPoint) {
+    ctx.output_proof(esk, to, rcm, value, proving_key)
 }

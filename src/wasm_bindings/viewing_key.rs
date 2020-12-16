@@ -6,7 +6,7 @@ use zcash_primitives::zip32::ExtendedFullViewingKey;
 use crate::common::utils::wasm_utils::{js_deserialize, js_serialize_res};
 use crate::key::SaplingKey;
 
-#[wasm_bindgen(catch)]
+#[wasm_bindgen(catch, js_name = "xfvk")]
 pub fn wasm_xfvk(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, JsValue> {
     console_error_panic_hook::set_once();
 
@@ -15,7 +15,7 @@ pub fn wasm_xfvk(seed: &[u8], derivation_path: &str) -> Result<Vec<u8>, JsValue>
     js_serialize_res(xfvk)
 }
 
-#[wasm_bindgen(catch)]
+#[wasm_bindgen(catch, js_name = "ovkFromXfvk")]
 pub fn wasm_ovk_from_xfvk(xfvk: &[u8]) -> Result<Vec<u8>, JsValue> {
     console_error_panic_hook::set_once();
 

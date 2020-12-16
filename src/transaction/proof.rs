@@ -1,11 +1,36 @@
-use bellman::groth16::{Parameters, PreparedVerifyingKey, Proof, VerifyingKey};
+use bellman::groth16::{Parameters, PreparedVerifyingKey, Proof};
 use bls12_381::Bls12;
-use zcash_primitives::primitives::{ProofGenerationKey};
+use zcash_primitives::primitives::ProofGenerationKey;
 use zcash_primitives::transaction::components::GROTH_PROOF_SIZE;
 use zcash_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
+use zcash_proofs::parse_parameters;
 
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::transaction::errors::ProofError;
+
+pub struct ProofParams {
+    pub spend_params: Parameters<Bls12>,
+    pub spend_vk: PreparedVerifyingKey<Bls12>,
+    pub output_params: Parameters<Bls12>,
+    pub output_vk: PreparedVerifyingKey<Bls12>,
+}
+
+pub fn parse_params(spend_params: &[u8], output_params: &[u8]) -> ProofParams {
+    let (
+        spend_params,
+        spend_vk,
+        output_params,
+        output_vk,
+        _,
+    ) = parse_parameters(spend_params, output_params, None);
+
+    ProofParams {
+        spend_params,
+        spend_vk,
+        output_params,
+        output_vk,
+    }
+}
 
 pub fn prepare_zkproof(proof: Proof<Bls12>) -> Result<[u8; GROTH_PROOF_SIZE], SaplingError> {
     let mut zkproof = [0u8; GROTH_PROOF_SIZE];
@@ -23,18 +48,4 @@ pub fn prepare_proof_generation_key(xsk: &ExtendedSpendingKey) -> ProofGeneratio
         ak: xfvk.fvk.vk.ak,
         nsk: xsk.expsk.nsk,
     }
-}
-
-pub fn prepare_proving_key(proving_key: &[u8]) -> Result<Parameters<Bls12>, SaplingError> {
-    Parameters::read(proving_key, false)
-        .map_err(ProofError::ReadFailed)
-        .map_err(SaplingError::caused_by)
-}
-
-pub fn prepare_verifying_key(verifying_key: &[u8]) -> Result<PreparedVerifyingKey<Bls12>, SaplingError> {
-    let vk = VerifyingKey::<Bls12>::read(verifying_key)
-        .map_err(ProofError::ReadFailed)
-        .map_err(SaplingError::caused_by)?;
-
-    Ok(bellman::groth16::prepare_verifying_key(&vk))
 }

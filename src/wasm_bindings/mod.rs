@@ -1,3 +1,4 @@
+pub mod merkle_tree;
 pub mod output_description;
 pub mod payment_address;
 pub mod proving_context;

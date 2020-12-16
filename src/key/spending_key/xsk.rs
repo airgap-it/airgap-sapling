@@ -38,13 +38,24 @@ mod tests {
 
     use super::*;
 
-    const SEED: [u8; 32] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-                            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+    const SEED_0123: [u8; 32] = [
+        0,   1,  2,  3,  4,  5,  6,  7,
+        8,   9, 10, 11, 12, 13, 14, 15,
+        16, 17, 18, 19, 20, 21, 22, 23,
+        24, 25, 26, 27, 28, 29, 30, 31
+    ];
 
-    // from https://github.com/zcash/zcash/blob/master/src/gtest/test_zip32.cpp
+    const SEED_RANDOM: [u8; 32] = [
+        114,  23,  97, 123,  33,  87, 215, 228,
+        132, 131, 246,  94,  13, 222, 110,  14,
+        242, 251, 242,  80, 135,  35,  26, 155,
+        154, 235,  61, 211, 149, 160, 197,  16
+    ];
+
     #[test]
     fn generates_extended_spending_key_from_seed() {
-        let test_data = vec![
+        // from https://github.com/zcash/zcash/blob/master/src/gtest/test_zip32.cpp
+        let test_data_0123 = vec![
             ("m/", [
                 "00", // depth (1 byte)
                 "00000000", // parent_fvk_tag (4 bytes, LE)
@@ -77,15 +88,35 @@ mod tests {
             ]),
         ];
 
-        let actual_expected = test_data.iter()
+        let test_data_random = vec![
+            ("m/", "0000000000000000002bcf088aef0eeef4f0aec0926d13899955c71860814fbf\
+                    f1bf6fa0584f653d50701fec3fb067d8d544bba255c218b22df8f0950ed4381f\
+                    44e46a9fc1f4a07a053cd5b50c07dcbd7cd9a8b0ae84970aa1fbff9598da8c50\
+                    3f2e005a4e5642600e5af73a37455f460db6a037356d94f79a8e4bc80078a0a5\
+                    c25daf5f68eea06900fb8750501a306a5399a0d03fbb5ee230c95765e9366c37\
+                    cb9371af47d8081233"
+            ),
+        ];
+
+        let actual_expected_0123 = test_data_0123.iter()
             .map(|(path, v)| {
-                let xsk = ExtendedSpendingKey::from_seed(&SEED, path).unwrap();
+                let xsk = ExtendedSpendingKey::from_seed(&SEED_0123, path).unwrap();
                 let actual = xsk.serialize().unwrap();
                 let expected: Vec<u8> = v.iter().flat_map(|&s| hex::decode(s).unwrap()).collect();
 
                 (actual, expected)
             });
 
+        let actual_expected_random = test_data_random.iter()
+            .map(|(path, expected)| {
+                let xsk = ExtendedSpendingKey::from_seed(&SEED_RANDOM, path).unwrap();
+                let actual = xsk.serialize().unwrap();
+                let expected = hex::decode(expected).unwrap();
+
+                (actual, expected)
+            });
+
+        let actual_expected = actual_expected_0123.chain(actual_expected_random);
 
         for (actual, expected) in actual_expected {
             assert_eq!(actual, expected);
@@ -103,7 +134,7 @@ mod tests {
 
         let actual_expected = test_data.iter()
             .map(|(path, err)| {
-                let actual = ExtendedSpendingKey::from_seed(&SEED, path).unwrap_err();
+                let actual = ExtendedSpendingKey::from_seed(&SEED_0123, path).unwrap_err();
 
                 (actual, err)
             });
@@ -115,7 +146,7 @@ mod tests {
     
     #[test]
     fn reads_extended_spending_key_from_bytes() {
-        let expected = ExtendedSpendingKey::from_seed(&SEED, "m/").unwrap();
+        let expected = ExtendedSpendingKey::from_seed(&SEED_0123, "m/").unwrap();
         let bytes = expected.serialize().unwrap();
         let actual = ExtendedSpendingKey::deserialize(bytes).unwrap();
         

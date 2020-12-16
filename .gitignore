@@ -8,3 +8,5 @@ pkg/
 
 dist/
 node_modules/
+
+examples/**/*.params

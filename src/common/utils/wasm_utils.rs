@@ -1,3 +1,4 @@
+use wasm_bindgen::__rt::WasmRefCell;
 use wasm_bindgen::JsValue;
 
 use crate::common::traits::Serializable;
@@ -25,8 +26,31 @@ pub fn js_deserialize<S, E>(bytes: &[u8]) -> Result<S, JsValue>
     S::deserialize(bytes.to_vec()).map_err(|err| JsValue::from(err.to_string()))
 }
 
-pub fn js_error_from<O, E: ToString>(error: E) -> Result<O, JsValue> {
-    Err(JsValue::from(error.to_string()))
+pub fn js_result_from<O, E: ToString>(error: E) -> Result<O, JsValue> {
+    Err(js_error_from(error))
+}
+
+pub fn js_error_from<E: ToString>(error: E) -> JsValue {
+    JsValue::from(error.to_string())
+}
+
+pub fn reference<T>(object: T) -> u32 {
+    let ref_cell = WasmRefCell::new(object);
+    let boxed = Box::new(ref_cell);
+
+    Box::into_raw(boxed) as u32
+}
+
+pub unsafe fn dereference<'a, T>(pointer: u32) -> &'a mut T {
+    let pointer = pointer as *mut WasmRefCell<T>;
+    let ref_cell = &mut *pointer;
+    ref_cell.get_mut()
+}
+
+pub unsafe fn drop_reference<T>(pointer: u32) {
+    let pointer = pointer as *mut WasmRefCell<T>;
+    (*pointer).borrow_mut(); // ensure no active borrows
+    drop(Box::from_raw(pointer));
 }
 
 #[cfg(test)]
@@ -111,7 +135,7 @@ mod tests {
 
         let actual_expected = test_data.iter()
             .map(|(err, js_value)| {
-                let actual = js_error_from::<(), &Box<dyn fmt::Display>>(err).unwrap_err();
+                let actual = js_result_from::<(), &Box<dyn fmt::Display>>(err).unwrap_err();
 
                 (actual, js_value)
             });

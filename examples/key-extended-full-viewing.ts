@@ -1,5 +1,7 @@
 /**
  * Create an extended full viewing key from a mnemonic
+ *
+ * Call `npm run build` before running this example.
  */
 
 import * as sapling from '@airgap/sapling-wasm'
