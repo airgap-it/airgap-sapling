@@ -15,8 +15,8 @@
     "experimentalDecorators": true,
     "importHelpers": false,
     "downlevelIteration": true, // To enable [].entries()
-    "target": "es5",
-    "lib": ["es2018", "dom"],
+    "target": "es2020",
+    "lib": ["es2015", "es7", "es2017.string", "dom"],
     "preserveSymlinks": true,
     /* Strict Type-Checking Options */
     "strict": true /* Enable all strict type-checking options. */,

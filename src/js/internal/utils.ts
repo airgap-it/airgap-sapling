@@ -2,7 +2,7 @@
 
 // Buffer
 
-export function bufferFrom(value: Buffer | Int8Array | string | number, name?: string, expectedType?: string): Buffer {
+export function bufferFrom(value: Buffer | Uint8Array | string | number, name?: string, expectedType?: string): Buffer {
   if (Buffer.isBuffer(value)) {
     return value
   } else if (isHexString(value)) {
@@ -17,7 +17,7 @@ export function bufferFrom(value: Buffer | Int8Array | string | number, name?: s
 }
 
 export function bufferFromOfLength(
-  value: Buffer | Int8Array | string | number,
+  value: Buffer | Uint8Array | string | number,
   minLength: number,
   name?: string,
   expectedType?: string
