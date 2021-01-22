@@ -2,6 +2,8 @@
  * Prepare a sapling transaction
  * 
  * Call `npm run build` before running this example.
+ * 
+ * FIXME: create a valid transaction
  */
 
 import * as sapling from '@airgap/sapling-wasm'
