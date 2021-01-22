@@ -1,10 +1,18 @@
 /**
  * Prepare a sapling transaction
+ * 
  * Call `npm run build` before running this example.
+ * 
+ * FIXME: create a valid transaction
  */
 
 import * as sapling from '@airgap/sapling-wasm'
-import { SaplingPaymentAddress } from '@airgap/sapling-wasm'
+import {
+  SaplingOutputDescription,
+  SaplingPaymentAddress,
+  SaplingSpendDescription,
+  SaplingUnsignedSpendDescription
+} from '@airgap/sapling-wasm'
 import axios, { AxiosResponse } from 'axios'
 import * as bip39 from 'bip39'
 import * as BN from 'bn.js'
@@ -20,8 +28,8 @@ const ZCASH_DOWNLOAD_URL = 'https://download.z.cash/downloads'
 
 // a sapling transaction consists of a list of spend descriptions, list of output descriptions and a binding signature
 interface Transaction {
-  spendDescriptions: Buffer[]
-  outputDescriptions: Buffer[]
+  spendDescriptions: SaplingSpendDescription[]
+  outputDescriptions: SaplingOutputDescription[]
   bindingSignature: Buffer
 }
 
@@ -33,11 +41,9 @@ async function prepareAndSignTransaction(): Promise<Transaction> {
 
   // generate a public key re-randomizer used to pepare and sign spending descriptions
   const ar: Buffer = await sapling.randR()
+  const transaction: Transaction = await createTransaction(account, inputs, outputs, ar)
 
-  const unsigned: Transaction = await prepareTransaction(account, inputs, outputs, ar)
-  const signed: Transaction = await signTransactionInputs(account, unsigned, ar)
-
-  return signed
+  return transaction
 }
 
 async function initParameters(): Promise<void> {
@@ -57,13 +63,13 @@ async function setupAccounts(): Promise<[Account, Input[], Output[]]> {
   return [alice, aliceInputs, aliceOutputs]
 }
 
-async function prepareTransaction(account: Account, inputs: Input[], outputs: Output[], ar: Buffer): Promise<Transaction> {
+async function createTransaction(account: Account, inputs: Input[], outputs: Output[], ar: Buffer): Promise<Transaction> {
   // all calls to `sapling#prepareSpendDescription`, `sapling#prepareOutputDescription` and `sapling#createBindingSignature`
   // must be performed with the same proving context, use `withProvingContext` to safely execute a block of code with a proving context instance
   const transaction: Transaction = await sapling.withProvingContext(async (context: number) => {
-    const spendDescriptions: Buffer[] = await Promise.all(
+    const spendDescriptions: SaplingSpendDescription[] = await Promise.all(
       inputs.map(async (input: Input) => {
-        const description = await sapling.prepareSpendDescription(
+        const unsignedDescription: SaplingUnsignedSpendDescription = await sapling.prepareSpendDescription(
           context,
           account.spendingKey,
           input.address,
@@ -73,13 +79,22 @@ async function prepareTransaction(account: Account, inputs: Input[], outputs: Ou
           STATE.root,
           await getWitness(input.position)
         )
-        return description
+
+        const sighash = sighashSpendDescription(unsignedDescription)
+        const signedDescription: SaplingSpendDescription = await sapling.signSpendDescription(
+          unsignedDescription,
+          account.spendingKey,
+          ar,
+          sighash
+        )
+
+        return signedDescription
       })
     )
 
     // generate a commitment randomness
     const rcm = await sapling.randR()
-    const outputDescriptions: Buffer[] = await Promise.all(
+    const outputDescriptions: SaplingOutputDescription[] = await Promise.all(
       outputs.map(async (output: Output) => {
         return sapling.prepareOutputDescription(context, account.viewingKey, output.destination, rcm, output.value)
       })
@@ -94,7 +109,7 @@ async function prepareTransaction(account: Account, inputs: Input[], outputs: Ou
     const bindingSignature = await sapling.createBindingSignature(context, valueBalance, sighash)
 
     return {
-      spendDescriptions,
+      spendDescriptions: spendDescriptions,
       outputDescriptions,
       bindingSignature
     }
@@ -103,32 +118,15 @@ async function prepareTransaction(account: Account, inputs: Input[], outputs: Ou
   return transaction
 }
 
-async function signTransactionInputs(account: Account, transaction: Transaction, ar: Buffer): Promise<Transaction> {
-  const signedSpendDescrptions: Buffer[] = await Promise.all(
-    transaction.spendDescriptions.map((spendDescription: Buffer) => {
-      // create data to be signed
-      const sighash = sighashSpendDescription(spendDescription)
-
-      return sapling.signSpendDescription(spendDescription, account.spendingKey, ar, sighash)
-    })
-  )
-
-  return {
-    spendDescriptions: signedSpendDescrptions,
-    outputDescriptions: transaction.outputDescriptions,
-    bindingSignature: transaction.bindingSignature
-  }
-}
-
 prepareAndSignTransaction()
   .then((transaction: Transaction) => {
     console.log('transaction.spendDescriptions')
-    transaction.spendDescriptions.forEach((desc: Buffer) => {
-      console.log('\t', desc.toString('hex'))
+    transaction.spendDescriptions.forEach((desc: SaplingSpendDescription) => {
+      console.log('\t', desc)
     })
     console.log('transaction.outputDescriptions')
-    transaction.outputDescriptions.forEach((desc: Buffer) => {
-      console.log('\t', desc.toString('hex'))
+    transaction.outputDescriptions.forEach((desc: SaplingOutputDescription) => {
+      console.log('\t', desc)
     })
     console.log('transaction.bindingSignature')
     console.log('\t', transaction.bindingSignature.toString('hex'))
@@ -287,13 +285,23 @@ async function createUncommitedHashes(): Promise<Buffer[]> {
   return res
 }
 
-function sighashDescriptions(spendDescriptions: Buffer[], outputDescriptions: Buffer[]): Buffer {
-  const descriptions = spendDescriptions.concat(outputDescriptions)
-  return Buffer.concat(descriptions)
+function sighashDescriptions(spendDescriptions: SaplingSpendDescription[], outputDescriptions: SaplingOutputDescription[]): Buffer {
+  const spendBytes: Buffer = spendDescriptions.reduce(
+    (buffer: Buffer, next: SaplingSpendDescription) => Buffer.concat([buffer, next.cv, next.nf, next.rk, next.proof]),
+    Buffer.alloc(0)
+  )
+  
+  const outputBytes: Buffer = outputDescriptions.reduce(
+    (buffer: Buffer, next: SaplingOutputDescription) => Buffer.concat([buffer, next.cv, next.cm, next.epk, next.cenc, next.cout, next.proof]),
+    Buffer.alloc(0)
+  )
+
+  return Buffer.concat([spendBytes, outputBytes])
 }
 
-function sighashSpendDescription(spendDescription: Buffer): Buffer {
-  return spendDescription
+function sighashSpendDescription(description: SaplingUnsignedSpendDescription): Buffer {
+  return Buffer.concat([description.cv, description.nf, description.rk, description.proof])
+
 }
 
 async function prepareParams(name: string): Promise<Buffer> {

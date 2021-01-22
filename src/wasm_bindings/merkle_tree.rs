@@ -2,12 +2,15 @@ use std::convert::TryInto;
 
 use wasm_bindgen::prelude::*;
 
-use crate::transaction::merkle_hash;
 use crate::common::utils::assert_utils::assert_value_or_error;
 use crate::common::utils::wasm_utils::{js_error_from, js_result_from};
+use crate::init_lib;
+use crate::transaction::merkle_hash;
 
 #[wasm_bindgen(catch, js_name = "merkleHash")]
 pub fn wasm_merkle_hash(depth: u64, lhs: &[u8], rhs: &[u8]) -> Result<Vec<u8>, JsValue> {
+    init_lib();
+
     assert_value_or_error(depth <= 62, js_error_from("merkleHash: depth should be not larger than 62"))?;
 
     let depth: usize = depth.try_into()

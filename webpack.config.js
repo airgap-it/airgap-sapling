@@ -1,20 +1,23 @@
-const CopyWebpackPlugin = require('copy-webpack-plugin')
 const WasmPackPlugin = require('@wasm-tool/wasm-pack-plugin')
-
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 const path = require('path')
+
+const WasmPreloadPlugin = require('./plugins/WasmPreloadPlugin')
+
+const nodeModules = path.resolve(__dirname, 'node_modules')
 
 const baseConfig = {
   entry: path.resolve(__dirname, 'src/js/index.ts'),
   devtool: 'inline-source-map',
-  target: 'node',
+  target: ['es2020', 'node'],
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'index.js',
     libraryTarget: 'commonjs'
   },
   resolve: {
-    extensions: ['.js', '.ts'],
-    modules: [path.resolve(__dirname, 'node_modules')],
+    extensions: ['.js', '.ts', '.wasm'],
+    modules: [nodeModules],
     descriptionFiles: [path.resolve(__dirname, 'package.json')],
     symlinks: false
   },
@@ -23,7 +26,7 @@ const baseConfig = {
       { 
         test: /\.ts$/, 
         loader: 'ts-loader',
-        exclude: path.resolve(__dirname, 'node_modules')
+        exclude: nodeModules
       }
     ]
   },
@@ -33,6 +36,9 @@ const baseConfig = {
       outName: 'index',
       forceMode: 'production',
       extraArgs: '--target bundler --mode normal'
+    }),
+    new WasmPreloadPlugin({
+      outputFile: 'index.js'
     })
   ],
   experiments: {

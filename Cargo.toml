@@ -1,6 +1,6 @@
 [package]
 name = "sapling_wasm"
-version = "0.0.2"
+version = "0.0.4"
 authors = ["Papers.ch <contact@papers.ch>"]
 edition = "2018"
 
@@ -8,14 +8,16 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [package.metadata.wasm-pack.profile.release]
-# disabled until [#781](https://github.com/rustwasm/wasm-pack/issues/781) is properly fixed
-#wasm-opt = ["-Oz", "--enable-mutable-globals"]
-wasm-opt = false
+# temporarily disabled because of `Error: failed to execute `wasm-opt`: exited with signal: 11`
+wasm-opt = ["-Oz", "--enable-mutable-globals"]
 
 [dependencies]
 bellman = { version = "0.8.1", default-features = false, features = ["groth16"] }
+blake2b_simd = "0.5.11"
+blake2s_simd = "0.5.11"
 bls12_381 = "0.3.1"
 console_error_panic_hook = "0.1.6"
+ff = "0.8.0"
 getrandom = { version = "0.1.0", features = ["wasm-bindgen"] }
 group = "0.8.0"
 jubjub = "0.5.1"

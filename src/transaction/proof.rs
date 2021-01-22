@@ -8,27 +8,29 @@ use zcash_proofs::parse_parameters;
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::transaction::errors::ProofError;
 
-pub struct ProofParams {
+pub struct ProofParameters {
     pub spend_params: Parameters<Bls12>,
     pub spend_vk: PreparedVerifyingKey<Bls12>,
     pub output_params: Parameters<Bls12>,
     pub output_vk: PreparedVerifyingKey<Bls12>,
 }
 
-pub fn parse_params(spend_params: &[u8], output_params: &[u8]) -> ProofParams {
-    let (
-        spend_params,
-        spend_vk,
-        output_params,
-        output_vk,
-        _,
-    ) = parse_parameters(spend_params, output_params, None);
+impl ProofParameters {
+    pub fn from(spend_params: &[u8], output_params: &[u8]) -> ProofParameters {
+        let (
+            spend_params,
+            spend_vk,
+            output_params,
+            output_vk,
+            _,
+        ) = parse_parameters(spend_params, output_params, None);
 
-    ProofParams {
-        spend_params,
-        spend_vk,
-        output_params,
-        output_vk,
+        ProofParameters {
+            spend_params,
+            spend_vk,
+            output_params,
+            output_vk,
+        }
     }
 }
 
