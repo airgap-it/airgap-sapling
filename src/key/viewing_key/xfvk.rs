@@ -5,6 +5,8 @@ use crate::common::traits::Serializable;
 use crate::key::sapling_key::SaplingKey;
 
 use super::errors::ViewingKeyError;
+use zcash_primitives::constants::CRH_IVK_PERSONALIZATION;
+use group::GroupEncoding;
 
 impl SaplingKey for ExtendedFullViewingKey {
     fn from_seed(seed: &[u8], derivation_path: &str) -> Result<Self, SaplingError> where Self: Sized {
@@ -26,6 +28,24 @@ impl Serializable<Vec<u8>, SaplingError> for ExtendedFullViewingKey {
 
         Ok(bytes)
     }
+}
+
+pub fn crh_ivk(xfvk: &ExtendedFullViewingKey) -> Vec<u8> {
+    let ak = xfvk.fvk.vk.ak;
+    let nk = xfvk.fvk.vk.nk;
+
+    let hash = blake2s_simd::Params::new()
+        .hash_length(32)
+        .personal(CRH_IVK_PERSONALIZATION)
+        .to_state()
+        .update(&ak.to_bytes()[..])
+        .update(&nk.to_bytes()[..])
+        .finalize();
+
+    let mut hash = hash.as_bytes().to_vec();
+    hash[31] &= 0b0000_0111;
+
+    hash
 }
 
 #[cfg(test)]

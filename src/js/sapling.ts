@@ -1,35 +1,55 @@
-import { getPaymentAddressXfvk, getNextPaymentAddressXfvk } from './internal/account/payment-address'
-import { getXsk } from './internal/account/spending-key'
-import { getXfvk } from './internal/account/viewing-key'
-import { initSaplingParameters } from './internal/parameters'
-import { createBindingSignatureForTx } from './internal/transaction/binding-signature'
-import { getMerkleHashForDepth } from './internal/transaction/merkle-tree'
-import { getOutputDescriptionFromXfvk } from './internal/transaction/output-description'
-import { getSpendDescriptionFromXsk, signSpendDescriptionWithXsk } from './internal/transaction/spend-description'
+import {
+  getAddressFromXfvk,
+  getDiversifierFromRawAddress,
+  getNextAddressFromXfvk,
+  getPkdFromRawAddress,
+  getRawAddressFromIvk
+} from './internal/address/payment-address'
+import { __wasm__keyAgreement } from './internal/key/key-agreement'
+import { __wasm__xsk } from './internal/key/spending-key'
+import { __wasm__ivk, __wasm__ovk, __wasm__xfvk, __wasm__xfvkFromXsk } from './internal/key/viewing-key'
+import { __wasm__initParameters } from './internal/parameters'
+import { __wasm__bindingSignature } from './internal/transaction/binding-signature'
+import { __wasm__verifyCmu } from './internal/transaction/commitment'
+import { __wasm__merkleHashForDepth } from './internal/transaction/merkle-tree'
+import { __wasm__computeNf } from './internal/transaction/nullifier'
+import {
+  __wasm__deriveEpkFromEsk,
+  __wasm__outputDescriptionFromXfvk,
+  __wasm__partialOutputDescription
+} from './internal/transaction/output-description'
+import { __wasm__spendDescriptionFromXsk, __wasm__signSpendDescriptionWithXsk } from './internal/transaction/spend-description'
 import { WasmSapling } from './internal/types'
 import { rejectPromise } from './internal/utils'
-import { SaplingPaymentAddress } from './types'
+import {
+  SaplingOutputDescription,
+  SaplingPartialOutputDescription,
+  SaplingPaymentAddress,
+  SaplingSpendDescription,
+  SaplingUnsignedSpendDescription
+} from './types'
 
-const saplingPromise = new Promise<WasmSapling>((resolve, reject) => {
-  import('../../pkg')
-    .then((sapling) => {
-      resolve(sapling)
-    })
-    .catch((error) => {
-      reject(`Could not load sapling-wasm: ${error}`)
-    })
-})
+let isInitialized: boolean = false
+const saplingPromise: Promise<WasmSapling> = import('../../pkg')
+  .catch((error) => {
+    console.error(error)
+    throw new Error(`Could not load sapling-wasm: ${error}`)
+  })
 
 /**
- * Initializes the library with specified sapling parameters.
+ * Initialize the library with specified sapling parameters.
  *
- * @param {Buffer|Int8Array|string} spendParams The sapling spending parameters.
- * @param {Buffer|Int8Array|string} outputParams The sapling output parameters.
+ * @param {Buffer|Uint8Array|string} spendParams The sapling spending parameters.
+ * @param {Buffer|Uint8Array|string} outputParams The sapling output parameters.
  */
-export async function initParameters(spendParams: Buffer | Int8Array | string, outputParams: Buffer | Int8Array | string): Promise<void> {
+export async function initParameters(spendParams: Buffer | Uint8Array | string, outputParams: Buffer | Uint8Array | string): Promise<void> {
   try {
-    const sapling: WasmSapling = await saplingPromise
-    initSaplingParameters(sapling, spendParams, outputParams)
+    if (!isInitialized) {
+      const sapling: WasmSapling = await saplingPromise
+
+      __wasm__initParameters(sapling, spendParams, outputParams)
+      isInitialized = true
+    }
   } catch (error) {
     return rejectPromise('init', error)
   }
@@ -38,16 +58,16 @@ export async function initParameters(spendParams: Buffer | Int8Array | string, o
 /**
  * Create an extended spending key from the given seed.
  *
- * @param {Buffer|Int8Array|string} seed A seed from which the key will be derived
+ * @param {Buffer|Uint8Array|string} seed A seed from which the key will be derived
  * @param {string} derivationPath A valid BIP39 derivation path
  * @returns {Buffer} The generated extended spending key
  */
 
-export async function getExtendedSpendingKey(seed: Buffer | Int8Array | string, derivationPath: string): Promise<Buffer> {
+export async function getExtendedSpendingKey(seed: Buffer | Uint8Array | string, derivationPath: string): Promise<Buffer> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return getXsk(sapling, seed, derivationPath)
+    return __wasm__xsk(sapling, seed, derivationPath)
   } catch (error) {
     return rejectPromise('getExtendedSpendingKey', error)
   }
@@ -56,59 +76,160 @@ export async function getExtendedSpendingKey(seed: Buffer | Int8Array | string, 
 /**
  * Create an extended full viewing key from the given seed.
  *
- * @param {Buffer|Int8Array|string} seed A seed from which the key will be derived
+ * @param {Buffer|Uint8Array|string} seed A seed from which the key will be derived
  * @param {string} derivationPath A valid BIP39 derivation path
  * @returns {Buffer} The generated extended full viewing key
  */
 
-export async function getExtendedFullViewingKey(seed: Buffer | Int8Array | string, derivationPath: string): Promise<Buffer> {
+export async function getExtendedFullViewingKey(seed: Buffer | Uint8Array | string, derivationPath: string): Promise<Buffer> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return getXfvk(sapling, seed, derivationPath)
+    return __wasm__xfvk(sapling, seed, derivationPath)
   } catch (error) {
     return rejectPromise('getExtendedFullViewingKey', error)
   }
 }
 
 /**
+ * Create an extended full viewing key from the given extended spending key.
+ * 
+ * @param {Buffer|Uint8Array|string} spendingKey An extended spending key
+ * @returns {Buffer} The generated extended full viewing key
+ */
+export async function getExtendedFullViewingKeyFromSpendingKey(spendingKey: Buffer | Uint8Array | string): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__xfvkFromXsk(sapling, spendingKey)
+  } catch (error) {
+    return rejectPromise('getExtendedFullViewingKeyFromSpendingKey', error)
+  }
+}
+
+/**
+ * Derive an outgoing viewing key from extended full viewing key.
+ * 
+ * @param {Buffer|Uint8Array|string} viewingKey An extended full viewing key
+ * @returns {Buffer} The derived outgoing viewing key
+ */
+export async function getOutgoingViewingKey(viewingKey: Buffer | Uint8Array | string): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__ovk(sapling, viewingKey)
+  } catch (error) {
+    return rejectPromise('getOutgoingViewingKey', error)
+  }
+}
+
+/**
+ * Derive an incoming viewing key from extended full viewing key.
+ * 
+ * @param {Buffer|Uint8Array|string} viewingKey An extended full viewing key
+ * @returns {Buffer} The derived incoming viewing key
+ */
+export async function getIncomingViewingKey(viewingKey: Buffer | Uint8Array | string): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__ivk(sapling, viewingKey)
+  } catch (error) {
+    return rejectPromise('getIncomingViewingKey', error)
+  }
+}
+
+/**
  * Derive a payment address from the given extended full viewing key.
  *
- * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
- * @param {Buffer|Int8Array|string|number|undefined} [index] A 11-byte diversifier index used to determine which diversifier should be used to derive the address. If not present, a new diversifier index is created with a default value of [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]. If provided as bytes, it is expected to be in the little-endian (LE) format.
+ * @param {Buffer|Uint8Array|string} viewingKey An extended full viewing key
+ * @param {Buffer|Uint8Array|string|number|undefined} [index] A 11-byte diversifier index used to determine which diversifier should be used to derive the address. If not present, a new diversifier index is created with a default value of [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]. If provided as bytes, it is expected to be in the little-endian (LE) format.
  * @returns {SaplingPaymentAddress} The derived payment address
  */
 
 export async function getPaymentAddressFromViewingKey(
-  viewingKey: Buffer | Int8Array | string,
-  index?: Buffer | Int8Array | string | number | undefined
+  viewingKey: Buffer | Uint8Array | string,
+  index?: Buffer | Uint8Array | string | number | undefined
 ): Promise<SaplingPaymentAddress> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return getPaymentAddressXfvk(sapling, viewingKey, index)
+    return getAddressFromXfvk(sapling, viewingKey, index)
   } catch (error) {
     return rejectPromise('getPaymentAddressFromViewingKey', error)
   }
 }
 
-/** Derive next valid payment address from the given extended full viewing key and current diversifier index.
+/** 
+ * Derive next valid payment address from the given extended full viewing key and current diversifier index.
  *
- * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
- * @param {Buffer|Int8Array|string|number} index The last used 11-byte diversifier index. If provided as bytes, it is expected to be in the little-endian (LE) format.
+ * @param {Buffer|Uint8Array|string} viewingKey An extended full viewing key
+ * @param {Buffer|Uint8Array|string|number} index The last used 11-byte diversifier index. If provided as bytes, it is expected to be in the little-endian (LE) format.
  * @returns {SaplingPaymentAddress} The derived payment address
  */
 
 export async function getNextPaymentAddressFromViewingKey(
-  viewingKey: Buffer | Int8Array | string,
-  index: Buffer | Int8Array | string | number
+  viewingKey: Buffer | Uint8Array | string,
+  index: Buffer | Uint8Array | string | number
 ): Promise<SaplingPaymentAddress> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return getNextPaymentAddressXfvk(sapling, viewingKey, index)
+    return getNextAddressFromXfvk(sapling, viewingKey, index)
   } catch (error) {
     return rejectPromise('getNextPaymentAddressFromViewingKey', error)
+  }
+}
+
+/**
+ * Create a raw payment address value from the specified incoming viewing key and diversifier.
+ * 
+ * @param incomingViewingKey An incoming viewing key from which an address should be created
+ * @param diversifier The address diversifier
+ * @returns {Buffer} The raw payment address
+ */
+export async function getRawPaymentAddressFromIncomingViewingKey(
+  incomingViewingKey: Buffer | Uint8Array | string,
+  diversifier: Buffer | Uint8Array | string
+): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return getRawAddressFromIvk(sapling, incomingViewingKey, diversifier)
+  } catch (error) {
+    return rejectPromise('getRawPaymentAddressFromIncomingViewingKey', error)
+  }
+}
+
+/**
+ * Get a diversifier from a raw payment address.
+ * 
+ * @param {Buffer | Uint8Array | string} address A raw payment address
+ * @returns {Buffer} The diversifier
+ */
+export async function getDiversifiedFromRawPaymentAddress(address: Buffer | Uint8Array | string): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return getDiversifierFromRawAddress(sapling, address)
+  } catch (error) {
+    return rejectPromise('getDiversifierFromRawPaymentAddress', error)
+  }
+}
+
+/**
+ * Get a pkd from a raw payment address.
+ * 
+ * @param {Buffer | Uint8Array | string} address A raw payment address
+ * @returns {Buffer} The diversifier
+ */
+export async function getPkdFromRawPaymentAddress(address: Buffer | Uint8Array | string): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return getPkdFromRawAddress(sapling, address)
+  } catch (error) {
+    return rejectPromise('getPkdFromRawPaymentAddress', error)
   }
 }
 
@@ -120,12 +241,12 @@ export async function getNextPaymentAddressFromViewingKey(
  * @param {function(Object): T} action An action to be executed
  * @returns {T} Result returned by the action
  */
-export async function withProvingContext<T>(action: (context: number) => T): Promise<T> {
+export async function withProvingContext<T>(action: (context: number) => Promise<T>): Promise<T> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
     const context: number = sapling.initProvingContext()
-    const result: T = action(context)
+    const result: T = await action(context)
     sapling.dropProvingContext(context)
 
     return result
@@ -156,18 +277,18 @@ export async function randR(): Promise<Buffer> {
  *
  * @param {number} context A pointer to sapling proving context
  * @param {string|number|BigInt} valueBalance
- * @param {Buffer|Int8Array|string} sighash The data to be signed
+ * @param {Buffer|Uint8Array|string} sighash The data to be signed
  * @returns {Buffer} The created binding signature
  */
 export async function createBindingSignature(
   context: number,
   valueBalance: string | number | BigInt,
-  sighash: Buffer | Int8Array | string
+  sighash: Buffer | Uint8Array | string
 ): Promise<Buffer> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return createBindingSignatureForTx(sapling, context, valueBalance, sighash)
+    return __wasm__bindingSignature(sapling, context, valueBalance, sighash)
   } catch (error) {
     return rejectPromise('createBindingSignature', error)
   }
@@ -177,29 +298,29 @@ export async function createBindingSignature(
  * Prepare an unsigned sapling spend description
  *
  * @param {number} context A pointer to sapling proving context
- * @param {Buffer|Int8Array|string} spendingKey An extended spending key
- * @param {SaplingPaymentAddress|Buffer|Int8Array|string} address The address to which the input has been linked
- * @param {Buffer|Int8Array|string} rcm The randomness of the commitment
- * @param {Buffer|Int8Array|string} ar Re-randomization of the public key
+ * @param {Buffer|Uint8Array|string} spendingKey An extended spending key
+ * @param {SaplingPaymentAddress|Buffer|Uint8Array|string} address The address to which the input has been linked
+ * @param {Buffer|Uint8Array|string} rcm The randomness of the commitment
+ * @param {Buffer|Uint8Array|string} ar Re-randomization of the public key
  * @param {string|number|BigInt} value The value of the input
- * @param {Buffer|Int8Array|string} anchor The root of the merkle tree
- * @param {Buffer|Int8Array|string} merklePath The path of the commitment in the tree
- * @returns {Buffer} The created unsinged spend description
+ * @param {Buffer|Uint8Array|string} anchor The root of the merkle tree
+ * @param {Buffer|Uint8Array|string} merklePath The path of the commitment in the tree
+ * @returns {SaplingUnsignedSpendDescription} The created unsinged spend description
  */
 export async function prepareSpendDescription(
   context: number,
-  spendingKey: Buffer | Int8Array | string,
-  address: SaplingPaymentAddress | Buffer | Int8Array | string,
-  rcm: Buffer | Int8Array | string,
-  ar: Buffer | Int8Array | string,
+  spendingKey: Buffer | Uint8Array | string,
+  address: SaplingPaymentAddress | Buffer | Uint8Array | string,
+  rcm: Buffer | Uint8Array | string,
+  ar: Buffer | Uint8Array | string,
   value: string | number | BigInt,
-  anchor: Buffer | Int8Array | string,
-  merklePath: Buffer | Int8Array | string
-): Promise<Buffer> {
+  anchor: Buffer | Uint8Array | string,
+  merklePath: Buffer | Uint8Array | string
+): Promise<SaplingUnsignedSpendDescription> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return getSpendDescriptionFromXsk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath)
+    return __wasm__spendDescriptionFromXsk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath)
   } catch (error) {
     return rejectPromise('prepareSpendDescription', error)
   }
@@ -208,22 +329,22 @@ export async function prepareSpendDescription(
 /**
  * Sign an unsigned sapling spend description
  *
- * @param {Buffer|Int8Array|string} spendDescription An unsigned spend description
- * @param {Buffer|Int8Array|string} spendingKey An extended spending key
- * @param {Buffer|Int8Array|string} ar Re-randomization of the public key
- * @param {Buffer|Int8Array|string} sighash The data to be signed
- * @return {Buffer} The signed spend description
+ * @param {SaplingUnsignedSpendDescription} spendDescription An unsigned spend description
+ * @param {Buffer|Uint8Array|string} spendingKey An extended spending key
+ * @param {Buffer|Uint8Array|string} ar Re-randomization of the public key
+ * @param {Buffer|Uint8Array|string} sighash The data to be signed
+ * @return {SaplingSpendDescription} The signed spend description
  */
 export async function signSpendDescription(
-  spendDescription: Buffer | Int8Array | string,
-  spendingKey: Buffer | Int8Array | string,
-  ar: Buffer | Int8Array | string,
-  sighash: Buffer | Int8Array | string
-): Promise<Buffer> {
+  spendDescription: SaplingUnsignedSpendDescription,
+  spendingKey: Buffer | Uint8Array | string,
+  ar: Buffer | Uint8Array | string,
+  sighash: Buffer | Uint8Array | string
+): Promise<SaplingSpendDescription> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return signSpendDescriptionWithXsk(sapling, spendDescription, spendingKey, ar, sighash)
+    return __wasm__signSpendDescriptionWithXsk(sapling, spendDescription, spendingKey, ar, sighash)
   } catch (error) {
     return rejectPromise('signSpendDescription', error)
   }
@@ -233,49 +354,161 @@ export async function signSpendDescription(
  * Prepare a sapling output description.
  *
  * @param {number} context A pointer to sapling proving context
- * @param {Buffer|Int8Array|string} viewingKey An extended full viewing key
- * @param {SaplingPaymentAddress|Buffer|Int8Array|string} destination The destination address
- * @param {Buffer|Int8Array|string} rcm The randomness of the commitment
+ * @param {Buffer|Uint8Array|string} viewingKey An extended full viewing key
+ * @param {SaplingPaymentAddress|Buffer|Uint8Array|string} destination The destination address
+ * @param {Buffer|Uint8Array|string} rcm The randomness of the commitment
  * @param {string|number|BigInt} value The value to transfer
- * @param {Buffer|Int8Array|string} provingKey A proving key which should be used to create a proof
- * @param {Buffer|Int8Array|string|undefined} [memo] An optional message
- * @returns {Buffer} The created output description
+ * @param {Buffer|Uint8Array|string|undefined} [memo] An optional message
+ * @returns {SaplingOutputDescription} The created output description
  */
 export async function prepareOutputDescription(
   context: number,
-  viewingKey: Buffer | Int8Array | string,
-  destination: SaplingPaymentAddress | Buffer | Int8Array | string,
-  rcm: Buffer | Int8Array | string,
+  viewingKey: Buffer | Uint8Array | string,
+  destination: SaplingPaymentAddress | Buffer | Uint8Array | string,
+  rcm: Buffer | Uint8Array | string,
   value: string | number | BigInt,
-  memo?: Buffer | Int8Array | string | undefined
-): Promise<Buffer> {
+  memo?: Buffer | Uint8Array | string | undefined
+): Promise<SaplingOutputDescription> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return getOutputDescriptionFromXfvk(sapling, context, viewingKey, destination, rcm, value, memo)
+    return __wasm__outputDescriptionFromXfvk(sapling, context, viewingKey, destination, rcm, value, memo)
   } catch (error) {
     return rejectPromise('prepareOutputDescription', error)
   }
 }
 
 /**
- * Computes a Merkle Tree parent hash for the specified depth and its children.
+ * Prepare a partial sapling output description.
  *
- * @param {number|BigInt} depth The depth of the tree, cannot be larger than 62.
- * @param {Buffer|Int8Array|string} lhs A 32-byte child hash.
- * @param {Buffer|Int8Array|string} rhs A 32-byte child hash.
- * @returns {Buffer} The computed parent hash.
+ * @param {number} context A pointer to sapling proving context
+ * @param {SaplingPaymentAddress|Buffer|Uint8Array|string} destination The destination address
+ * @param {Buffer|Uint8Array|string} rcm The randomness of the commitment
+ * @param {Buffer|Uint8Array|string} ephemeralKey An ephemeral private key that will be used to create an output proof
+ * @param {string|number|BigInt} value The value to transfer
+ * @returns {SaplingPartialOutputDescription} The created partial output description
  */
-export async function merkleHash(
-  depth: number | BigInt,
-  lhs: Buffer | Int8Array | string,
-  rhs: Buffer | Int8Array | string
+export async function preparePartialOutputDescription(
+  context: number,
+  destination: SaplingPaymentAddress | Buffer | Uint8Array | string,
+  rcm: Buffer | Uint8Array | string,
+  ephemeralKey: Buffer | Uint8Array | string,
+  value: string | number | BigInt,
+): Promise<SaplingPartialOutputDescription> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__partialOutputDescription(sapling, context, destination, rcm, ephemeralKey, value)
+  } catch (error) {
+    return rejectPromise('preparePartialOutputDescription', error)
+  }
+}
+
+/**
+ * Derive an ephemeral public key from the specified address diversifier and ephemeral private key.
+ * 
+ * @param diversifier A payment address diversifier
+ * @param privateKey An ephemeral private key
+ * @returns {Buffer} The derived ephemeral public key
+ */
+export async function deriveEphemeralPublicKey(
+  diversifier: Buffer | Uint8Array | string, 
+  privateKey: Buffer | Uint8Array | string
 ): Promise<Buffer> {
   try {
     const sapling: WasmSapling = await saplingPromise
 
-    return getMerkleHashForDepth(sapling, depth, lhs, rhs)
+    return __wasm__deriveEpkFromEsk(sapling, diversifier, privateKey)
+  } catch (error) {
+    return rejectPromise('deriveEphemeralPublicKey', error)
+  }
+}
+
+/**
+ * Verify if the specified commitment is valid in the context of provided address, transfer value and rcm.
+ * 
+ * @param commitment The commitment to verify
+ * @param address The expected raw address
+ * @param value The expected transfer value
+ * @param rcm The expected randomness of the commitment
+ * @returns {boolean} `true` if commitment is valid, `false` otherwise
+ */
+export async function verifyCommitment(
+  commitment: Buffer | Uint8Array | string,
+  address: Buffer | Uint8Array | string, 
+  value: string | number | BigInt, 
+  rcm: Buffer | Uint8Array | string
+): Promise<boolean> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+    
+    return __wasm__verifyCmu(sapling, commitment, address, value, rcm)
+  } catch (error) {
+    return rejectPromise('verifyCommitment', error)
+  }
+}
+
+/**
+ * Compute a nullifier for the commitment.
+ * 
+ * @param viewingKey An extended full viewing key that is the owner of the commitment
+ * @param address The destination address of the commitment
+ * @param value The transfer value of the commitment
+ * @param rcm The randomness of the commitment
+ * @param position The position of the commitment
+ * @returns {Buffer} The computed nullifier
+ */
+export async function computeNullifier(
+  viewingKey: Buffer | Uint8Array | string,
+  address: Buffer | Uint8Array | string,
+  value: string | number | BigInt,
+  rcm: Buffer | Uint8Array | string,
+  position: string | number | BigInt
+): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__computeNf(sapling, viewingKey, address, value, rcm, position)
+  } catch (error) {
+    return rejectPromise('computeNullifier', error)
+  }
+}
+
+/**
+ * Compute a Merkle Tree parent hash for the specified depth and its children.
+ *
+ * @param {number|BigInt} depth The depth of the tree, cannot be larger than 62
+ * @param {Buffer|Uint8Array|string} lhs A 32-byte child hash
+ * @param {Buffer|Uint8Array|string} rhs A 32-byte child hash
+ * @returns {Buffer} The computed parent hash
+ */
+export async function merkleHash(
+  depth: number | BigInt,
+  lhs: Buffer | Uint8Array | string,
+  rhs: Buffer | Uint8Array | string
+): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__merkleHashForDepth(sapling, depth, lhs, rhs)
   } catch (error) {
     return rejectPromise('merkleHash', error)
+  }
+}
+
+/**
+ * Compute a key agreement.
+ * 
+ * @param {Buffer|Uint8Array|string} p A 32-byte point
+ * @param {Buffer|Uint8Array|string} sk A 32-byte scalar
+ * @returns {Buffer} The computed key agreement
+ */
+export async function keyAgreement(p: Buffer | Uint8Array | string, sk: Buffer | Uint8Array | string): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__keyAgreement(sapling, p, sk)
+  } catch (error) {
+    return rejectPromise('keyAgreement', error)
   }
 }

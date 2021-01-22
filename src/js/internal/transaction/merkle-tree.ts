@@ -1,11 +1,11 @@
 import { WasmSapling } from '../types'
 import { bigIntFrom, bufferFrom } from '../utils'
 
-export function getMerkleHashForDepth(
+export function __wasm__merkleHashForDepth(
   sapling: WasmSapling,
   depth: number | BigInt,
-  lhs: Buffer | Int8Array | string,
-  rhs: Buffer | Int8Array | string
+  lhs: Buffer | Uint8Array | string,
+  rhs: Buffer | Uint8Array | string
 ): Buffer {
   const depthNum: BigInt = bigIntFrom(depth)
   const lhsBuffer: Buffer = bufferFrom(lhs)

@@ -2,6 +2,8 @@
 use wasm_bindgen::prelude::*;
 
 pub use wasm_bindings::{
+    commitment::*,
+    key_agreement::*,
     merkle_tree::*,
     output_description::*,
     payment_address::*,
@@ -14,7 +16,7 @@ pub use wasm_bindings::{
 };
 
 use crate::state::State;
-use crate::transaction::parse_params;
+use crate::transaction::ProofParameters;
 
 mod address;
 mod common;
@@ -27,9 +29,15 @@ mod state;
 
 #[wasm_bindgen(js_name = "initParams")]
 pub fn wasm_init_params(spend_params: &[u8], output_params: &[u8]) {
-    console_error_panic_hook::set_once();
+    init_lib();
+    if State::proof_params().is_err() {
+        State::set_proof_params(ProofParameters::from(spend_params, output_params));
+    }
+}
 
-    let proof_params = parse_params(spend_params, output_params);
-
-    State::set_proof_params(proof_params);
+pub fn init_lib() {
+    if !State::is_initialized() {
+        console_error_panic_hook::set_once();
+        State::set_initialized();
+    }
 }
