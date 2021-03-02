@@ -7,10 +7,10 @@ WORKDIR /build
 COPY . /build
 
 # clean project
-RUN /build/packages/sapling-android/gradlew --project-dir /build/packages/sapling-android clean
+RUN ./packages/sapling-android/gradlew --project-dir ./packages/sapling-android clean
 
 # build apk, exclude prod flavored unit tests
-RUN /build/packages/sapling-android/gradlew --project-dir /build/packages/sapling-android assemble
+RUN ./packages/sapling-android/gradlew --project-dir ./packages/sapling-android assemble
 
 # copy release aar
 RUN cp /build/packages/sapling-android/build/outputs/aar/release.aar android-release-unsigned.aar

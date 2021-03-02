@@ -73,7 +73,7 @@ function find_latest() {
   else
     local beta_version beta_formatted
 
-    beta_version=$(echo "$latest_beta" | awk -F'-beta.' '{print $2}')
+    beta_version=$(echo "$latest_beta" | awk -F'-beta.' '{print $2+0}')
     beta_formatted=$($1 "$beta_version")
     echo "$beta_target-beta$beta_formatted"
   fi
