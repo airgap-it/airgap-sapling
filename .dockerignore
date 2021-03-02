@@ -1,0 +1,12 @@
+.idea
+node_modules
+Cargo.lock
+
+/packages/sapling-wasm/node_modules
+/packages/sapling-wasm/dist
+/packages/sapling-wasm/examples/**/*.params
+
+/packages/sapling-android/.cargo
+/packages/sapling-android/toolchains
+/packages/sapling-android/build
+/packages/sapling-android/local.properties

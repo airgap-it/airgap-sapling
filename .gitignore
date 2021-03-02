@@ -1,12 +1,9 @@
+.idea/
+.idea/**/*
+
 /target
 **/*.rs.bk
 Cargo.lock
 pkg/
 
-.idea/
-.idea/**/*
-
-dist/
-node_modules/
-
-examples/**/*.params
+node_modules
