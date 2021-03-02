@@ -108,7 +108,7 @@ function fix_versions () {
   core_latest=$(find_latest format_core_beta)
   if [[ "$CORE_VERSION" != "$core_latest" ]]; then
     echo "  core $CORE_VERSION -> $core_latest"
-    sed -i "" -e "s/\"version\" = \"$CORE_VERSION\"/\"version\" = \"$core_latest\"/1" "$CORE_PATH/Cargo.toml"
+    sed -i "" -e "s/version = \"$CORE_VERSION\"/version = \"$core_latest\"/1" "$CORE_PATH/Cargo.toml"
   fi
 
   js_latest=$(find_latest format_js_beta)
@@ -117,7 +117,11 @@ function fix_versions () {
     npm --prefix "$LERNA_PATH" run bump:version -- "$js_latest" --yes
   fi
 
-  echo "Done."
+  if check_versions; then
+    echo "Done."
+  else
+    exit 1
+  fi
 }
 
 ### Execution ###
@@ -142,6 +146,7 @@ else
                 exit 0
               else
                 fix_versions
+                exit 0
               fi
               ;;
             -h|--help|*)
