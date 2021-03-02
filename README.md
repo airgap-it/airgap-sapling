@@ -1,16 +1,29 @@
-# AirGap Sapling Wasm
+# AirGap Sapling
 
+[![release](https://img.shields.io/jitpack/v/github/airgap-it/airgap-sapling)](https://jitpack.io/#airgap-it/airgap-sapling)
 [![npm](https://img.shields.io/npm/v/@airgap/sapling-wasm.svg?colorB=brightgreen)](https://www.npmjs.com/package/@airgap/sapling-wasm)
 
-A Wasm wrapper around [Zcash Rust crates](https://github.com/zcash/librustzcash).
+Wasm, Android and iOS wrappers around [Zcash Rust crates](https://github.com/zcash/librustzcash).
 
-## Install
+## Project Overview
 
-```
+The project is divided into the following packages:
+- `sapling` - common sources in Rust, provides C and Wasm bindings for [Zcash crates](https://github.com/zcash/librustzcash)
+- `sapling-wasm` - a JavaScript library using Wasm bindings from the `sapling` package
+- `sapling-android` - a native Android library using C bindings from the `sapling` package
+- `sapling-ios` - a native iOS library using C bindings from the `sapling` package
+
+## Sapling Wasm
+
+### Install
+
+To add JS AirGap Sapling library into your project run:
+
+```bash
 $ npm install --save @airgap/sapling-wasm
 ```
 
-## Examples
+### Examples
 
 ```ts
 import * as bip39 from 'bip39'
@@ -37,4 +50,33 @@ console.log(
 )
 ```
 
-More advanced examples can be found in `/examples`.
+More advanced examples can be found in `js/examples`.
+
+## Sapling Android
+
+### Install
+
+To add Android AirGap Sapling library into your project:
+
+1. Ensure [Android NDK](https://developer.android.com/ndk) is supported in your project. 
+
+2. Add the [JitPack](https://jitpack.io/) repository to your root `build.gradle` file:
+  ```groovy
+  allprojects {
+    repositories {
+      ...
+      maven { url 'https://jitpack.io' }
+    }
+  }
+  ```
+
+1. Add the dependency:
+  ```groovy
+  def saplingVersion = "0.0.4"
+
+  implementation "com.github.airgap-it:airgap-sapling:$saplingVersion"
+  ```
+
+## Sapling iOS
+
+TBD
