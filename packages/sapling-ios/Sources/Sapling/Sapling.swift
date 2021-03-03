@@ -1,23 +1,8 @@
 import SaplingFFI
 
 public struct Sapling {
-    public typealias Context = UnsafeMutableRawPointer
     
-    public typealias Seed = [UInt8]
-    public typealias ExtendedSpendingKey = [UInt8]
-    public typealias ExtendedFullViewingKey = [UInt8]
-    public typealias IncomingViewingKey = [UInt8]
-    public typealias OutgoingViewingKey = [UInt8]
-    
-    public typealias Address = [UInt8]
-    public typealias Diversifier = [UInt8]
-    public typealias Index = [UInt8]
-    
-    public typealias Rcm = [UInt8]
-    public typealias Esk = [UInt8]
-    public typealias Ar = [UInt8]
-    public typealias Anchor = [UInt8]
-    public typealias MerklePath = [UInt8]
+    public init() {}
     
     /* Commitment */
     
@@ -301,6 +286,24 @@ public struct Sapling {
         
         return key
     }
+    
+    public typealias Context = UnsafeMutableRawPointer
+    
+    public typealias Seed = [UInt8]
+    public typealias ExtendedSpendingKey = [UInt8]
+    public typealias ExtendedFullViewingKey = [UInt8]
+    public typealias IncomingViewingKey = [UInt8]
+    public typealias OutgoingViewingKey = [UInt8]
+    
+    public typealias Address = [UInt8]
+    public typealias Diversifier = [UInt8]
+    public typealias Index = [UInt8]
+    
+    public typealias Rcm = [UInt8]
+    public typealias Esk = [UInt8]
+    public typealias Ar = [UInt8]
+    public typealias Anchor = [UInt8]
+    public typealias MerklePath = [UInt8]
  
     public enum Error: Swift.Error {
         case computeCommitmentFailed
