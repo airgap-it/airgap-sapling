@@ -159,7 +159,7 @@ printf "%s\n" \
 "" \
 "[target.i686-linux-android]" \
 "ar = \"$(get_toolchain_dir $X86)/bin/llvm-ar\"" \
-"linker = \"$(get_toolchain_dir $X86)/bin/i686-linux-android-clang\"" >> "$CARGO_CONFIG_FILE"
+"linker = \"$(get_toolchain_dir $X86)/bin/i686-linux-android-clang\"" > "$CARGO_CONFIG_FILE"
 
 echo "  Cargo config saved."
 

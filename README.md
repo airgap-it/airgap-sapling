@@ -2,6 +2,7 @@
 
 [![release](https://img.shields.io/jitpack/v/github/airgap-it/airgap-sapling)](https://jitpack.io/#airgap-it/airgap-sapling)
 [![npm](https://img.shields.io/npm/v/@airgap/sapling-wasm.svg?colorB=brightgreen)](https://www.npmjs.com/package/@airgap/sapling-wasm)
+[![release](https://img.shields.io/github/v/tag/airgap-it/airgap-sapling?include_prereleases)](https://github.com/airgap-it/airgap-sapling/releases)
 
 Wasm, Android and iOS wrappers around [Zcash Rust crates](https://github.com/zcash/librustzcash).
 
