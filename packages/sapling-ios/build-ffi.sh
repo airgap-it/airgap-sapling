@@ -34,7 +34,7 @@ function ios_target () {
       echo ios-x86_64-simulator
       ;;
     *)
-      echo "Error: Unknown Rust target."
+      echo "Error: Unknown iOS target."
       exit 1
       ;;
   esac
