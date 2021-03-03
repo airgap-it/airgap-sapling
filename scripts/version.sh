@@ -87,7 +87,7 @@ function check_versions () {
   load_versions
 
   if compare_versions; then
-    echo "Versions match."
+    echo -e "\n  Versions match."
     return 0
   else
     echo -e "\n  Versions mismatch."
