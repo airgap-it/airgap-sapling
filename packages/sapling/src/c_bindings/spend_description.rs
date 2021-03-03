@@ -11,7 +11,7 @@ use zcash_proofs::sapling::SaplingProvingContext;
 use zcash_proofs::ZcashParameters;
 
 use crate::common::errors::{CausedBy, SaplingError};
-use crate::common::utils::c_utils::{c_dereference, c_deserialize, c_deserialize_slice, c_serialize_res, c_size_catch_result};
+use crate::common::utils::c_utils::{c_dereference, c_deserialize, c_deserialize_slice, c_serialize_res, c_ptr_catch_result};
 use crate::State;
 use crate::transaction::{prepare_spend_description, sign_spend_description, SpendDetails, SpendParameters, UnsignedSpendDescription};
 
@@ -32,9 +32,9 @@ pub extern "C" fn c_spend_description_from_xsk(
     anchor_len: size_t,
     merkle_path: *const c_uchar,
     merkle_path_len: size_t,
-    description_result: *mut *const c_uchar,
-) -> size_t {
-    c_size_catch_result(|| {
+    description_len: *mut size_t,
+) -> *mut c_uchar {
+    c_ptr_catch_result(|| {
         let xsk: ExtendedSpendingKey = unsafe { c_deserialize(xsk, xsk_len) }?;
         let payment_address: PaymentAddress = unsafe { c_deserialize(address, address_len) }?;
         let rcm: jubjub::Scalar = unsafe { c_deserialize(rcm, rcm_len) }?;
@@ -58,7 +58,7 @@ pub extern "C" fn c_spend_description_from_xsk(
             SpendParameters { proving_key, verifying_key },
         );
 
-        unsafe { c_serialize_res(spend_description, description_result) }
+        unsafe { c_serialize_res(spend_description, description_len) }
     })
 }
 
@@ -72,9 +72,9 @@ pub extern "C" fn c_sign_spend_description_with_xsk(
     ar_len: size_t,
     sighash: *const c_uchar,
     sighash_len: size_t,
-    description_result: *mut *const c_uchar,
-) -> size_t {
-    c_size_catch_result(|| {
+    description_len: *mut size_t,
+) -> *mut c_uchar {
+    c_ptr_catch_result(|| {
         let spend_description: UnsignedSpendDescription = unsafe { c_deserialize(spend_description, spend_description_len) }?;
         let xks: ExtendedSpendingKey = unsafe { c_deserialize(xsk, xsk_len) }?;
         let ar: jubjub::Scalar = unsafe { c_deserialize(ar, ar_len) }?;
@@ -84,6 +84,6 @@ pub extern "C" fn c_sign_spend_description_with_xsk(
 
         let spend_description = sign_spend_description(spend_description, xks, ar, sighash);
 
-        unsafe { c_serialize_res(spend_description, description_result) }
+        unsafe { c_serialize_res(spend_description, description_len) }
     })
 }

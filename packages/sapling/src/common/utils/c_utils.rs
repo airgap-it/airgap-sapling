@@ -2,18 +2,19 @@ use std::any::Any;
 use std::ffi::CStr;
 use std::fmt::Display;
 use std::panic::{catch_unwind, UnwindSafe};
+use std::ptr;
 use std::slice;
 
-use libc::{c_char, c_uchar, size_t};
+use libc::{c_char, c_uchar, malloc, size_t};
 use wyz::TapResult;
 
 use crate::common::traits::Serializable;
 
-pub fn c_size_catch_result<F, E>(f: F) -> size_t
-    where F: FnOnce() -> Result<size_t, E> + UnwindSafe,
+pub fn c_ptr_catch_result<F, E>(f: F) -> *mut c_uchar
+    where F: FnOnce() -> Result<*mut c_uchar, E> + UnwindSafe,
           E: Display {
 
-    catch_result(f).unwrap_or(0)
+    catch_result(f).unwrap_or(ptr::null_mut())
 }
 
 pub fn c_bool_catch_result<F, R, E>(f: F) -> bool
@@ -29,32 +30,33 @@ pub fn c_bool_catch<F, R>(f: F) -> bool
     catch(f).is_ok()
 }
 
-pub unsafe fn c_copy_result(bytes: Vec<u8>, result: *mut *const c_uchar) -> size_t {
-    let result = &mut *result;
+pub unsafe fn c_get_result(bytes: Vec<u8>, res_len: *mut size_t) -> *mut c_uchar {
     let len = bytes.len();
+    let res = malloc(len) as *mut c_uchar;
+    res.copy_from(bytes.as_ptr(), len);
 
-    *result = Box::new(bytes).as_ptr();
-    len
+    *res_len = len;
+    res
 }
 
-pub unsafe fn c_copy_result_res<E>(bytes: Vec<u8>, result: *mut *const c_uchar) -> Result<size_t, E> {
-    Ok(c_copy_result(bytes, result))
+pub unsafe fn c_get_result_res<E>(bytes: Vec<u8>, res_len: *mut size_t) -> Result<*mut c_uchar, E> {
+    Ok(c_get_result(bytes, res_len))
 }
 
-pub unsafe fn c_serialize<S, E>(value: S, result: *mut *const c_uchar) -> Result<size_t, E>
+pub unsafe fn c_serialize<S, E>(value: S, res_len: *mut size_t) -> Result<*mut c_uchar, E>
     where S: Serializable<Vec<u8>, E>,
           E: ToString {
 
     let bytes = value.serialize()?;
-    c_copy_result_res(bytes, result)
+    c_get_result_res(bytes, res_len)
 }
 
-pub unsafe fn c_serialize_res<S, E>(value: Result<S, E>, result: *mut *const c_uchar) -> Result<size_t, E>
+pub unsafe fn c_serialize_res<S, E>(value: Result<S, E>, result_len: *mut size_t) -> Result<*mut c_uchar, E>
     where S: Serializable<Vec<u8>, E>,
           E: ToString {
 
     let bytes = value.and_then(|s| s.serialize())?;
-    c_copy_result_res(bytes, result)
+    c_get_result_res(bytes, result_len)
 }
 
 pub unsafe fn c_deserialize<S, E>(bytes: *const c_uchar, len: size_t) -> Result<S, E>

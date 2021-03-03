@@ -10,18 +10,23 @@ Java_it_airgap_sapling_Sapling_extComputeCmu(
         jbyteArray jaddr,
         jlong jval,
         jbyteArray jrcm) {
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
     auto val = (uint64_t) jval;
 
-    const unsigned char *rcm;
-    size_t rcm_len = jbyteArray_to_uchar(env, jrcm, rcm);
+    size_t rcm_len;
+    const unsigned char *rcm = jbyteArray_to_uchar(env, jrcm, &rcm_len);
 
-    const unsigned char *cmu;
-    size_t cmu_len = c_compute_cmu(addr, addr_len, val, rcm, rcm_len, cmu);
+    size_t cmu_len;
+    unsigned char *cmu = c_compute_cmu(addr, addr_len, val, rcm, rcm_len, &cmu_len);
+    jbyteArray jcmu = uchar_to_jbyteArray(env, cmu, cmu_len);
 
-    return cmu_len != 0 ? uchar_to_jbyteArray(env, cmu, cmu_len) : nullptr;
+    local_clean(addr);
+    local_clean(rcm);
+    ffi_clean(cmu);
+
+    return jcmu;
 }
 
 /******** Init ********/
@@ -33,13 +38,18 @@ Java_it_airgap_sapling_Sapling_extInitParameters(
         jobject /* this */,
         jbyteArray jspendParams,
         jbyteArray joutputParams) {
-    const unsigned char *s_params;
-    size_t s_params_len = jbyteArray_to_uchar(env, jspendParams, s_params);
+    size_t s_params_len;
+    const unsigned char *s_params = jbyteArray_to_uchar(env, jspendParams, &s_params_len);
 
-    const unsigned char *o_params;
-    size_t o_params_len = jbyteArray_to_uchar(env, joutputParams, o_params);
+    size_t o_params_len;
+    const unsigned char *o_params = jbyteArray_to_uchar(env, joutputParams, &o_params_len);
 
-    return c_init_params(s_params, s_params_len, o_params, o_params_len);
+    jboolean jinit = c_init_params(s_params, s_params_len, o_params, o_params_len);
+
+    local_clean(s_params);
+    local_clean(o_params);
+
+    return jinit;
 }
 
 /******** Key Agreement ********/
@@ -51,16 +61,21 @@ Java_it_airgap_sapling_Sapling_extKeyAgreement(
         jobject /* this */,
         jbyteArray jp,
         jbyteArray jsk) {
-    const unsigned char *p;
-    size_t p_len = jbyteArray_to_uchar(env, jp, p);
+    size_t p_len;
+    const unsigned char *p = jbyteArray_to_uchar(env, jp, &p_len);
 
-    const unsigned char *sk;
-    size_t sk_len = jbyteArray_to_uchar(env, jsk, sk);
+    size_t sk_len;
+    const unsigned char *sk = jbyteArray_to_uchar(env, jsk, &sk_len);
 
-    const unsigned char *ka;
-    size_t ka_len = c_key_agreement(p, p_len, sk, sk_len, ka);
+    size_t ka_len;
+    unsigned char *ka = c_key_agreement(p, p_len, sk, sk_len, &ka_len);
+    jbyteArray jka = uchar_to_jbyteArray(env, ka, ka_len);
 
-    return ka_len != 0 ? uchar_to_jbyteArray(env, ka, ka_len) : nullptr;
+    local_clean(p);
+    local_clean(sk);
+    ffi_clean(ka);
+
+    return jka;
 }
 
 /******** Merkle Tree ********/
@@ -75,16 +90,21 @@ Java_it_airgap_sapling_Sapling_extMerkleHash(
         jbyteArray jrhs) {
     auto depth = (uint64_t) jdepth;
 
-    const unsigned char *lhs;
-    size_t lhs_len = jbyteArray_to_uchar(env, jlhs, lhs);
+    size_t lhs_len;
+    const unsigned char *lhs = jbyteArray_to_uchar(env, jlhs, &lhs_len);
 
-    const unsigned char *rhs;
-    size_t rhs_len = jbyteArray_to_uchar(env, jrhs, rhs);
+    size_t rhs_len;
+    const unsigned char *rhs = jbyteArray_to_uchar(env, jrhs, &rhs_len);
 
-    const unsigned char *m_hash;
-    size_t m_hash_len = c_merkle_hash(depth, lhs, lhs_len, rhs, rhs_len, m_hash);
+    size_t m_hash_len;
+    unsigned char *m_hash = c_merkle_hash(depth, lhs, lhs_len, rhs, rhs_len, &m_hash_len);
+    jbyteArray jm_hash = uchar_to_jbyteArray(env, m_hash, m_hash_len);
 
-    return m_hash_len != 0 ? uchar_to_jbyteArray(env, m_hash, m_hash_len) : nullptr;
+    local_clean(lhs);
+    local_clean(rhs);
+    ffi_clean(m_hash);
+
+    return jm_hash;
 }
 
 /******** Nullifier ********/
@@ -99,23 +119,29 @@ Java_it_airgap_sapling_Sapling_extComputeNullifierWithXfvk(
         jlong jval,
         jbyteArray jrcm,
         jlong jpos) {
-    const unsigned char *xfvk;
-    size_t xfvk_len = jbyteArray_to_uchar(env, jxfvk, xfvk);
+    size_t xfvk_len;
+    const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
 
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
     auto val = (uint64_t) jval;
 
-    const unsigned char *rcm;
-    size_t rcm_len = jbyteArray_to_uchar(env, jrcm, rcm);
+    size_t rcm_len;
+    const unsigned char *rcm = jbyteArray_to_uchar(env, jrcm, &rcm_len);
 
     auto pos = (uint64_t) jpos;
 
-    const unsigned char *nullfier;
-    size_t nullifier_len = c_compute_nullifier_with_xfvk(xfvk, xfvk_len, addr, addr_len, val, rcm, rcm_len, pos, nullfier);
+    size_t nullifier_len;
+    unsigned char *nullifier = c_compute_nullifier_with_xfvk(xfvk, xfvk_len, addr, addr_len, val, rcm, rcm_len, pos, &nullifier_len);
+    jbyteArray jnullifier = uchar_to_jbyteArray(env, nullifier, nullifier_len);
 
-    return nullifier_len != 0 ? uchar_to_jbyteArray(env, nullfier, nullifier_len) : nullptr;
+    local_clean(xfvk);
+    local_clean(addr);
+    local_clean(rcm);
+    ffi_clean(nullifier);
+    
+    return jnullifier;
 }
 
 /******** Output Description ********/
@@ -132,21 +158,27 @@ Java_it_airgap_sapling_Sapling_extOutputDescriptionFromXfvk(
         jlong jval) {
     void *ctx = (void *) jctx;
     
-    const unsigned char *xfvk;
-    size_t xfvk_len = jbyteArray_to_uchar(env, jxfvk, xfvk);
+    size_t xfvk_len;
+    const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
 
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
-    const unsigned char *rcm;
-    size_t rcm_len = jbyteArray_to_uchar(env, jrcm, rcm);
+    size_t rcm_len;
+    const unsigned char *rcm = jbyteArray_to_uchar(env, jrcm, &rcm_len);
 
     auto val = (uint64_t) jval;
     
-    const unsigned char *o_desc;
-    size_t o_desc_len = c_output_description_from_xfvk(ctx, xfvk, xfvk_len, addr, addr_len, rcm, rcm_len, val, o_desc);
+    size_t o_desc_len;
+    unsigned char *o_desc = c_output_description_from_xfvk(ctx, xfvk, xfvk_len, addr, addr_len, rcm, rcm_len, val, &o_desc_len);
+    jbyteArray jo_desc = uchar_to_jbyteArray(env, o_desc, o_desc_len);
+
+    local_clean(xfvk);
+    local_clean(addr);
+    local_clean(rcm);
+    ffi_clean(o_desc);
     
-    return o_desc_len != 0 ? uchar_to_jbyteArray(env, o_desc, o_desc_len) : nullptr;
+    return jo_desc;
 }
 
 extern "C"
@@ -162,22 +194,22 @@ Java_it_airgap_sapling_Sapling_extOutputDescriptionFromXfvkWithMemo(
         jbyteArray jmemo) {
     void *ctx = (void *) jctx;
 
-    const unsigned char *xfvk;
-    size_t xfvk_len = jbyteArray_to_uchar(env, jxfvk, xfvk);
+    size_t xfvk_len;
+    const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
 
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
-    const unsigned char *rcm;
-    size_t rcm_len = jbyteArray_to_uchar(env, jrcm, rcm);
+    size_t rcm_len;
+    const unsigned char *rcm = jbyteArray_to_uchar(env, jrcm, &rcm_len);
 
     auto val = (uint64_t) jval;
 
-    const unsigned char *memo;
-    size_t memo_len = jbyteArray_to_uchar(env, jmemo, memo);
+    size_t memo_len;
+    const unsigned char *memo = jbyteArray_to_uchar(env, jmemo, &memo_len);
 
-    const unsigned char *o_desc;
-    size_t o_desc_len = c_output_description_from_xfvk_with_memo(
+    size_t o_desc_len;
+    unsigned char *o_desc = c_output_description_from_xfvk_with_memo(
             ctx,
             xfvk,
             xfvk_len,
@@ -188,10 +220,17 @@ Java_it_airgap_sapling_Sapling_extOutputDescriptionFromXfvkWithMemo(
             val,
             memo,
             memo_len,
-            o_desc
+            &o_desc_len
     );
-
-    return o_desc_len != 0 ? uchar_to_jbyteArray(env, o_desc, o_desc_len) : nullptr;
+    jbyteArray jo_desc = uchar_to_jbyteArray(env, o_desc, o_desc_len);
+    
+    local_clean(xfvk);
+    local_clean(addr);
+    local_clean(rcm);
+    local_clean(memo);
+    ffi_clean(o_desc);
+    
+    return jo_desc;
 }
 
 extern "C"
@@ -206,21 +245,27 @@ Java_it_airgap_sapling_Sapling_extOutputDescriptionFromOvk(
         jlong jval) {
     void *ctx = (void *) jctx;
 
-    const unsigned char *ovk;
-    size_t ovk_len = jbyteArray_to_uchar(env, jovk, ovk);
+    size_t ovk_len;
+    const unsigned char *ovk = jbyteArray_to_uchar(env, jovk, &ovk_len);
 
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
-    const unsigned char *rcm;
-    size_t rcm_len = jbyteArray_to_uchar(env, jrcm, rcm);
+    size_t rcm_len;
+    const unsigned char *rcm = jbyteArray_to_uchar(env, jrcm, &rcm_len);
 
     auto val = (uint64_t) jval;
 
-    const unsigned char *o_desc;
-    size_t o_desc_len = c_output_description_from_ovk(ctx, ovk, ovk_len, addr, addr_len, rcm, rcm_len, val, o_desc);
+    size_t o_desc_len;
+    unsigned char *o_desc = c_output_description_from_ovk(ctx, ovk, ovk_len, addr, addr_len, rcm, rcm_len, val, &o_desc_len);
+    jbyteArray jo_desc = uchar_to_jbyteArray(env, o_desc, o_desc_len);
 
-    return o_desc_len != 0 ? uchar_to_jbyteArray(env, o_desc, o_desc_len) : nullptr;
+    local_clean(ovk);
+    local_clean(addr);
+    local_clean(rcm);
+    ffi_clean(o_desc);
+
+    return jo_desc;
 }
 
 extern "C"
@@ -235,21 +280,27 @@ Java_it_airgap_sapling_Sapling_extPartialOutputDescription(
         jlong jval) {
     void *ctx = (void *) jctx;
 
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
-    const unsigned char *rcm;
-    size_t rcm_len = jbyteArray_to_uchar(env, jrcm, rcm);
+    size_t rcm_len;
+    const unsigned char *rcm = jbyteArray_to_uchar(env, jrcm, &rcm_len);
 
-    const unsigned char *esk;
-    size_t esk_len = jbyteArray_to_uchar(env, jesk, esk);
+    size_t esk_len;
+    const unsigned char *esk = jbyteArray_to_uchar(env, jesk, &esk_len);
 
     auto val = (uint64_t) jval;
 
-    const unsigned char *o_desc;
-    size_t o_desc_len = c_partial_output_description(ctx, addr, addr_len, rcm, rcm_len, esk, esk_len, val, o_desc);
+    size_t o_desc_len;
+    unsigned char *o_desc = c_partial_output_description(ctx, addr, addr_len, rcm, rcm_len, esk, esk_len, val, &o_desc_len);
+    jbyteArray jo_desc = uchar_to_jbyteArray(env, o_desc, o_desc_len);
 
-    return o_desc_len != 0 ? uchar_to_jbyteArray(env, o_desc, o_desc_len) : nullptr;
+    local_clean(addr);
+    local_clean(rcm);
+    local_clean(esk);
+    ffi_clean(o_desc);
+
+    return jo_desc;
 }
 
 extern "C"
@@ -259,16 +310,21 @@ Java_it_airgap_sapling_Sapling_extDeriveEpkFromEsk(
         jobject /* this */,
         jbyteArray jdiv,
         jbyteArray jesk) {
-    const unsigned char *div;
-    size_t div_len = jbyteArray_to_uchar(env, jdiv, div);
+    size_t div_len;
+    const unsigned char *div = jbyteArray_to_uchar(env, jdiv, &div_len);
 
-    const unsigned char *esk;
-    size_t esk_len = jbyteArray_to_uchar(env, jesk, esk);
+    size_t esk_len;
+    const unsigned char *esk = jbyteArray_to_uchar(env, jesk, &esk_len);
 
-    const unsigned char *epk;
-    size_t epk_len = c_derive_epk_from_esk(div, div_len, esk, esk_len, epk);
+    size_t epk_len;
+    unsigned char *epk = c_derive_epk_from_esk(div, div_len, esk, esk_len, &epk_len);
+    jbyteArray jepk = uchar_to_jbyteArray(env, epk, epk_len);
     
-    return epk_len != 0 ? uchar_to_jbyteArray(env, epk, epk_len) : nullptr;
+    local_clean(div);
+    local_clean(esk);
+    ffi_clean(epk);
+    
+    return jepk;
 }
 
 /******** Payment Address ********/
@@ -279,13 +335,17 @@ Java_it_airgap_sapling_Sapling_extDefaultPaymentAddressFromXfvk(
         JNIEnv *env, 
         jobject /* this */,
         jbyteArray jxfvk) {
-    const unsigned char *xfvk;
-    size_t xfvk_len = jbyteArray_to_uchar(env, jxfvk, xfvk);
+    size_t xfvk_len;
+    const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
     
-    const unsigned char *addr;
-    size_t addr_len = c_default_payment_address_from_xfvk(xfvk, xfvk_len, addr);
+    size_t addr_len;
+    unsigned char *addr = c_default_payment_address_from_xfvk(xfvk, xfvk_len, &addr_len);
+    jbyteArray jaddr = uchar_to_jbyteArray(env, addr, addr_len);
     
-    return addr_len != 0 ? uchar_to_jbyteArray(env, addr, addr_len) : nullptr;
+    local_clean(xfvk);
+    ffi_clean(addr);
+    
+    return jaddr;
 }
 
 extern "C"
@@ -295,16 +355,20 @@ Java_it_airgap_sapling_Sapling_extNextPaymentAddressFromXfvk(
         jobject /* this */,
         jbyteArray jxfvk,
         jbyteArray jidx) {
-    const unsigned char *xfvk;
-    size_t xfvk_len = jbyteArray_to_uchar(env, jxfvk, xfvk);
+    size_t xfvk_len;
+    const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
 
-    const unsigned char *idx;
-    size_t idx_len = jbyteArray_to_uchar(env, jidx, idx);
+    size_t idx_len;
+    const unsigned char *idx = jbyteArray_to_uchar(env, jidx, &idx_len);
 
-    const unsigned char *addr;
-    size_t addr_len = c_next_payment_address_from_xfvk(xfvk, xfvk_len, idx, idx_len, addr);
-
-    return addr_len != 0 ? uchar_to_jbyteArray(env, addr, addr_len) : nullptr;
+    size_t addr_len;
+    unsigned char *addr = c_next_payment_address_from_xfvk(xfvk, xfvk_len, idx, idx_len, &addr_len);
+    jbyteArray jaddr = uchar_to_jbyteArray(env, addr, addr_len);
+    
+    local_clean(xfvk);
+    ffi_clean(addr);
+    
+    return jaddr;
 }
 
 extern "C"
@@ -314,16 +378,21 @@ Java_it_airgap_sapling_Sapling_extPaymentAddressFromXfvk(
         jobject /* this */,
         jbyteArray jxfvk,
         jbyteArray jidx) {
-    const unsigned char *xfvk;
-    size_t xfvk_len = jbyteArray_to_uchar(env, jxfvk, xfvk);
+    size_t xfvk_len;
+    const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
 
-    const unsigned char *idx;
-    size_t idx_len = jbyteArray_to_uchar(env, jidx, idx);
+    size_t idx_len;
+    const unsigned char *idx = jbyteArray_to_uchar(env, jidx, &idx_len);
 
-    const unsigned char *addr;
-    size_t addr_len = c_payment_address_from_xfvk(xfvk, xfvk_len, idx, idx_len, addr);
-
-    return addr_len != 0 ? uchar_to_jbyteArray(env, addr, addr_len) : nullptr;
+    size_t addr_len;
+    unsigned char *addr = c_payment_address_from_xfvk(xfvk, xfvk_len, idx, idx_len, &addr_len);
+    jbyteArray jaddr = uchar_to_jbyteArray(env, addr, addr_len);
+    
+    local_clean(xfvk);
+    local_clean(idx);
+    ffi_clean(addr);
+    
+    return jaddr;
 }
 
 extern "C"
@@ -333,16 +402,21 @@ Java_it_airgap_sapling_Sapling_extPaymentAddressFromIvk(
         jobject /* this */,
         jbyteArray jivk,
         jbyteArray jdiv) {
-    const unsigned char *ivk;
-    size_t ivk_len = jbyteArray_to_uchar(env, jivk, ivk);
+    size_t ivk_len;
+    const unsigned char *ivk = jbyteArray_to_uchar(env, jivk, &ivk_len);
 
-    const unsigned char *div;
-    size_t div_len = jbyteArray_to_uchar(env, jdiv, div);
+    size_t div_len;
+    const unsigned char *div = jbyteArray_to_uchar(env, jdiv, &div_len);
 
-    const unsigned char *addr;
-    size_t addr_len = c_payment_address_from_xfvk(ivk, ivk_len, div, div_len, addr);
+    size_t addr_len;
+    unsigned char *addr = c_payment_address_from_xfvk(ivk, ivk_len, div, div_len, &addr_len);
+    jbyteArray jaddr = uchar_to_jbyteArray(env, addr, addr_len);
 
-    return addr_len != 0 ? uchar_to_jbyteArray(env, addr, addr_len) : nullptr;
+    local_clean(ivk);
+    local_clean(div);
+    ffi_clean(addr);
+
+    return jaddr;
 }
 
 extern "C"
@@ -351,13 +425,17 @@ Java_it_airgap_sapling_Sapling_extDiversifierFromPaymentAddress(
         JNIEnv *env,
         jobject /* this */,
         jbyteArray jaddr) {
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
-    const unsigned char *div;
-    size_t div_len = c_diversifier_from_payment_address(addr, addr_len, div);
-
-    return div_len != 0 ? uchar_to_jbyteArray(env, div, div_len) : nullptr;
+    size_t div_len;
+    unsigned char *div = c_diversifier_from_payment_address(addr, addr_len, &div_len);
+    jbyteArray jdiv = uchar_to_jbyteArray(env, div, div_len);
+    
+    local_clean(addr);
+    ffi_clean(div);
+    
+    return jdiv;
 }
 
 extern "C"
@@ -366,13 +444,17 @@ Java_it_airgap_sapling_Sapling_extPkdFromPaymentAddress(
         JNIEnv *env,
         jobject /* this */,
         jbyteArray jaddr) {
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
-    const unsigned char *pkd;
-    size_t pkd_len = c_diversifier_from_payment_address(addr, addr_len, pkd);
+    size_t pkd_len;
+    unsigned char *pkd = c_diversifier_from_payment_address(addr, addr_len, &pkd_len);
+    jbyteArray jpkd = uchar_to_jbyteArray(env, pkd, pkd_len);
 
-    return pkd_len != 0 ? uchar_to_jbyteArray(env, pkd, pkd_len) : nullptr;
+    local_clean(addr);
+    ffi_clean(pkd);
+
+    return jpkd;
 }
 
 /******** Proving Context ********/
@@ -399,10 +481,13 @@ Java_it_airgap_sapling_Sapling_extDropProvingContext(
 extern "C"
 JNIEXPORT jbyteArray JNICALL
 Java_it_airgap_sapling_Sapling_extRandR(JNIEnv *env, jobject /* this */) {
-    const unsigned char *r;
-    size_t r_len = c_rand_r(r);
+    size_t r_len;
+    unsigned char *r = c_rand_r(&r_len);
+    jbyteArray jr = uchar_to_jbyteArray(env, r, r_len);
 
-    return r_len != 0 ? uchar_to_jbyteArray(env, r, r_len) : nullptr;
+    ffi_clean(r);
+
+    return jr;
 }
 
 /******** Signature ********/
@@ -418,13 +503,17 @@ Java_it_airgap_sapling_Sapling_extCreateBindingSignature(
     void *ctx = (void *) jctx;
     auto bal = (int64_t) jbal;
 
-    const unsigned char *sighash;
-    size_t sighash_len = jbyteArray_to_uchar(env, jsighash, sighash);
+    size_t sighash_len;
+    const unsigned char *sighash = jbyteArray_to_uchar(env, jsighash, &sighash_len);
 
-    const unsigned char *sig;
-    size_t sig_len = c_binding_signature(ctx, bal, sighash, sighash_len, sig);
+    size_t sig_len;
+    unsigned char *sig = c_binding_signature(ctx, bal, sighash, sighash_len, &sig_len);
+    jbyteArray jsig = uchar_to_jbyteArray(env, sig, sig_len);
 
-    return sig_len != 0 ? uchar_to_jbyteArray(env, sig, sig_len) : nullptr;
+    local_clean(sighash);
+    ffi_clean(sig);
+
+    return jsig;
 }
 
 /******** Spend Description ********/
@@ -444,28 +533,28 @@ Java_it_airgap_sapling_Sapling_extSpendDescriptionFromXsk(
         jbyteArray jmerklePath) {
     void *ctx = (void *) jctx;
 
-    const unsigned char *xsk;
-    size_t xsk_len = jbyteArray_to_uchar(env, jxsk, xsk);
+    size_t xsk_len;
+    const unsigned char *xsk = jbyteArray_to_uchar(env, jxsk, &xsk_len);
 
-    const unsigned char *addr;
-    size_t addr_len = jbyteArray_to_uchar(env, jaddr, addr);
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
-    const unsigned char *rcm;
-    size_t rcm_len = jbyteArray_to_uchar(env, jrcm, rcm);
+    size_t rcm_len;
+    const unsigned char *rcm = jbyteArray_to_uchar(env, jrcm, &rcm_len);
 
-    const unsigned char *ar;
-    size_t ar_len = jbyteArray_to_uchar(env, jar, ar);
+    size_t ar_len;
+    const unsigned char *ar = jbyteArray_to_uchar(env, jar, &ar_len);
 
     auto val = (uint64_t) jval;
 
-    const unsigned char *anchor;
-    size_t anchor_len = jbyteArray_to_uchar(env, janchor, anchor);
+    size_t anchor_len;
+    const unsigned char *anchor = jbyteArray_to_uchar(env, janchor, &anchor_len);
 
-    const unsigned char *merkle_path;
-    size_t merkle_path_len = jbyteArray_to_uchar(env, jmerklePath, merkle_path);
+    size_t merkle_path_len;
+    const unsigned char *merkle_path = jbyteArray_to_uchar(env, jmerklePath, &merkle_path_len);
 
-    const unsigned char *s_desc;
-    size_t s_desc_len = c_spend_description_from_xsk(
+    size_t s_desc_len;
+    unsigned char *s_desc = c_spend_description_from_xsk(
             ctx,
             xsk,
             xsk_len,
@@ -480,10 +569,19 @@ Java_it_airgap_sapling_Sapling_extSpendDescriptionFromXsk(
             anchor_len,
             merkle_path,
             merkle_path_len,
-            s_desc
+            &s_desc_len
     );
+    jbyteArray js_desc = uchar_to_jbyteArray(env, s_desc, s_desc_len);
 
-    return s_desc_len != 0 ? uchar_to_jbyteArray(env, s_desc, s_desc_len) : nullptr;
+    local_clean(xsk);
+    local_clean(addr);
+    local_clean(rcm);
+    local_clean(ar);
+    local_clean(anchor);
+    local_clean(merkle_path);
+    ffi_clean(s_desc);
+
+    return js_desc;
 }
 
 extern "C"
@@ -495,20 +593,20 @@ Java_it_airgap_sapling_Sapling_extSignSpendDescriptionWithXsk(
         jbyteArray jxsk,
         jbyteArray jar,
         jbyteArray jsighash) {
-    const unsigned char *s_desc;
-    size_t s_desc_len = jbyteArray_to_uchar(env, js_desc, s_desc);
+    size_t s_desc_len;
+    const unsigned char *s_desc = jbyteArray_to_uchar(env, js_desc, &s_desc_len);
 
-    const unsigned char *xsk;
-    size_t xsk_len = jbyteArray_to_uchar(env, jxsk, xsk);
+    size_t xsk_len;
+    const unsigned char *xsk = jbyteArray_to_uchar(env, jxsk, &xsk_len);
 
-    const unsigned char *ar;
-    size_t ar_len = jbyteArray_to_uchar(env, jar, ar);
+    size_t ar_len;
+    const unsigned char *ar = jbyteArray_to_uchar(env, jar, &ar_len);
 
-    const unsigned char *sighash;
-    size_t sighash_len = jbyteArray_to_uchar(env, jsighash, sighash);
+    size_t sighash_len;
+    const unsigned char *sighash = jbyteArray_to_uchar(env, jsighash, &sighash_len);
 
-    const unsigned char *signed_s_desc;
-    size_t signed_s_desc_len = c_sign_spend_description_with_xsk(
+    size_t signed_s_desc_len;
+    unsigned char *signed_s_desc = c_sign_spend_description_with_xsk(
             s_desc,
             s_desc_len,
             xsk,
@@ -517,10 +615,17 @@ Java_it_airgap_sapling_Sapling_extSignSpendDescriptionWithXsk(
             ar_len,
             sighash,
             sighash_len,
-            signed_s_desc
+            &signed_s_desc_len
     );
+    jbyteArray jsigned_s_desc = uchar_to_jbyteArray(env, signed_s_desc, signed_s_desc_len);
 
-    return sighash_len != 0 ? uchar_to_jbyteArray(env, signed_s_desc, signed_s_desc_len) : nullptr;
+    local_clean(s_desc);
+    local_clean(xsk);
+    local_clean(ar);
+    local_clean(sighash);
+    ffi_clean(signed_s_desc);
+
+    return jsigned_s_desc;
 }
 
 /******** Spending Key ********/
@@ -532,15 +637,19 @@ Java_it_airgap_sapling_Sapling_extXsk(
         jobject /* this */,
         jbyteArray jseed,
         jstring jd_path) {
-    const unsigned char *seed;
-    size_t seed_len = jbyteArray_to_uchar(env, jseed, seed);
+    size_t seed_len;
+    const unsigned char *seed = jbyteArray_to_uchar(env, jseed, &seed_len);
 
     const char *d_path = env->GetStringUTFChars(jd_path, nullptr);
 
-    const unsigned char *xsk;
-    size_t xsk_len = c_xsk(seed, seed_len, d_path, xsk);
+    size_t xsk_len;
+    unsigned char *xsk = c_xsk(seed, seed_len, d_path, &xsk_len);
+    jbyteArray jxsk = uchar_to_jbyteArray(env, xsk, xsk_len);
 
-    return xsk_len != 0 ? uchar_to_jbyteArray(env, xsk, xsk_len) : nullptr;
+    local_clean(seed);
+    ffi_clean(xsk);
+
+    return jxsk;
 }
 
 /******** Viewing Key ********/
@@ -552,15 +661,19 @@ Java_it_airgap_sapling_Sapling_extXfvk(
         jobject /* this */,
         jbyteArray jseed,
         jstring jd_path) {
-    const unsigned char *seed;
-    size_t seed_len = jbyteArray_to_uchar(env, jseed, seed);
+    size_t seed_len;
+    const unsigned char *seed = jbyteArray_to_uchar(env, jseed, &seed_len);
 
     const char *d_path = env->GetStringUTFChars(jd_path, nullptr);
 
-    const unsigned char *xfvk;
-    size_t xfvk_len = c_xfvk(seed, seed_len, d_path, xfvk);
+    size_t xfvk_len;
+    unsigned char *xfvk = c_xfvk(seed, seed_len, d_path, &xfvk_len);
+    jbyteArray jxfvk = uchar_to_jbyteArray(env, xfvk, xfvk_len);
 
-    return xfvk_len != 0 ? uchar_to_jbyteArray(env, xfvk, xfvk_len) : nullptr;
+    local_clean(seed);
+    ffi_clean(xfvk);
+
+    return jxfvk;
 }
 
 extern "C"
@@ -569,35 +682,47 @@ Java_it_airgap_sapling_Sapling_extXfvkFromXsk(
         JNIEnv *env,
         jobject /* this */,
         jbyteArray jxsk) {
-    const unsigned char *xsk;
-    size_t xsk_len = jbyteArray_to_uchar(env, jxsk, xsk);
+    size_t xsk_len;
+    const unsigned char *xsk = jbyteArray_to_uchar(env, jxsk, &xsk_len);
 
-    const unsigned char *xfvk;
-    size_t xfvk_len = c_xfvk_from_xsk(xsk, xsk_len, xfvk);
+    size_t xfvk_len;
+    unsigned char *xfvk = c_xfvk_from_xsk(xsk, xsk_len, &xfvk_len);
+    jbyteArray jxfvk = uchar_to_jbyteArray(env, xfvk, xfvk_len);
 
-    return xfvk_len != 0 ? uchar_to_jbyteArray(env, xfvk, xfvk_len) : nullptr;
+    local_clean(xsk);
+    ffi_clean(xfvk);
+
+    return jxfvk;
 }
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
 Java_it_airgap_sapling_Sapling_extOvkFromXfvk(JNIEnv *env, jobject /* this */, jbyteArray jxfvk) {
-    const unsigned char *xfvk;
-    size_t xfvk_len = jbyteArray_to_uchar(env, jxfvk, xfvk);
+    size_t xfvk_len;
+    const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
 
-    const unsigned char *ovk;
-    size_t ovk_len = c_xfvk_from_xsk(xfvk, xfvk_len, ovk);
+    size_t ovk_len;
+    unsigned char *ovk = c_xfvk_from_xsk(xfvk, xfvk_len, &ovk_len);
+    jbyteArray jovk = uchar_to_jbyteArray(env, ovk, ovk_len);
 
-    return ovk_len != 0 ? uchar_to_jbyteArray(env, ovk, ovk_len) : nullptr;
+    local_clean(xfvk);
+    ffi_clean(ovk);
+
+    return jovk;
 }
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
 Java_it_airgap_sapling_Sapling_extXfvkToIvk(JNIEnv *env, jobject /* this */, jbyteArray jxfvk) {
-    const unsigned char *xfvk;
-    size_t xfvk_len = jbyteArray_to_uchar(env, jxfvk, xfvk);
+    size_t xfvk_len;
+    const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
 
-    const unsigned char *ivk;
-    size_t ivk_len = c_xfvk_to_ivk(xfvk, xfvk_len, ivk);
+    size_t ivk_len;
+    unsigned char *ivk = c_xfvk_to_ivk(xfvk, xfvk_len, &ivk_len);
+    jbyteArray jivk = uchar_to_jbyteArray(env, ivk, ivk_len);
 
-    return ivk_len != 0 ? uchar_to_jbyteArray(env, ivk, ivk_len) : nullptr;
+    local_clean(xfvk);
+    ffi_clean(ivk);
+
+    return jivk;
 }

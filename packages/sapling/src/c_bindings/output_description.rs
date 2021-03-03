@@ -10,7 +10,7 @@ use zcash_proofs::sapling::SaplingProvingContext;
 use zcash_proofs::ZcashParameters;
 
 use crate::common::errors::{CausedBy, SaplingError};
-use crate::common::utils::c_utils::{c_dereference, c_deserialize, c_deserialize_slice, c_serialize_res, c_size_catch_result};
+use crate::common::utils::c_utils::{c_dereference, c_deserialize, c_deserialize_slice, c_serialize_res, c_ptr_catch_result};
 use crate::State;
 use crate::transaction::{derive_epk, OutputDetails, prepare_output_description, prepare_partial_output_description};
 
@@ -24,9 +24,9 @@ pub extern "C" fn c_output_description_from_xfvk(
     rcm: *const c_uchar,
     rcm_len: size_t,
     value: u64,
-    description_result: *mut *const c_uchar,
-) -> size_t {
-    c_size_catch_result(|| {
+    description_len: *mut size_t,
+) -> *mut c_uchar {
+    c_ptr_catch_result(|| {
         let xfvk: ExtendedFullViewingKey = unsafe { c_deserialize(xfvk, xfvk_len) }?;
         let address: PaymentAddress = unsafe { c_deserialize(to, to_len) }?;
         let rcm: jubjub::Scalar = unsafe { c_deserialize(rcm, rcm_len) }?;
@@ -45,7 +45,7 @@ pub extern "C" fn c_output_description_from_xfvk(
             proving_key,
         );
 
-        unsafe { c_serialize_res(output_description, description_result) }
+        unsafe { c_serialize_res(output_description, description_len) }
     })
 }
 
@@ -61,9 +61,9 @@ pub extern "C" fn c_output_description_from_xfvk_with_memo(
     value: u64,
     memo: *const c_uchar,
     memo_len: size_t,
-    description_result: *mut *const c_uchar,
-) -> size_t {
-    c_size_catch_result(|| {
+    description_len: *mut size_t,
+) -> *mut c_uchar {
+    c_ptr_catch_result(|| {
         let xfvk: ExtendedFullViewingKey = unsafe { c_deserialize(xfvk, xfvk_len) }?;
         let address: PaymentAddress = unsafe { c_deserialize(to, to_len) }?;
         let rcm: jubjub::Scalar = unsafe { c_deserialize(rcm, rcm_len) }?;
@@ -83,7 +83,7 @@ pub extern "C" fn c_output_description_from_xfvk_with_memo(
             proving_key,
         );
 
-        unsafe { c_serialize_res(output_description, description_result) }
+        unsafe { c_serialize_res(output_description, description_len) }
     })
 }
 
@@ -97,9 +97,9 @@ pub extern "C" fn c_output_description_from_ovk(
     rcm: *const c_uchar,
     rcm_len: size_t,
     value: u64,
-    description_result: *mut *const c_uchar,
-) -> size_t {
-    c_size_catch_result(|| {
+    description_len: *mut size_t,
+) -> *mut c_uchar {
+    c_ptr_catch_result(|| {
         let ovk: OutgoingViewingKey = unsafe { c_deserialize(ovk, ovk_len) }?;
         let address: PaymentAddress = unsafe { c_deserialize(to, to_len) }?;
         let rcm: jubjub::Scalar = unsafe { c_deserialize(rcm, rcm_len) }?;
@@ -118,7 +118,7 @@ pub extern "C" fn c_output_description_from_ovk(
             proving_key,
         );
 
-        unsafe { c_serialize_res(output_description, description_result) }
+        unsafe { c_serialize_res(output_description, description_len) }
     })
 }
 
@@ -132,9 +132,9 @@ pub extern "C" fn c_partial_output_description(
     esk: *const c_uchar,
     esk_len: size_t,
     value: u64,
-    description_result: *mut *const c_uchar,
-) -> size_t {
-    c_size_catch_result(|| {
+    description_len: *mut size_t,
+) -> *mut c_uchar {
+    c_ptr_catch_result(|| {
         let address: PaymentAddress = unsafe { c_deserialize(to, to_len)? };
         let rcm: jubjub::Scalar = unsafe { c_deserialize(rcm, rcm_len)? };
         let esk: jubjub::Scalar = unsafe { c_deserialize(esk, esk_len)? };
@@ -152,7 +152,7 @@ pub extern "C" fn c_partial_output_description(
             proving_key,
         );
 
-        unsafe { c_serialize_res(output_description, description_result) }
+        unsafe { c_serialize_res(output_description, description_len) }
     })
 }
 
@@ -162,9 +162,9 @@ pub extern "C" fn c_derive_epk_from_esk(
     diversifier_len: size_t,
     esk: *const c_uchar,
     esk_len: size_t,
-    epk_result: *mut *const c_uchar,
-) -> size_t {
-    c_size_catch_result(|| {
+    epk_len: *mut size_t,
+) -> *mut c_uchar {
+    c_ptr_catch_result(|| {
         let diversifier: [u8; 11] = unsafe { c_deserialize_slice(diversifier, diversifier_len) }.try_into()
             .map_err(|_| SaplingError::caused_by("deriveEpkFromEsk: index must be an array of 11 bytes"))?;
         let diversifier = Diversifier(diversifier);
@@ -172,6 +172,6 @@ pub extern "C" fn c_derive_epk_from_esk(
 
         let epk = derive_epk(diversifier, esk);
 
-        unsafe { c_serialize_res(epk, epk_result) }
+        unsafe { c_serialize_res(epk, epk_len) }
     })
 }
