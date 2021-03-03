@@ -1,9 +1,11 @@
 .idea/
 .idea/**/*
 
-/target
+target
 **/*.rs.bk
 Cargo.lock
 pkg/
 
 node_modules
+
+.build
