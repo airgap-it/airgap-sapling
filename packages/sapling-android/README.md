@@ -22,7 +22,7 @@ To add Android AirGap Sapling library into your project:
 
 1. Add the dependency:
   ```groovy
-  def saplingVersion = "0.0.4"
+  def saplingVersion = "x.y.z"
 
   implementation "com.github.airgap-it:airgap-sapling:$saplingVersion"
   ```

@@ -3,6 +3,17 @@
 
 import PackageDescription
 
+let excludes = [
+   "../sapling",
+   "../sapling-android",
+   "../../scripts",
+   "../../Cargo.toml",
+   "../../jitpack.yml",
+   "../../lerna.json",
+   "../../package.json",
+   "../../package-lock.json"
+]
+
 let package = Package(
     name: "AirGapSapling",
     products: [
@@ -21,11 +32,13 @@ let package = Package(
         .target(
             name: "Sapling",
             dependencies: [],
-            path: "packages/sapling-ios/Sources/Sapling"),
+            path: "packages/sapling-ios/Sources/Sapling",
+            exclude: excludes),
 
         .testTarget(
             name: "SaplingTests",
             dependencies: [],
-            path: "packages/sapling-ios/Tests/SaplingTests")
+            path: "packages/sapling-ios/Tests/SaplingTests",
+            exclude: excludes)
     ]
 )
