@@ -73,11 +73,29 @@ To add Android AirGap Sapling library into your project:
 
 1. Add the dependency:
   ```groovy
-  def saplingVersion = "0.0.4"
+  def saplingVersion = "x.y.z"
 
   implementation "com.github.airgap-it:airgap-sapling:$saplingVersion"
   ```
 
 ## Sapling iOS
 
-TBD
+### Install
+
+To add iOS AirGap Sapling into your project, add the package dependency:
+
+#### Xcode
+
+Open the `Add Package Dependency` window (as described in [the official guide](https://developer.apple.com/documentation/xcode/adding_package_dependencies_to_your_app)) and enter the AirGap Sapling GitHub repository URL:
+```
+https://github.com/airgap-it/airgap-sapling
+```
+
+#### Package.swift file
+
+Add the following dependency in your `Package.swift` file:
+
+```swift
+.package(url: "https://github.com/airgap-it/airgap-sapling", from: "x.y.z")
+```
+
