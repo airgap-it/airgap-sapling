@@ -3,7 +3,7 @@ use zcash_primitives::primitives::PaymentAddress;
 use zcash_primitives::zip32::ExtendedFullViewingKey;
 
 use crate::common::errors::SaplingError;
-use crate::common::utils::c_utils::{c_copy_result_res, c_deserialize, c_size_catch_result};
+use crate::common::utils::c_utils::{c_get_result_res, c_deserialize, c_ptr_catch_result};
 use crate::transaction::compute_nullifier;
 
 #[no_mangle]
@@ -16,15 +16,15 @@ pub extern "C" fn c_compute_nullifier_with_xfvk(
     rcm: *const c_uchar,
     rcm_len: size_t,
     position: u64,
-    nullifier_result: *mut *const c_uchar,
-) -> size_t {
-    c_size_catch_result(|| {
+    nullifier_len: *mut size_t,
+) -> *mut c_uchar {
+    c_ptr_catch_result(|| {
         let xfvk: ExtendedFullViewingKey = unsafe { c_deserialize(xfvk, xfvk_len) }?;
         let payment_address: PaymentAddress = unsafe { c_deserialize(address, address_len) }?;
         let rcm: jubjub::Scalar = unsafe { c_deserialize(rcm, rcm_len) }?;
 
         let nullifier = compute_nullifier(&xfvk.fvk.vk, &payment_address, value, rcm, position)?;
 
-        unsafe { c_copy_result_res::<SaplingError>(nullifier.to_vec(), nullifier_result) }
+        unsafe { c_get_result_res::<SaplingError>(nullifier.to_vec(), nullifier_len) }
     })
 }

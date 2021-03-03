@@ -203,8 +203,8 @@ LIB_NAME=$(grep -o "name\s\+.\+" "$CORE_MANIFEST_PATH" | awk '{ print $3 }' | se
 CPP_DIR="$CURR_DIR/app/src/main/cpp"
 
 INCLUDE_DIR="$CURR_DIR/../sapling/include"
-if cp "$INCLUDE_DIR/$LIB_NAME.h" "$CPP_DIR/include/sapling.h"; then
-  echo -e "  \xE2\x9C\x94 header (include/sapling.h)"
+if cp "$INCLUDE_DIR/$LIB_NAME.h" "$CPP_DIR/include/sapling_ffi.h"; then
+  echo -e "  \xE2\x9C\x94 header (include/sapling_ffi.h)"
 else
   exit 1
 fi
@@ -216,6 +216,7 @@ function cp_lib () {
   cpp_lib_dir="libs/$(android_abi "$1")"
   cpp_lib_name="libsapling_ffi.a"
 
+  mkdir -p "$CPP_DIR/$cpp_lib_dir"
   if cp "$TARGET_DIR/$(rust_target "$1")/release/lib$LIB_NAME.a" "$CPP_DIR/$cpp_lib_dir/$cpp_lib_name"; then
     echo -e "  \xE2\x9C\x94 $1 static lib ($cpp_lib_dir/$cpp_lib_name)"
   else
