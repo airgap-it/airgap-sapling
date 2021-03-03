@@ -1,25 +1,22 @@
 #!/bin/bash
 
+# Currently there are some issues while cross compiling Rust code for iOS.
+# (https://github.com/rust-lang/rust/issues/79408)
+# As a __workaround__, a custom target with directly specified min iOS version is used.
+
+MIN_IOS_VERSION=11.0
 ARM_64=arm64
-ARM=arm
 X86_64=x86_64
-X86=x86
 
 CURR_DIR=${BASH_SOURCE[0]%/build-ffi.sh}
 
 function rust_target () {
   case $1 in
     "$ARM_64")
-      echo aarch64-linux-android
-      ;;
-    "$ARM")
-      echo armv7-linux-androideabi
+      echo aarch64-apple-ios
       ;;
     "$X86_64")
-      echo x86_64-linux-android
-      ;;
-    "$X86")
-      echo i686-linux-android
+      echo x86_64-apple-ios
       ;;
     *)
       echo "Error: Unknown Rust target."
@@ -28,22 +25,35 @@ function rust_target () {
   esac
 }
 
-function android_abi () {
+function ios_target () {
   case $1 in
     "$ARM_64")
-      echo arm64-v8a
-      ;;
-    "$ARM")
-      echo armeabi-v7a
+      echo ios-arm64
       ;;
     "$X86_64")
-      echo x86_64
-      ;;
-    "$X86")
-      echo x86
+      echo ios-x86_64-simulator
       ;;
     *)
-      echo "Error: Unknown Android ABI."
+      echo "Error: Unknown Rust target."
+      exit 1
+      ;;
+  esac
+}
+
+function __workaround__rust_target () {
+  echo "$(rust_target "$1")$MIN_IOS_VERSION"
+}
+
+function ios_target() {
+    case $1 in
+    "$ARM_64")
+      echo ios-arm64
+      ;;
+    "$X86_64")
+      echo ios-x86_64-simulator
+      ;;
+    *)
+      echo "Error: Unknown iOS target."
       exit 1
       ;;
   esac
@@ -53,22 +63,21 @@ function android_abi () {
 
 echo "Checking the environment..."
 
-echo "  [variables]"
-if [[ -z "${ANDROID_HOME}" ]]; then
-  echo -e "    \xE2\x9C\x97 ANDROID_HOME"
-  ERROR="ANDROID_HOME has not been set"
-else
-  echo -e "    \xE2\x9C\x94 ANDROID_HOME"
-fi
-
-if [[ -z "${ANDROID_NDK}" ]]; then
-  echo -e "    \xE2\x9C\x97 ANDROID_NDK"
-  ERROR="ANDROID_NDK has not been set"
-else
-  echo -e "    \xE2\x9C\x94 ANDROID_NDK"
-fi
-
 echo "  [commands]"
+if which xcode-select >/dev/null; then
+  echo -e "    \xE2\x9C\x94 xcode-select"
+else
+  echo -e "    \xE2\x9C\x97 xcode-select"
+  ERROR="xcode-select could not been found"
+fi
+
+if which xcodebuild >/dev/null; then
+  echo -e "    \xE2\x9C\x94 xcodebuild"
+else
+  echo -e "    \xE2\x9C\x97 xcodebuild"
+  ERROR="xcode-select could not been found"
+fi
+
 if which rustup >/dev/null; then
   echo -e "    \xE2\x9C\x94 rustup"
 else
@@ -76,11 +85,18 @@ else
   ERROR="rustup could not been found"
 fi
 
-if which cargo >/dev/null; then
-  echo -e "    \xE2\x9C\x94 cargo"
+if which rustc >/dev/null; then
+  echo -e "    \xE2\x9C\x94 rustc"
 else
-  echo -e "    \xE2\x9C\x97 cargo"
-  ERROR="cargo could not been found"
+  echo -e "    \xE2\x9C\x97 rustc"
+  ERROR="rustc could not been found"
+fi
+
+if which cargo >/dev/null; then
+  echo -e "    \xE2\x9C\x94 cargo-lipo"
+else
+  echo -e "    \xE2\x9C\x97 cargo-lipo"
+  ERROR="cargo-lipo could not been found"
 fi
 
 if [[ -n "${ERROR}" ]]; then
@@ -90,47 +106,11 @@ fi
 
 ### CHECK end ###
 
-### BUILD TOOLCHAINS begin ###
-
-SDK_VERSION=$(grep -o "targetSdkVersion\s\+\d\+" "$CURR_DIR/app/build.gradle" | awk '{ print $2 }')
-echo -e "\nBuilding the toolchains for API $SDK_VERSION..."
-
-TOOLCHAINS_DIR="$CURR_DIR/toolchains"
-if [ -d "$TOOLCHAINS_DIR" ]; then
-  echo "  Toolchains directory already exists, skipping. ($TOOLCHAINS_DIR)"
-else
-  mkdir "$TOOLCHAINS_DIR"
-  echo "  Toolchains directory created. ($TOOLCHAINS_DIR)"
-fi
-
-function get_toolchain_dir () {
-  echo "$TOOLCHAINS_DIR/api-$SDK_VERSION/$1"
-}
-
-function build_toolchain () {
-  local dir
-
-  dir=$(get_toolchain_dir "$1")
-  if [ -d "$dir" ]; then
-    echo "  $1 toolchain already exists, skipping. ($dir)"
-  else
-    echo "  Making $1 toolchain..."
-    "${ANDROID_NDK}"/build/tools/make-standalone-toolchain.sh --platform="android-$SDK_VERSION" --arch="$1" --install-dir="$dir"
-    echo "  $1 toolchain installed to $dir"
-  fi
-}
-
-build_toolchain $ARM_64
-build_toolchain $ARM
-build_toolchain $X86_64
-build_toolchain $X86
-
-### BUILD TOOLCHAINS end ###
-
 ### SETUP COMPILE begin ###
 
 echo -e "\nSetting up compile targets..."
 
+# __workaround__ begin
 CARGO_CONFIG_DIR="$CURR_DIR/.cargo"
 if [ -d "$CARGO_CONFIG_DIR" ]; then
   echo "  Cargo config directory already exists. ($CARGO_CONFIG_DIR)"
@@ -138,40 +118,27 @@ else
   mkdir "$CARGO_CONFIG_DIR"
   echo "  Cargo config directory created. ($CARGO_CONFIG_DIR)"
 fi
-
-CARGO_CONFIG_FILE="$CARGO_CONFIG_DIR/config"
-if [ -f "$CARGO_CONFIG_FILE" ]; then
-  rm "$CARGO_CONFIG_FILE"
-fi
-
-printf "%s\n" \
-"[target.aarch64-linux-android]" \
-"ar = \"$(get_toolchain_dir $ARM_64)/bin/llvm-ar\"" \
-"linker = \"$(get_toolchain_dir $ARM_64)/bin/aarch64-linux-android-clang\"" \
-"" \
-"[target.armv7-linux-androideabi]" \
-"ar = \"$(get_toolchain_dir $ARM)/bin/llvm-ar\"" \
-"linker = \"$(get_toolchain_dir $ARM)/bin/arm-linux-androideabi-clang\"" \
-"" \
-"[target.x86_64-linux-android]" \
-"ar = \"$(get_toolchain_dir $X86_64)/bin/llvm-ar\"" \
-"linker = \"$(get_toolchain_dir $X86_64)/bin/x86_64-linux-android-clang\"" \
-"" \
-"[target.i686-linux-android]" \
-"ar = \"$(get_toolchain_dir $X86)/bin/llvm-ar\"" \
-"linker = \"$(get_toolchain_dir $X86)/bin/i686-linux-android-clang\"" >> "$CARGO_CONFIG_FILE"
-
-echo "  Cargo config saved."
+# __workaround__ end
 
 function add_target () {
-  rustup target add "$(rust_target "$1")"
+  # __workaround__ begin
+  local target custom_target custom_target_file
+
+  target=$(rust_target "$1")
+  custom_target=$(__workaround__rust_target "$1")
+  custom_target_file=$CARGO_CONFIG_DIR/$custom_target.json
+  rustc +nightly -Z unstable-options --target="$target" --print target-spec-json > "$custom_target_file"
+  sed -i "" -e "s/\"llvm-target\": \"\(.*\)\"/\"llvm-target\": \"\1$MIN_IOS_VERSION\"/g" "$custom_target_file"
+  # __workaround__ end
+
+  # replace __workaround__ start
+  # rustup target add "$(rust_target "$1")"
+  # replace __workaround__ end
 }
 
 echo "  Adding Rust targets..."
 add_target $ARM_64
-add_target $ARM
 add_target $X86_64
-add_target $X86
 
 ### SETUP COMPILE end ###
 
@@ -181,54 +148,81 @@ echo -e "\nCompiling..."
 CORE_MANIFEST_PATH="$CURR_DIR/../sapling/Cargo.toml"
 
 function build () {
-  local target
+  # __workaround__ start
+  local custom_target custom_target_file
 
-  target=$(rust_target "$1")
-  echo "  cargo build --manifest-path $CORE_MANIFEST_PATH --release --features \"c_bindings\" --target $target"
+  custom_target=$(__workaround__rust_target "$1")
+  custom_target_file="$CARGO_CONFIG_DIR/$custom_target.json"
+  echo "  cargo +nightly build -Z build-std --manifest-path $CORE_MANIFEST_PATH --release --features \"c_bindings\" --target $custom_target_file"
 
-  cargo build --manifest-path "$CORE_MANIFEST_PATH" --release --features "c_bindings" --target "$target"
+  rustup +nightly component add rust-src
+  cargo +nightly build -Z build-std --manifest-path "$CORE_MANIFEST_PATH" --release --features "c_bindings" --target "$custom_target_file"
+  # __workaround__ end
+
+  # replace __workaround__ start
+  # local target
+
+  # target=$(rust_target "$1")
+  # echo "  cargo build --manifest-path $CORE_MANIFEST_PATH --release --features \"c_bindings\" --target $target"
+
+  # cargo build --manifest-path "$CORE_MANIFEST_PATH" --release --features "c_bindings" --target ""
+  # replace __workaround__ end
 }
 
 build $ARM_64
-build $ARM
 build $X86_64
-build $X86
 
 ### COMPILE end ###
 
-### COPY begin ###
+### CREATE XCFRAMEWORK begin ###
 
-echo -e "\nCopying the files..."
+echo -e "\nCreating XCFramework..."
+
 LIB_NAME=$(grep -o "name\s\+.\+" "$CORE_MANIFEST_PATH" | awk '{ print $3 }' | sed -e 's/^"//' -e 's/"$//')
-CPP_DIR="$CURR_DIR/app/src/main/cpp"
 
 INCLUDE_DIR="$CURR_DIR/../sapling/include"
-if cp "$INCLUDE_DIR/$LIB_NAME.h" "$CPP_DIR/include/sapling.h"; then
-  echo -e "  \xE2\x9C\x94 header (include/sapling.h)"
-else
-  exit 1
-fi
-
 TARGET_DIR="$CURR_DIR/../../target"
-function cp_lib () {
-  local cpp_lib_dir cpp_lib_name
 
-  cpp_lib_dir="libs/$(android_abi "$1")"
-  cpp_lib_name="libsapling_ffi.a"
+XCFRAMEWORK_DIR=$CURR_DIR/libsapling_ffi.xcframework
+rm -rf $XCFRAMEWORK_DIR
 
-  if cp "$TARGET_DIR/$(rust_target "$1")/release/lib$LIB_NAME.a" "$CPP_DIR/$cpp_lib_dir/$cpp_lib_name"; then
-    echo -e "  \xE2\x9C\x94 $1 static lib ($cpp_lib_dir/$cpp_lib_name)"
+# __workaround__ start
+xcodebuild -create-xcframework \
+  -library "$TARGET_DIR/$(__workaround__rust_target "$ARM_64")/release/lib$LIB_NAME.a" \
+  -headers "$INCLUDE_DIR" \
+  -library "$TARGET_DIR/$(__workaround__rust_target "$X86_64")/release/lib$LIB_NAME.a" \
+  -headers "$INCLUDE_DIR" \
+  -output "$XCFRAMEWORK_DIR"
+# __workaround__ end
+
+# replace __workaround__ start
+#xcodebuild -create-xcframework \
+#  -library "$TARGET_DIR/$(rust_target "$ARM_64")/release/lib$LIB_NAME.a" \
+#  -headers "$INCLUDE_DIR" \
+#  -library "$TARGET_DIR/$(rust_target "$X86_64")/release/lib$LIB_NAME.a" \
+#  -headers "$INCLUDE_DIR" \
+#  -output "$XCFRAMEWORK_DIR"
+# replace __workaround__ end
+
+function create_module () {
+  local module_map_path
+
+  module_map_path=$(ios_target "$1")/Headers/module.modulemap
+  if printf "%s\n" \
+    "module SaplingFFI {" \
+    "$(echo -e "\theader \"airgap_sapling.h\"")" \
+    "$(echo -e "\texport *")" \
+    "}" > "$XCFRAMEWORK_DIR/$module_map_path"; then
+    echo -e "  \xE2\x9C\x94 $1 module map ($module_map_path)"
   else
-    echo -e "  \xE2\x9C\x97 $1 static lib"
+    echo -e "  \xE2\x9C\x97 $1 module map"
     exit 1
   fi
 }
 
-cp_lib $ARM_64
-cp_lib $ARM
-cp_lib $X86_64
-cp_lib $X86
+create_module $ARM_64
+create_module $X86_64
 
-### COPY end ###
+### CREATE XCFRAMEWORK end ###
 
 echo -e "\nDone."

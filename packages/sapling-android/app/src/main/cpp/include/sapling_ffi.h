@@ -1,11 +1,13 @@
 #ifndef AIRGAP_SAPLING_H
 #define AIRGAP_SAPLING_H
 
+#include "stdlib.h"
+#include "stddef.h"
 #include "stdbool.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
     /******** Commitment ********/
 
     unsigned char *c_compute_cmu(
@@ -64,7 +66,7 @@ extern "C" {
     /******** Output Description ********/
 
     unsigned char *c_output_description_from_xfvk(
-            const void *ctx,
+            void *ctx,
             const unsigned char *xfvk,
             size_t xfvk_len,
             const unsigned char *to,
@@ -76,7 +78,7 @@ extern "C" {
     );
 
     unsigned char *c_output_description_from_xfvk_with_memo(
-            const void *ctx,
+            void *ctx,
             const unsigned char *xfvk,
             size_t xfvk_len,
             const unsigned char *to,
@@ -90,7 +92,7 @@ extern "C" {
     );
 
     unsigned char *c_output_description_from_ovk(
-            const void *ctx,
+            void *ctx,
             const unsigned char *ovk,
             size_t ovk_len,
             const unsigned char *to,
@@ -102,7 +104,7 @@ extern "C" {
     );
 
     unsigned char *c_partial_output_description(
-            const void *ctx,
+            void *ctx,
             const unsigned char *to,
             size_t to_len,
             const unsigned char *rcm,
@@ -228,6 +230,6 @@ extern "C" {
     unsigned char *c_xfvk_to_ivk(const unsigned char *xfvk, size_t xfvk_len, size_t *ivk_len);
 #ifdef __cplusplus
 };
-#endif
+#endif // __cplusplus
 
 #endif // AIRGAP_SAPLING_H
