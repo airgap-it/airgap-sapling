@@ -1,6 +1,6 @@
 [package]
 name = "airgap_sapling"
-version = "0.0.5-beta.8"
+version = "0.0.5-beta.9"
 authors = ["Papers.ch <contact@papers.ch>"]
 edition = "2018"
 
@@ -20,10 +20,10 @@ wasm_bindings = [
     "zcash_proofs/local-prover"
 ]
 
-c_bindings = ["libc", "log"]
+c_bindings = ["bellman/default", "zcash_proofs/default", "libc", "log"]
 
 [dependencies]
-bellman = "0.8.1"
+bellman = { version = "0.8.1", default-features = false }
 blake2b_simd = "0.5.11"
 blake2s_simd = "0.5.11"
 bls12_381 = "0.3.1"
@@ -37,7 +37,7 @@ regex = "1.4.2"
 subtle = "2.3.0"
 wyz = "0.2.0"
 zcash_primitives = { git = "https://github.com/zcash/librustzcash", package = "zcash_primitives", branch = "master" }
-zcash_proofs = { git = "https://github.com/zcash/librustzcash", package = "zcash_proofs", branch = "master" }
+zcash_proofs = { git = "https://github.com/zcash/librustzcash", package = "zcash_proofs", branch = "master", default-features = false }
 
 console_error_panic_hook = { version = "0.1.6", optional = true }
 libc = { version = "0.2.86", optional = true }
