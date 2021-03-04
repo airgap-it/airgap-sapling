@@ -6,11 +6,11 @@
     "build": "lerna run build --stream",
     "build:prod": "lerna run build:prod --stream",
     "prepare": "lerna bootstrap",
-    "bump:version": "lerna version --no-git-tag-version",
-    "bump:major": "lerna version --no-git-tag-version major --yes",
-    "bump:minor": "lerna version --no-git-tag-version minor --yes",
-    "bump:patch": "lerna version --no-git-tag-version patch --yes",
-    "bump:beta": "lerna version --no-git-tag-version prerelease --preid beta --yes"
+    "bump:version": "lerna version --no-git-tag-version && ./scripts/version.sh --fix",
+    "bump:major": "lerna version --no-git-tag-version major --yes && ./scripts/version.sh --fix",
+    "bump:minor": "lerna version --no-git-tag-version minor --yes && ./scripts/version.sh --fix",
+    "bump:patch": "lerna version --no-git-tag-version patch --yes && ./scripts/version.sh --fix",
+    "bump:beta": "lerna version --no-git-tag-version prerelease --preid beta --yes && ./scripts/version.sh --fix"
   },
   "devDependencies": {
     "@types/bn.js": "^4.11.6",

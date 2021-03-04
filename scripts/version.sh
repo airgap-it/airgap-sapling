@@ -15,13 +15,13 @@ LERNA_PATH=${BASH_SOURCE[0]/%version.sh/..}
 
 function load_versions () {
   ANDROID_VERSION=$(grep -o "versionName\s\+.\+" "$ANDROID_PATH/app/build.gradle" | awk '{ print $2 }' | sed -e 's/^"//' -e 's/"$//')
-  echo "  android $ANDROID_VERSION"
+  echo "  - android $ANDROID_VERSION"
 
   CORE_VERSION=$(grep -o "version\s\+.\+" "$CORE_PATH/Cargo.toml" | head -1 | awk '{ print $3 }' | sed -e 's/^"//' -e 's/"$//')
-  echo "  core $CORE_VERSION"
+  echo "  - core $CORE_VERSION"
 
   LERNA_VERSION=$(grep -o "\"version\":\s\+.\+" "$LERNA_PATH/lerna.json" | awk '{ print $2 }' | sed -e 's/^"//' -e 's/"$//')
-  echo "  js $LERNA_VERSION"
+  echo "  - js $LERNA_VERSION"
 }
 
 function compare_versions() {
@@ -87,10 +87,10 @@ function check_versions () {
   load_versions
 
   if compare_versions; then
-    echo -e "\n  Versions match."
+    echo -e "  \xE2\x9C\x94 Versions match."
     return 0
   else
-    echo -e "\n  Versions mismatch."
+    echo -e "  \xE2\x9C\x97 Versions mismatch."
     return 1
   fi
 }
@@ -114,7 +114,7 @@ function fix_versions () {
   js_latest=$(find_latest format_js_beta)
   if [[ "$LERNA_VERSION" != "$js_latest" ]]; then
     echo "  js $LERNA_VERSION -> $js_latest"
-    npm --prefix "$LERNA_PATH" run bump:version -- "$js_latest" --yes
+    npx lerna version --no-git-tag-version "$js_latest" --yes
   fi
 
   if check_versions; then

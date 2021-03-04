@@ -2,7 +2,7 @@ import { SaplingPaymentAddress, SaplingSpendDescription, SaplingUnsignedSpendDes
 
 import { WasmSapling } from '../types'
 import { isPaymentAddress } from '../address/payment-address'
-import { bigIntFrom, bufferFrom } from '../utils'
+import { stringFrom, bufferFrom } from '../utils'
 
 export function __wasm__spendDescriptionFromXsk(
   sapling: WasmSapling,
@@ -23,7 +23,7 @@ export function __wasm__spendDescriptionFromXsk(
   )
   const rcmBuffer: Buffer = bufferFrom(rcm, 'rcm', '`Buffer`, `Uint8Array` or hex string')
   const arBuffer: Buffer = bufferFrom(ar, 'ar', '`Buffer`, `Uint8Array` or hex string')
-  const valueNum: BigInt = bigIntFrom(value, 'value', '`number` `BigInt` or `string`')
+  const valueString: string = stringFrom(value, 'value', '`number` `BigInt` or `string`')
   const anchorBuffer: Buffer = bufferFrom(anchor, 'anchor', '`Buffer`, `Uint8Array` or hex string')
   const merklePathBuffer: Buffer = bufferFrom(merklePath, 'merklePath', '`Buffer`, `Uint8Array` or hex string')
 
@@ -34,7 +34,7 @@ export function __wasm__spendDescriptionFromXsk(
       addressBuffer,
       rcmBuffer,
       arBuffer,
-      valueNum,
+      valueString,
       anchorBuffer,
       merklePathBuffer
     )

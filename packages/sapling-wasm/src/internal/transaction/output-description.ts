@@ -2,7 +2,7 @@ import { SaplingOutputDescription, SaplingPartialOutputDescription, SaplingPayme
 
 import { WasmSapling } from '../types'
 import { isPaymentAddress } from '../address/payment-address'
-import { bigIntFrom, bufferFrom } from '../utils'
+import { stringFrom, bufferFrom } from '../utils'
 
 export function __wasm__outputDescriptionFromXfvk(
   sapling: WasmSapling,
@@ -20,13 +20,13 @@ export function __wasm__outputDescriptionFromXfvk(
     '`SaplingPaymentAddress`, `Buffer`, `Uint8Array` or hex string'
   )
   const rcmBuffer: Buffer = bufferFrom(rcm, 'rcm', '`Buffer`, `Uint8Array` or hex string')
-  const valueNum: BigInt = bigIntFrom(value, 'value', '`number`, `BigInt` or `string`')
+  const valueString: string = stringFrom(value, 'value', '`number`, `BigInt` or `string`')
   const memoBuffer: Buffer | undefined = memo !== undefined ? bufferFrom(memo, 'memo', '`Buffer`, `Uint8Array` or hex string') : undefined
 
   const outputDescription: Buffer = Buffer.from(
     memoBuffer !== undefined
-      ? sapling.outputDescriptionFromXfvkWithMemo(context, xfvkBuffer, toBuffer, rcmBuffer, valueNum, memoBuffer)
-      : sapling.outputDescriptionFromXfvk(context, xfvkBuffer, toBuffer, rcmBuffer, valueNum)
+      ? sapling.outputDescriptionFromXfvkWithMemo(context, xfvkBuffer, toBuffer, rcmBuffer, valueString, memoBuffer)
+      : sapling.outputDescriptionFromXfvk(context, xfvkBuffer, toBuffer, rcmBuffer, valueString)
   )
 
   return {
@@ -54,9 +54,9 @@ export function __wasm__partialOutputDescription(
   )
   const rcmBuffer: Buffer = bufferFrom(rcm, 'rcm', '`Buffer`, `Uint8Array` or hex string')
   const eskBuffer: Buffer = bufferFrom(esk, 'esk', '`Buffer`, `Uint8Array` or hex string')
-  const valueNum: BigInt = bigIntFrom(value, 'value', '`number`, `BigInt` or `string`')
+  const valueString: string = stringFrom(value, 'value', '`number`, `BigInt` or `string`')
 
-  const outputDescription: Buffer = Buffer.from(sapling.partialOutputDescription(context, toBuffer, rcmBuffer, eskBuffer, valueNum))
+  const outputDescription: Buffer = Buffer.from(sapling.partialOutputDescription(context, toBuffer, rcmBuffer, eskBuffer, valueString))
 
   return {
     cv: outputDescription.slice(0, 32) /* 32 bytes */,

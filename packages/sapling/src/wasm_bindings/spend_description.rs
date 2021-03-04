@@ -23,7 +23,7 @@ pub fn wasm_spend_description_from_xsk(
     address: &[u8],
     rcm: &[u8],
     ar: &[u8],
-    value: u64,
+    value: &str,
     anchor: &[u8],
     merkle_path: &[u8],
 ) -> Result<Vec<u8>, JsValue> {
@@ -33,6 +33,7 @@ pub fn wasm_spend_description_from_xsk(
     let payment_address: PaymentAddress = js_deserialize(address)?;
     let rcm: jubjub::Scalar = js_deserialize(rcm)?;
     let ar: jubjub::Scalar = js_deserialize(ar)?;
+    let value: u64 = value.parse().or_else(|_| js_result_from("spendDescriptionFromXsk: invalid value"))?;
     let anchor: bls12_381::Scalar = js_deserialize(anchor)?;
     let merkle_path: MerklePath<Node> = js_deserialize(merkle_path)?;
 

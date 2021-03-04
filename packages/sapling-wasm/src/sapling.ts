@@ -184,8 +184,8 @@ export async function getNextPaymentAddressFromViewingKey(
 /**
  * Create a raw payment address value from the specified incoming viewing key and diversifier.
  * 
- * @param incomingViewingKey An incoming viewing key from which an address should be created
- * @param diversifier The address diversifier
+ * @param {Buffer|Uint8Array|string} incomingViewingKey An incoming viewing key from which an address should be created
+ * @param {Buffer|Uint8Array|string} diversifier The address diversifier
  * @returns {Buffer} The raw payment address
  */
 export async function getRawPaymentAddressFromIncomingViewingKey(
@@ -407,8 +407,8 @@ export async function preparePartialOutputDescription(
 /**
  * Derive an ephemeral public key from the specified address diversifier and ephemeral private key.
  * 
- * @param diversifier A payment address diversifier
- * @param privateKey An ephemeral private key
+ * @param {Buffer|Uint8Array|string} diversifier A payment address diversifier
+ * @param {Buffer|Uint8Array|string} privateKey An ephemeral private key
  * @returns {Buffer} The derived ephemeral public key
  */
 export async function deriveEphemeralPublicKey(
@@ -427,10 +427,10 @@ export async function deriveEphemeralPublicKey(
 /**
  * Verify if the specified commitment is valid in the context of provided address, transfer value and rcm.
  * 
- * @param commitment The commitment to verify
- * @param address The expected raw address
- * @param value The expected transfer value
- * @param rcm The expected randomness of the commitment
+ * @param {Buffer|Uint8Array|string} commitment The commitment to verify
+ * @param {Buffer|Uint8Array|string} address The expected raw address
+ * @param {string|number|BigInt} value The expected transfer value
+ * @param {Buffer|Uint8Array|string} rcm The expected randomness of the commitment
  * @returns {boolean} `true` if commitment is valid, `false` otherwise
  */
 export async function verifyCommitment(
@@ -451,11 +451,11 @@ export async function verifyCommitment(
 /**
  * Compute a nullifier for the commitment.
  * 
- * @param viewingKey An extended full viewing key that is the owner of the commitment
- * @param address The destination address of the commitment
- * @param value The transfer value of the commitment
- * @param rcm The randomness of the commitment
- * @param position The position of the commitment
+ * @param {Buffer|Uint8Array|string} viewingKey An extended full viewing key that is the owner of the commitment
+ * @param {Buffer|Uint8Array|string} address The destination address of the commitment
+ * @param {string|number|BigInt} value The transfer value of the commitment
+ * @param {Buffer|Uint8Array|string} rcm The randomness of the commitment
+ * @param {string|number|BigInt} position The position of the commitment
  * @returns {Buffer} The computed nullifier
  */
 export async function computeNullifier(
@@ -477,13 +477,13 @@ export async function computeNullifier(
 /**
  * Compute a Merkle Tree parent hash for the specified depth and its children.
  *
- * @param {number|BigInt} depth The depth of the tree, cannot be larger than 62
+ * @param {string|number} depth The depth of the tree, cannot be larger than 62
  * @param {Buffer|Uint8Array|string} lhs A 32-byte child hash
  * @param {Buffer|Uint8Array|string} rhs A 32-byte child hash
  * @returns {Buffer} The computed parent hash
  */
 export async function merkleHash(
-  depth: number | BigInt,
+  depth: string | number,
   lhs: Buffer | Uint8Array | string,
   rhs: Buffer | Uint8Array | string
 ): Promise<Buffer> {

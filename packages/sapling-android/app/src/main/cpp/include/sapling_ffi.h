@@ -41,7 +41,7 @@ extern "C" {
     /******** Merkle Tree ********/
 
     unsigned char *c_merkle_hash(
-            uint64_t depth,
+            size_t depth,
             const unsigned char *lhs,
             size_t lhs_len,
             const unsigned char *rhs,
