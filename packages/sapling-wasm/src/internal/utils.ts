@@ -59,11 +59,21 @@ export function isHexString(string: any): string is string {
 
 // Number
 
-export function bigIntFrom(value: number | string | BigInt, name?: string, expectedType?: string): BigInt {
-  if (typeof value === 'bigint') {
+export function numberFrom(value: number | string, name?: string, expectedType?: string): number {
+  if (typeof value === 'number') {
     return value
-  } else if (typeof value === 'number' || typeof value === 'string') {
-    return BigInt(value)
+  } else if (typeof value === 'string') {
+    return parseInt(value)
+  } else {
+    throw invalidTypeError(name, expectedType)
+  }
+}
+
+export function stringFrom(value: number | string | BigInt, name?: string, expectedType?: string): string {
+  if (typeof value === 'string') {
+    return value
+  } else if (typeof value === 'number' || typeof value === 'bigint') {
+    return value.toString()
   } else {
     throw invalidTypeError(name, expectedType)
   }

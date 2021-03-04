@@ -1,6 +1,6 @@
 [package]
 name = "airgap_sapling"
-version = "0.0.5-beta.7"
+version = "0.0.5-beta.8"
 authors = ["Papers.ch <contact@papers.ch>"]
 edition = "2018"
 

@@ -15,12 +15,13 @@ use crate::transaction::{derive_epk, OutputDetails, prepare_output_description, 
 use crate::wasm_bindings::init::init_lib;
 
 #[wasm_bindgen(catch, js_name = "outputDescriptionFromXfvk")]
-pub fn wasm_output_description_from_xfvk(ctx: u32, xfvk: &[u8], to: &[u8], rcm: &[u8], value: u64) -> Result<Vec<u8>, JsValue> {
+pub fn wasm_output_description_from_xfvk(ctx: u32, xfvk: &[u8], to: &[u8], rcm: &[u8], value: &str) -> Result<Vec<u8>, JsValue> {
     init_lib();
 
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let address: PaymentAddress = js_deserialize(to)?;
     let rcm: jubjub::Scalar = js_deserialize(rcm)?;
+    let value: u64 = value.parse().or_else(|_| js_result_from("outputDescriptionFromXfvk: invalid value"))?;
 
     let ctx: &mut SaplingProvingContext = unsafe { js_dereference(ctx) };
 
@@ -30,7 +31,7 @@ pub fn wasm_output_description_from_xfvk(ctx: u32, xfvk: &[u8], to: &[u8], rcm: 
     let output_description = prepare_output_description(
         ctx,
         xfvk.fvk.ovk,
-        OutputDetails { to_address: address, value },
+        OutputDetails { to_address: address, value: value as u64 },
         rcm,
         None,
         proving_key
@@ -40,12 +41,13 @@ pub fn wasm_output_description_from_xfvk(ctx: u32, xfvk: &[u8], to: &[u8], rcm: 
 }
 
 #[wasm_bindgen(catch, js_name = "outputDescriptionFromXfvkWithMemo")]
-pub fn wasm_output_description_from_xfvk_with_memo(ctx: u32, xfvk: &[u8], to: &[u8], rcm: &[u8], value: u64, memo: &[u8]) -> Result<Vec<u8>, JsValue> {
+pub fn wasm_output_description_from_xfvk_with_memo(ctx: u32, xfvk: &[u8], to: &[u8], rcm: &[u8], value: &str, memo: &[u8]) -> Result<Vec<u8>, JsValue> {
     init_lib();
 
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let address: PaymentAddress = js_deserialize(to)?;
     let rcm: jubjub::Scalar = js_deserialize(rcm)?;
+    let value: u64 = value.parse().or_else(|_| js_result_from("outputDescriptionFromXfvkWithMemo: invalid value"))?;
 
     let ctx: &mut SaplingProvingContext = unsafe { js_dereference(ctx) };
 
@@ -65,12 +67,13 @@ pub fn wasm_output_description_from_xfvk_with_memo(ctx: u32, xfvk: &[u8], to: &[
 }
 
 #[wasm_bindgen(catch, js_name = "outputDescriptionFromOvk")]
-pub fn wasm_output_description_from_ovk(ctx: u32, ovk: &[u8], to: &[u8], rcm: &[u8], value: u64) -> Result<Vec<u8>, JsValue> {
+pub fn wasm_output_description_from_ovk(ctx: u32, ovk: &[u8], to: &[u8], rcm: &[u8], value: &str) -> Result<Vec<u8>, JsValue> {
     init_lib();
 
     let ovk: OutgoingViewingKey = js_deserialize(ovk)?;
     let address: PaymentAddress = js_deserialize(to)?;
     let rcm: jubjub::Scalar = js_deserialize(rcm)?;
+    let value: u64 = value.parse().or_else(|_| js_result_from("outputDescriptionFromOvk: invalid value"))?;
 
     let ctx: &mut SaplingProvingContext = unsafe { js_dereference(ctx) };
 
@@ -90,12 +93,13 @@ pub fn wasm_output_description_from_ovk(ctx: u32, ovk: &[u8], to: &[u8], rcm: &[
 }
 
 #[wasm_bindgen(catch, js_name = "partialOutputDescription")]
-pub fn wasm_partial_output_description(ctx: u32, to: &[u8], rcm: &[u8], esk: &[u8], value: u64) -> Result<Vec<u8>, JsValue> {
+pub fn wasm_partial_output_description(ctx: u32, to: &[u8], rcm: &[u8], esk: &[u8], value: &str) -> Result<Vec<u8>, JsValue> {
     init_lib();
 
     let address: PaymentAddress = js_deserialize(to)?;
     let rcm: jubjub::Scalar = js_deserialize(rcm)?;
     let esk: jubjub::Scalar = js_deserialize(esk)?;
+    let value: u64 = value.parse().or_else(|_| js_result_from("partialOutputDescription: invalid value"))?;
 
     let ctx: &mut SaplingProvingContext = unsafe { js_dereference(ctx) };
 

@@ -88,7 +88,7 @@ Java_it_airgap_sapling_Sapling_extMerkleHash(
         jlong jdepth,
         jbyteArray jlhs,
         jbyteArray jrhs) {
-    auto depth = (uint64_t) jdepth;
+    auto depth = (size_t) jdepth;
 
     size_t lhs_len;
     const unsigned char *lhs = jbyteArray_to_uchar(env, jlhs, &lhs_len);

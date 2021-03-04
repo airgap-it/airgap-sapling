@@ -36,7 +36,7 @@ public struct Sapling {
     
     /* Merkle Tree */
     
-    public func merkleHash(ofDepth depth: UInt64, lhs: [UInt8], rhs: [UInt8]) throws -> [UInt8] {
+    public func merkleHash(ofDepth depth: Int, lhs: [UInt8], rhs: [UInt8]) throws -> [UInt8] {
         var merkleHashCount = 0
         guard let merkleHash = c_merkle_hash(depth, lhs, lhs.count, rhs, rhs.count, &merkleHashCount)?.toArray(count: merkleHashCount) else {
             throw Error.createMerkleHashFailed
