@@ -15,26 +15,26 @@ stages:
 build:
   stage: build
   before_script:
-    - cp .dockerignore .dockerignore_root
+    - cp .dockerignore .dockerignore.tmp
     - cp containers/npm/.dockerignore_npm .dockerignore
   script:
     - docker build -f containers/npm/Dockerfile -t $GOOGLE_TAG .
   after_script:
     - rm .dockerignore
-    - mv .dockerignore_root .dockerignore
+    - mv .dockerignore.tmp .dockerignore
   tags:
     - docker
 
 build_android:
   stage: build
   before_script:
-    - cp .dockerignore .dockerignore_root
+    - cp .dockerignore .dockerignore.tmp
     - cp containers/android/.dockerignore_android .dockerignore
   script:
     - docker build -f containers/android/Dockerfile -t $GOOGLE_TAG_ANDROID .
   after_script:
     - rm .dockerignore
-    - mv .dockerignore_root .dockerignore
+    - mv .dockerignore.tmp .dockerignore
   tags:
     - docker
 

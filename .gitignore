@@ -1,5 +1,6 @@
 .idea/
 .idea/**/*
+*.tmp
 
 target
 **/*.rs.bk
