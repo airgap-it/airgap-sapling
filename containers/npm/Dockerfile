@@ -1,20 +1,3 @@
-FROM bitriseio/android-ndk:latest
-
-RUN mkdir /build
-WORKDIR /build
-
-# copy source
-COPY . /build
-
-# clean project
-RUN ./packages/sapling-android/gradlew --project-dir ./packages/sapling-android clean
-
-# build apk, exclude prod flavored unit tests
-RUN ./packages/sapling-android/gradlew --project-dir ./packages/sapling-android assemble
-
-# copy release aar
-RUN cp /build/packages/sapling-android/build/outputs/aar/release.aar android-release-unsigned.aar
-
 FROM node:15-slim
 
 RUN apt-get update && apt-get install -yq git python build-essential curl
@@ -31,7 +14,7 @@ RUN mkdir /build
 WORKDIR /build
 
 # copy sources
-COPY ../.. /build
+COPY . /build
 
 # install dependencies
 RUN npm ci

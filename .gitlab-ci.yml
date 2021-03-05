@@ -3,7 +3,8 @@ image: docker:latest
 variables:
   GOOGLE_TAG: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHA
   GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
-
+  GOOGLE_TAG_ANDROID: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:android-$CI_COMMIT_SHA
+  GOOGLE_TAG_LATEST_ANDROID: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:android-latest
 
 stages:
   - build
@@ -13,10 +14,34 @@ stages:
 
 build:
   stage: build
+  before_script:
+    - cp .dockerignore .dockerignore_root
+    - cp containers/npm/.dockerignore_npm .dockerignore
   script:
-    - docker build -t $GOOGLE_TAG .
+    - docker build -f containers/npm/Dockerfile -t $GOOGLE_TAG .
+  after_script:
+    - rm .dockerignore
+    - mv .dockerignore_root .dockerignore
   tags:
     - docker
+
+build_android:
+  stage: build
+  before_script:
+    - cp .dockerignore .dockerignore_root
+    - cp containers/android/.dockerignore_android .dockerignore
+  script:
+    - docker build -f containers/android/Dockerfile -t $GOOGLE_TAG_ANDROID .
+  after_script:
+    - rm .dockerignore
+    - mv .dockerignore_root .dockerignore
+  tags:
+    - docker
+
+#build_ios:
+#  stage: build
+#  script:
+#    - xcodebuild -scheme AirGapSapling -destination generic/platform=iOS Simulator,arch=x86_64
 
 check:
   stage: check
