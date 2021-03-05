@@ -4,6 +4,3 @@ Cargo.lock
 
 sapling-android
 sapling-ios
-
-jitpack.yml
-Package.swift

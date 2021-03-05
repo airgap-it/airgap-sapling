@@ -25,6 +25,8 @@ RUN chmod +x ./scripts/npm/publish-beta-only.sh
 RUN git update-index --assume-unchanged ./scripts/npm/publish.sh
 RUN git update-index --assume-unchanged ./scripts/npm/publish-beta-only.sh
 
+RUN git update-index --assume-unchanged .dockerignore
+
 # set to production
 RUN export NODE_ENV=production
 
