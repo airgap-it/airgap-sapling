@@ -1,12 +1,12 @@
-/target
+.idea/
+.idea/**/*
+*.tmp
+
+target
 **/*.rs.bk
 Cargo.lock
 pkg/
 
-.idea/
-.idea/**/*
+node_modules
 
-dist/
-node_modules/
-
-examples/**/*.params
+.build

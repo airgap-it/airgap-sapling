@@ -1,0 +1,50 @@
+[package]
+name = "airgap_sapling"
+version = "0.0.5"
+authors = ["Papers.ch <contact@papers.ch>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib", "staticlib"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-mutable-globals"]
+
+[features]
+wasm_bindings = [
+    "bellman/groth16",
+    "console_error_panic_hook",
+    "getrandom/wasm-bindgen",
+    "wasm-bindgen",
+    "web-sys",
+    "zcash_proofs/local-prover"
+]
+
+c_bindings = ["bellman/default", "zcash_proofs/default", "libc", "log"]
+
+[dependencies]
+bellman = { version = "0.8.1", default-features = false }
+blake2b_simd = "0.5.11"
+blake2s_simd = "0.5.11"
+bls12_381 = "0.3.1"
+ff = "0.8.0"
+funty = "=1.1.0"
+getrandom = "=0.1.1"
+group = "0.8.0"
+jubjub = "0.5.1"
+rand_core = "0.5.1"
+regex = "1.4.2"
+subtle = "2.3.0"
+wyz = "0.2.0"
+zcash_primitives = { git = "https://github.com/zcash/librustzcash", package = "zcash_primitives", branch = "master" }
+zcash_proofs = { git = "https://github.com/zcash/librustzcash", package = "zcash_proofs", branch = "master", default-features = false }
+
+console_error_panic_hook = { version = "0.1.6", optional = true }
+libc = { version = "0.2.86", optional = true }
+log = { version = "0.4.14", optional = true }
+wasm-bindgen = { version = "0.2.69", optional = true }
+web-sys = { version = "0.3.46", features = ["console"], optional = true }
+
+[dev-dependencies]
+hex = "0.4.2"
+wasm-bindgen-test = "0.3.19"

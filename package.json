@@ -1,25 +1,16 @@
 {
-  "name": "@airgap/sapling-wasm",
-  "author": "Papers.ch <contact@papers.ch>",
-  "version": "0.0.4",
-  "homepage": "https://www.airgap.it",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/airgap-it/airgap-sapling-wasm"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "/dist"
-  ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "sourceMap": true,
+  "name": "airgap-sapling",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "build": "rm -rf dist && webpack --mode=development && npm link ./dist",
-    "build:prod": "rm -rf dist && webpack --mode=production",
-    "test": "cargo test"
+    "build": "lerna run build --stream",
+    "build:prod": "lerna run build:prod --stream",
+    "prepare": "lerna bootstrap",
+    "bump:version": "lerna version --no-git-tag-version && ./scripts/version.sh --fix",
+    "bump:major": "lerna version --no-git-tag-version major --yes && ./scripts/version.sh --fix",
+    "bump:minor": "lerna version --no-git-tag-version minor --yes && ./scripts/version.sh --fix",
+    "bump:patch": "lerna version --no-git-tag-version patch --yes && ./scripts/version.sh --fix",
+    "bump:beta": "lerna version --no-git-tag-version prerelease --preid beta --yes && ./scripts/version.sh --fix"
   },
   "devDependencies": {
     "@types/bn.js": "^4.11.6",
@@ -38,6 +29,8 @@
     "eslint-plugin-jsdoc": "^30.7.8",
     "eslint-plugin-no-null": "^1.0.2",
     "eslint-plugin-prefer-arrow": "^1.2.2",
+    "husky": "^5.1.2",
+    "lerna": "^3.22.1",
     "prettier": "^2.2.1",
     "source-map-loader": "^1.1.3",
     "ts-loader": "^8.0.11",
@@ -48,5 +41,9 @@
     "webpack-cli": "^4.3.1",
     "webpack-sources": "^2.2.0"
   },
-  "dependencies": {}
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  }
 }

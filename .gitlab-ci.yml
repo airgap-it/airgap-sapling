@@ -3,17 +3,55 @@ image: docker:latest
 variables:
   GOOGLE_TAG: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_SHA
   GOOGLE_TAG_LATEST: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
-
+  GOOGLE_TAG_ANDROID: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:android-$CI_COMMIT_SHA
+  GOOGLE_TAG_LATEST_ANDROID: eu.gcr.io/papers-kubernetes/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:android-latest
 
 stages:
   - build
+  - check
   - test
   - publish
 
 build:
   stage: build
+  before_script:
+    - cp .dockerignore .dockerignore.tmp
+    - cp containers/npm/.dockerignore_npm .dockerignore
   script:
-    - docker build -t $GOOGLE_TAG .
+    - docker build -f containers/npm/Dockerfile -t $GOOGLE_TAG .
+  after_script:
+    - rm .dockerignore
+    - mv .dockerignore.tmp .dockerignore
+  tags:
+    - docker
+
+build_android:
+  stage: build
+  before_script:
+    - cp .dockerignore .dockerignore.tmp
+    - cp containers/android/.dockerignore_android .dockerignore
+  script:
+    - docker build -f containers/android/Dockerfile -t $GOOGLE_TAG_ANDROID .
+  after_script:
+    - rm .dockerignore
+    - mv .dockerignore.tmp .dockerignore
+  tags:
+    - docker
+
+#build_ios:
+#  stage: build
+#  script:
+#    - xcodebuild -scheme AirGapSapling -destination generic/platform=iOS Simulator,arch=x86_64
+
+check:
+  stage: check
+  allow_failure: true
+  before_script:
+    - docker rm -f check-$CI_COMMIT_SHA || true
+  script:
+    - docker run --name check-$CI_COMMIT_SHA $GOOGLE_TAG /bin/bash -c "./scripts/version.sh --check"
+  after_script:
+    - docker rm -f check-$CI_COMMIT_SHA || true
   tags:
     - docker
 
@@ -22,29 +60,29 @@ unit:
   before_script:
     - docker rm -f unit-$CI_COMMIT_SHA || true
   script:
-    - docker run --name unit-$CI_COMMIT_SHA $GOOGLE_TAG /bin/bash -c "npm run test"
+    - docker run --name unit-$CI_COMMIT_SHA $GOOGLE_TAG /bin/bash -c "cargo test"
   after_script:
     - docker rm -f unit-$CI_COMMIT_SHA || true
   tags:
     - docker
   
-publish:
+publish_wasm:
   stage: publish
   only:
     - master
   when: manual
   script:
-    - docker run --env NPM_AUTH_TOKEN --name publish-$CI_COMMIT_SHA $GOOGLE_TAG ./npm-ci-publish.sh
+    - docker run --env NPM_AUTH_TOKEN --name publish-$CI_COMMIT_SHA $GOOGLE_TAG ./scripts/npm/publish.sh
   after_script:
     - docker rm -f publish-$CI_COMMIT_SHA || true
   tags:
     - docker
 
-publish_beta:
+publish_wasm_beta:
   stage: publish
   when: manual
   script:
-    - docker run --env NPM_AUTH_TOKEN --name publish-$CI_COMMIT_SHA $GOOGLE_TAG ./npm-ci-publish-beta-only.sh
+    - docker run --env NPM_AUTH_TOKEN --name publish-$CI_COMMIT_SHA $GOOGLE_TAG ./scripts/npm/publish-beta-only.sh
   after_script:
     - docker rm -f publish-$CI_COMMIT_SHA || true
   tags:

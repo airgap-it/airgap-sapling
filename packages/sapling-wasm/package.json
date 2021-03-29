@@ -1,0 +1,23 @@
+{
+  "name": "@airgap/sapling-wasm",
+  "author": "Papers.ch <contact@papers.ch>",
+  "version": "0.0.5",
+  "homepage": "https://www.airgap.it",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/airgap-it/airgap-sapling"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "/dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sourceMap": true,
+  "scripts": {
+    "build": "rm -rf dist && npx webpack --mode=development && npm link ./dist",
+    "build:prod": "rm -rf dist && npx webpack --mode=production"
+  }
+}
