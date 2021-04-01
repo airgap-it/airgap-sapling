@@ -1,25 +1,26 @@
 use std::convert::TryInto;
+use std::io::{Read, Write};
+use std::io;
 
+use bellman::groth16::Parameters;
+use bls12_381::Bls12;
+use ff::PrimeField;
+use group::GroupEncoding;
 use rand_core::OsRng;
 use zcash_primitives::keys::OutgoingViewingKey;
-use zcash_primitives::note_encryption::{Memo, SaplingNoteEncryption};
-use zcash_primitives::primitives::{Note, PaymentAddress, Diversifier};
-use zcash_primitives::transaction::components::{OutputDescription, GROTH_PROOF_SIZE};
+use zcash_primitives::memo::MemoBytes;
+use zcash_primitives::note_encryption::SaplingNoteEncryption;
+use zcash_primitives::primitives::{Diversifier, Note, PaymentAddress};
+use zcash_primitives::transaction::components::{GROTH_PROOF_SIZE, OutputDescription};
 use zcash_proofs::sapling::SaplingProvingContext;
 
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::traits::Serializable;
 use crate::transaction::note::create_note;
 use crate::transaction::output::errors::OutputDescriptionError;
+use crate::transaction::output::OutputDetails;
 use crate::transaction::output::proof::create_output_proof;
 use crate::transaction::proof::prepare_zkproof;
-use bellman::groth16::Parameters;
-use bls12_381::Bls12;
-use crate::transaction::output::OutputDetails;
-use std::io::{Read, Write};
-use std::io;
-use group::GroupEncoding;
-use ff::PrimeField;
 
 impl Serializable<Vec<u8>, SaplingError> for OutputDescription {
     fn deserialize(serialized: Vec<u8>) -> Result<Self, SaplingError> {
@@ -108,7 +109,7 @@ pub fn prepare_output_description(
     proving_key: &Parameters<Bls12>
 ) -> Result<OutputDescription, SaplingError> {
     let note = create_note(&output_details.to_address, output_details.value, rcm)?;
-    let memo = get_memo(memo);
+    let memo = get_memo(memo)?;
 
     let mut encryptor = create_encryptor(ovk, &note, &output_details.to_address, memo)?;
 
@@ -163,11 +164,14 @@ pub fn derive_epk(diversifier: Diversifier, esk: jubjub::Scalar) -> Result<jubju
     Ok(epk)
 }
 
-fn get_memo(memo: Option<&[u8]>) -> Memo {
-    memo.and_then(|m| Memo::from_bytes(m)).unwrap_or_else(Memo::default)
+fn get_memo(memo: Option<&[u8]>) -> Result<MemoBytes, SaplingError> {
+    match memo {
+        Some(m) => MemoBytes::from_bytes(m).map_err(|err| SaplingError::caused_by(err.to_string())),
+        None => Ok(MemoBytes::empty())
+    }
 }
 
-fn create_encryptor(ovk: OutgoingViewingKey, note: &Note, to: &PaymentAddress, memo: Memo) -> Result<SaplingNoteEncryption<OsRng>, SaplingError> {
+fn create_encryptor(ovk: OutgoingViewingKey, note: &Note, to: &PaymentAddress, memo: MemoBytes) -> Result<SaplingNoteEncryption<OsRng>, SaplingError> {
     let rng = OsRng;
     let encryptor = SaplingNoteEncryption::new(
         Some(ovk),
