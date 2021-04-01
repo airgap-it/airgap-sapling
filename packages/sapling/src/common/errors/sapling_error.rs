@@ -23,6 +23,12 @@ impl CausedBy<&str> for SaplingError {
     }
 }
 
+impl CausedBy<String> for SaplingError {
+    fn caused_by(cause: String) -> SaplingError {
+        SaplingError(Some(cause))
+    }
+}
+
 impl <T: DetailedError> CausedBy<T> for SaplingError {
     fn caused_by(cause: T) -> SaplingError {
         SaplingError(Some(cause.details()))
