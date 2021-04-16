@@ -10,3 +10,4 @@ pkg/
 node_modules
 
 .build
+.swiftpm
