@@ -2,5 +2,5 @@
   "packages": [
     "packages/sapling-wasm"
   ],
-  "version": "0.0.7-beta.0"
+  "version": "0.0.7"
 }
