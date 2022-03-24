@@ -3,15 +3,15 @@
 
 import PackageDescription
 
-let excludes = [
-   "../sapling",
-   "../sapling-android",
-   "../../scripts",
-   "../../Cargo.toml",
-   "../../jitpack.yml",
-   "../../lerna.json",
-   "../../package.json",
-   "../../package-lock.json"
+let excludes: [String] = [
+    "../../../sapling",
+    "../../../sapling-android",
+    "../../../../scripts",
+    "../../../../Cargo.toml",
+    "../../../../jitpack.yml",
+    "../../../../lerna.json",
+    "../../../../package.json",
+    "../../../../package-lock.json"
 ]
 
 let package = Package(
@@ -39,7 +39,7 @@ let package = Package(
             exclude: excludes),
         .binaryTarget(
             name: "SaplingFFI",
-            path: "packages/sapling-ios/libsapling_ffi.xcframework"),
+            path: "packages/sapling-ios/SaplingFFI.xcframework"),
         .testTarget(
             name: "SaplingTests",
             dependencies: [],
