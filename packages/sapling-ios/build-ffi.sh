@@ -183,7 +183,7 @@ LIB_NAME=$(grep -o "name\s\+.\+" "$CORE_MANIFEST_PATH" | awk '{ print $3 }' | se
 INCLUDE_DIR="$CURR_DIR/../sapling/include"
 TARGET_DIR="$CURR_DIR/../../target"
 
-XCFRAMEWORK_DIR=$CURR_DIR/libsapling_ffi.xcframework
+XCFRAMEWORK_DIR=$CURR_DIR/SaplingFFI.xcframework
 rm -rf $XCFRAMEWORK_DIR
 
 # __workaround__ start
