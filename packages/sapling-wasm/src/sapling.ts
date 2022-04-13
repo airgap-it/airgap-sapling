@@ -5,6 +5,7 @@ import {
   getPkdFromRawAddress,
   getRawAddressFromIvk
 } from './internal/address/payment-address'
+import { __wasm__pak_from_xsk } from './internal/key/authorizing-key'
 import { __wasm__keyAgreement } from './internal/key/key-agreement'
 import { __wasm__xsk } from './internal/key/spending-key'
 import { __wasm__ivk, __wasm__ovk, __wasm__xfvk, __wasm__xfvkFromXsk } from './internal/key/viewing-key'
@@ -18,7 +19,7 @@ import {
   __wasm__outputDescriptionFromXfvk,
   __wasm__partialOutputDescription
 } from './internal/transaction/output-description'
-import { __wasm__spendDescriptionFromXsk, __wasm__signSpendDescriptionWithXsk } from './internal/transaction/spend-description'
+import { __wasm__spendDescriptionFromXsk, __wasm__signSpendDescriptionWithXsk, __wasm__spendDescriptionFromPak } from './internal/transaction/spend-description'
 import { WasmSapling } from './internal/types'
 import { rejectPromise } from './internal/utils'
 import {
@@ -88,6 +89,22 @@ export async function getExtendedFullViewingKey(seed: Buffer | Uint8Array | stri
     return __wasm__xfvk(sapling, seed, derivationPath)
   } catch (error) {
     return rejectPromise('getExtendedFullViewingKey', error)
+  }
+}
+
+/**
+ * Create a proof authorizing key from the given extended spending key.
+ * 
+ * @param {Buffer|Uint8Array|string} spendingKey An extended spending key
+ * @returns {Buffer} The generated proof authorizing key
+ */
+export async function getProofAuthorizingKey(spendingKey: Buffer | Uint8Array | string): Promise<Buffer> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__pak_from_xsk(sapling, spendingKey)
+  } catch (error) {
+    return rejectPromise('getProofAuthorizingKey', error)
   }
 }
 
@@ -256,7 +273,7 @@ export async function withProvingContext<T>(action: (context: number) => Promise
 }
 
 /**
- * Create a random scalar
+ * Create a random scalar.
  *
  * @returns {Buffer} The generated scalar
  */
@@ -271,7 +288,7 @@ export async function randR(): Promise<Buffer> {
 }
 
 /**
- * Create a binding signature
+ * Create a binding signature.
  *
  * Must be called after all spend and output description has been created
  *
@@ -295,7 +312,7 @@ export async function createBindingSignature(
 }
 
 /**
- * Prepare an unsigned sapling spend description
+ * Prepare an unsigned sapling spend description using an extended spending key.
  *
  * @param {number} context A pointer to sapling proving context
  * @param {Buffer|Uint8Array|string} spendingKey An extended spending key
@@ -307,7 +324,7 @@ export async function createBindingSignature(
  * @param {Buffer|Uint8Array|string} merklePath The path of the commitment in the tree
  * @returns {SaplingUnsignedSpendDescription} The created unsinged spend description
  */
-export async function prepareSpendDescription(
+export async function prepareSpendDescriptionWithSpendingKey(
   context: number,
   spendingKey: Buffer | Uint8Array | string,
   address: SaplingPaymentAddress | Buffer | Uint8Array | string,
@@ -327,7 +344,39 @@ export async function prepareSpendDescription(
 }
 
 /**
- * Sign an unsigned sapling spend description
+ * Prepare an unsigned sapling spend description using a proof authorizing key.
+ *
+ * @param {number} context A pointer to sapling proving context
+ * @param {Buffer|Uint8Array|string} authorizingKey A proof authorizing key
+ * @param {SaplingPaymentAddress|Buffer|Uint8Array|string} address The address to which the input has been linked
+ * @param {Buffer|Uint8Array|string} rcm The randomness of the commitment
+ * @param {Buffer|Uint8Array|string} ar Re-randomization of the public key
+ * @param {string|number|BigInt} value The value of the input
+ * @param {Buffer|Uint8Array|string} anchor The root of the merkle tree
+ * @param {Buffer|Uint8Array|string} merklePath The path of the commitment in the tree
+ * @returns {SaplingUnsignedSpendDescription} The created unsinged spend description
+ */
+ export async function prepareSpendDescriptionWithAuthorizingKey(
+  context: number,
+  authorizingKey: Buffer | Uint8Array | string,
+  address: SaplingPaymentAddress | Buffer | Uint8Array | string,
+  rcm: Buffer | Uint8Array | string,
+  ar: Buffer | Uint8Array | string,
+  value: string | number | BigInt,
+  anchor: Buffer | Uint8Array | string,
+  merklePath: Buffer | Uint8Array | string
+): Promise<SaplingUnsignedSpendDescription> {
+  try {
+    const sapling: WasmSapling = await saplingPromise
+
+    return __wasm__spendDescriptionFromPak(sapling, context, authorizingKey, address, rcm, ar, value, anchor, merklePath)
+  } catch (error) {
+    return rejectPromise('prepareSpendDescription', error)
+  }
+}
+
+/**
+ * Sign an unsigned sapling spend description.
  *
  * @param {SaplingUnsignedSpendDescription} spendDescription An unsigned spend description
  * @param {Buffer|Uint8Array|string} spendingKey An extended spending key
