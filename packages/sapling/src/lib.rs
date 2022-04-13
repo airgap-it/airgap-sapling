@@ -4,10 +4,8 @@
 #[macro_use] extern crate log;
 
 #[cfg(feature = "c_bindings")]
-mod c_bindings;
-
-#[cfg(feature = "c_bindings")]
 pub use c_bindings::{
+    authorizing_key::*,
     commitment::*,
     init::*,
     key_agreement::*,
@@ -21,12 +19,9 @@ pub use c_bindings::{
     spending_key::*,
     viewing_key::*,
 };
-
-#[cfg(feature = "wasm_bindings")]
-mod wasm_bindings;
-
 #[cfg(feature = "wasm_bindings")]
 pub use wasm_bindings::{
+    authorizing_key::*,
     commitment::*,
     init::*,
     key_agreement::*,
@@ -42,6 +37,12 @@ pub use wasm_bindings::{
 };
 
 use crate::state::State;
+
+#[cfg(feature = "c_bindings")]
+mod c_bindings;
+
+#[cfg(feature = "wasm_bindings")]
+mod wasm_bindings;
 
 mod address;
 mod common;
