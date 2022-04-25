@@ -339,7 +339,7 @@ export async function prepareSpendDescriptionWithSpendingKey(
 
     return __wasm__spendDescriptionFromXsk(sapling, context, spendingKey, address, rcm, ar, value, anchor, merklePath)
   } catch (error) {
-    return rejectPromise('prepareSpendDescription', error)
+    return rejectPromise('prepareSpendDescriptionWithSpendingKey', error)
   }
 }
 
@@ -371,7 +371,7 @@ export async function prepareSpendDescriptionWithSpendingKey(
 
     return __wasm__spendDescriptionFromPak(sapling, context, authorizingKey, address, rcm, ar, value, anchor, merklePath)
   } catch (error) {
-    return rejectPromise('prepareSpendDescription', error)
+    return rejectPromise('prepareSpendDescriptionWithAuthorizingKey', error)
   }
 }
 
