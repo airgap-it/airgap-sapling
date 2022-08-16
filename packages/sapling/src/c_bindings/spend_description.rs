@@ -82,7 +82,7 @@ pub extern "C" fn c_spend_description_from_pak(
     description_len: *mut size_t,
 ) -> *mut c_uchar {
     c_ptr_catch_result(|| {
-        let pak: ProofGenerationKey = unsafe { c_deserialize(pak, xsk_len) }?;
+        let pak: ProofGenerationKey = unsafe { c_deserialize(pak, pak_len) }?;
         let payment_address: PaymentAddress = unsafe { c_deserialize(address, address_len) }?;
         let rcm: jubjub::Scalar = unsafe { c_deserialize(rcm, rcm_len) }?;
         let ar: jubjub::Scalar = unsafe { c_deserialize(ar, ar_len) }?;
