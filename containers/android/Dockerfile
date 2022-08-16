@@ -1,4 +1,4 @@
-FROM bitriseio/android-ndk:latest
+FROM androidsdk/android-31
 
 RUN mkdir /build
 WORKDIR /build

@@ -2,6 +2,14 @@ package it.airgap.sapling
 
 public class Sapling {
 
+    /******** Authorizing Key ********/
+
+    @Throws(SaplingException::class)
+    public fun getProofAuthorizingKey(spendingKey: ByteArray): ByteArray =
+        extPakFromXsk(spendingKey) ?: throw SaplingException("Failed to derive proof authorizing key from spending key")
+
+    private external fun extPakFromXsk(xsk: ByteArray): ByteArray?
+
     /******** Commitment ********/
 
     @Throws(SaplingException::class)
@@ -144,7 +152,7 @@ public class Sapling {
     /******** Spend Description ********/
 
     @Throws(SaplingException::class)
-    public fun prepareSpendDescription(
+    public fun prepareSpendDescriptionWithSpendingKey(
         context: Long,
         spendingKey: ByteArray,
         address: ByteArray,
@@ -157,12 +165,35 @@ public class Sapling {
         ?: throw SaplingException("Failed to prepare spend description")
 
     @Throws(SaplingException::class)
+    public fun prepareSpendDescriptionWithAuthorizingKey(
+        context: Long,
+        authorizingKey: ByteArray,
+        address: ByteArray,
+        rcm: ByteArray,
+        ar: ByteArray,
+        value: Long,
+        anchor: ByteArray,
+        merklePath: ByteArray,
+    ): ByteArray = extSpendDescriptionFromPak(context, authorizingKey, address, rcm, ar, value, anchor, merklePath)
+        ?: throw SaplingException("Failed to prepare spend description")
+
+    @Throws(SaplingException::class)
     public fun signSpendDescription(spendDescription: ByteArray, spendingKey: ByteArray, ar: ByteArray, sighash: ByteArray): ByteArray =
         extSignSpendDescriptionWithXsk(spendDescription, spendingKey, ar, sighash) ?: throw SaplingException("Failed to sign spend description")
 
     private external fun extSpendDescriptionFromXsk(
         context: Long,
         xsk: ByteArray,
+        address: ByteArray,
+        rcm: ByteArray,
+        ar: ByteArray,
+        value: Long,
+        anchor: ByteArray,
+        merklePath: ByteArray,
+    ): ByteArray?
+    private external fun extSpendDescriptionFromPak(
+        context: Long,
+        pak: ByteArray,
         address: ByteArray,
         rcm: ByteArray,
         ar: ByteArray,

@@ -27,8 +27,8 @@ let package = Package(
         .binaryTarget(
             name: "SaplingFFI",
             path: "SaplingFFI.xcframework"),
-        .testTarget(
-            name: "SaplingTests",
-            dependencies: ["Sapling"]),
+//        .testTarget(
+//            name: "SaplingTests",
+//            dependencies: ["Sapling"]),
     ]
 )
