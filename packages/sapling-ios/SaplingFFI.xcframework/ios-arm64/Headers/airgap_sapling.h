@@ -8,6 +8,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
+    /******** Authorizing Key ********/
+
+    unsigned char *c_pak_from_xsk(const unsigned char *xsk, size_t xsk_len, size_t *pak_len);
+
     /******** Commitment ********/
 
     unsigned char *c_compute_cmu(
@@ -192,6 +196,24 @@ extern "C" {
             void *ctx,
             const unsigned char *xsk,
             size_t xsk_len,
+            const unsigned char *address,
+            size_t address_len,
+            const unsigned char *rcm,
+            size_t rcm_len,
+            const unsigned char *ar,
+            size_t ar_len,
+            uint64_t value,
+            const unsigned char *anchor,
+            size_t anchor_len,
+            const unsigned char *merkle_path,
+            size_t merkle_path_len,
+            size_t *description_len
+    );
+
+    unsigned char *c_spend_description_from_pak(
+            void *ctx,
+            const unsigned char *pak,
+            size_t pak_len,
             const unsigned char *address,
             size_t address_len,
             const unsigned char *rcm,

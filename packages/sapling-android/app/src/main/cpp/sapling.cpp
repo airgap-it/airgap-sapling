@@ -1,5 +1,26 @@
 #include "sapling.h"
 
+/******** Authorizing Key ********/
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_it_airgap_sapling_Sapling_extPakFromXsk(
+        JNIEnv *env,
+        jobject /* this */,
+        jbyteArray jxsk) {
+    size_t xsk_len;
+    const unsigned char *xsk = jbyteArray_to_uchar(env, jxsk, &xsk_len);
+
+    size_t pak_len;
+    unsigned char *pak = c_pak_from_xsk(xsk, xsk_len, &pak_len);
+    jbyteArray jpak = uchar_to_jbyteArray(env, pak, pak_len);
+
+    local_clean(xsk);
+    ffi_clean(pak);
+
+    return jpak;
+}
+
 /******** Commitment ********/
 
 extern "C"
@@ -574,6 +595,72 @@ Java_it_airgap_sapling_Sapling_extSpendDescriptionFromXsk(
     jbyteArray js_desc = uchar_to_jbyteArray(env, s_desc, s_desc_len);
 
     local_clean(xsk);
+    local_clean(addr);
+    local_clean(rcm);
+    local_clean(ar);
+    local_clean(anchor);
+    local_clean(merkle_path);
+    ffi_clean(s_desc);
+
+    return js_desc;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_it_airgap_sapling_Sapling_extSpendDescriptionFromPak(
+        JNIEnv *env,
+        jobject /* this */,
+        jlong jctx,
+        jbyteArray jpak,
+        jbyteArray jaddr,
+        jbyteArray jrcm,
+        jbyteArray jar,
+        jlong jval,
+        jbyteArray janchor,
+        jbyteArray jmerklePath) {
+    void *ctx = (void *) jctx;
+
+    size_t pak_len;
+    const unsigned char *pak = jbyteArray_to_uchar(env, jpak, &pak_len);
+
+    size_t addr_len;
+    const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
+
+    size_t rcm_len;
+    const unsigned char *rcm = jbyteArray_to_uchar(env, jrcm, &rcm_len);
+
+    size_t ar_len;
+    const unsigned char *ar = jbyteArray_to_uchar(env, jar, &ar_len);
+
+    auto val = (uint64_t) jval;
+
+    size_t anchor_len;
+    const unsigned char *anchor = jbyteArray_to_uchar(env, janchor, &anchor_len);
+
+    size_t merkle_path_len;
+    const unsigned char *merkle_path = jbyteArray_to_uchar(env, jmerklePath, &merkle_path_len);
+
+    size_t s_desc_len;
+    unsigned char *s_desc = c_spend_description_from_pak(
+            ctx,
+            pak,
+            pak_len,
+            addr,
+            addr_len,
+            rcm,
+            rcm_len,
+            ar,
+            ar_len,
+            val,
+            anchor,
+            anchor_len,
+            merkle_path,
+            merkle_path_len,
+            &s_desc_len
+    );
+    jbyteArray js_desc = uchar_to_jbyteArray(env, s_desc, s_desc_len);
+
+    local_clean(pak);
     local_clean(addr);
     local_clean(rcm);
     local_clean(ar);
