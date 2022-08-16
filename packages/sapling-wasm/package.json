@@ -17,7 +17,10 @@
   "types": "dist/index.d.ts",
   "sourceMap": true,
   "scripts": {
-    "build": "rm -rf dist && npx webpack --mode=development && npm link ./dist",
+    "build": "rm -rf dist && npx webpack --mode=development && npm link ./dist  && node patch-node.js",
     "build:prod": "rm -rf dist && npx webpack --mode=production"
+  },
+  "devDependencies": {
+    "replace-in-file": "^6.3.5"
   }
 }
