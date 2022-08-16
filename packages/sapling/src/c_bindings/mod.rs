@@ -1,3 +1,4 @@
+pub mod authorizing_key;
 pub mod commitment;
 pub mod init;
 pub mod key_agreement;

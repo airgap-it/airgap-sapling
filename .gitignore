@@ -12,3 +12,5 @@ node_modules
 .build
 .swiftpm
 .DS_Store
+
+.npmrc

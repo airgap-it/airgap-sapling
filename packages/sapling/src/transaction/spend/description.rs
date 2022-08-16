@@ -3,13 +3,12 @@ use std::io;
 
 use ff::PrimeField;
 use group::GroupEncoding;
-
 use zcash_primitives::merkle_tree::MerklePath;
-use zcash_primitives::primitives::{PaymentAddress, ViewingKey, Nullifier};
+use zcash_primitives::primitives::{Nullifier, PaymentAddress, ViewingKey};
 use zcash_primitives::redjubjub::PublicKey;
 use zcash_primitives::sapling::Node;
 use zcash_primitives::transaction::components::{GROTH_PROOF_SIZE, SpendDescription};
-use zcash_primitives::zip32::{ExtendedFullViewingKey, ExtendedSpendingKey};
+use zcash_primitives::zip32::ExtendedSpendingKey;
 use zcash_proofs::sapling::SaplingProvingContext;
 
 use crate::common::errors::{CausedBy, SaplingError};
@@ -121,9 +120,9 @@ pub fn prepare_spend_description(
     merkle_path: MerklePath<Node>,
     parameters: SpendParameters
 ) -> Result<UnsignedSpendDescription, SaplingError> {
-    let xfvk = ExtendedFullViewingKey::from(&spend_details.from_xsk);
+    let vk = &spend_details.from_pak.to_viewing_key();
     let nullifier = compute_nullifier(
-        &xfvk.fvk.vk,
+        &vk,
         &spend_details.to_address,
         spend_details.value,
         rcm,

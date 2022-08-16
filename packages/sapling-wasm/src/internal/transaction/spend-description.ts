@@ -49,6 +49,51 @@ export function __wasm__spendDescriptionFromXsk(
   }
 }
 
+export function __wasm__spendDescriptionFromPak(
+  sapling: WasmSapling,
+  context: number,
+  pak: Buffer | Uint8Array | string,
+  address: SaplingPaymentAddress | Buffer | Uint8Array | string,
+  rcm: Buffer | Uint8Array | string,
+  ar: Buffer | Uint8Array | string,
+  value: string | number | BigInt,
+  anchor: Buffer | Uint8Array | string,
+  merklePath: Buffer | Uint8Array | string
+): SaplingUnsignedSpendDescription {
+  const pakBuffer: Buffer = bufferFrom(pak, 'authorizingKey', '`Buffer`, `Uint8Array` or hex string')
+  const addressBuffer: Buffer = bufferFrom(
+    isPaymentAddress(address) ? address.raw : address,
+    'address',
+    '`SaplingPaymentAddress`, `Buffer`, `Uint8Array` or hex string'
+  )
+  const rcmBuffer: Buffer = bufferFrom(rcm, 'rcm', '`Buffer`, `Uint8Array` or hex string')
+  const arBuffer: Buffer = bufferFrom(ar, 'ar', '`Buffer`, `Uint8Array` or hex string')
+  const valueString: string = stringFrom(value, 'value', '`number` `BigInt` or `string`')
+  const anchorBuffer: Buffer = bufferFrom(anchor, 'anchor', '`Buffer`, `Uint8Array` or hex string')
+  const merklePathBuffer: Buffer = bufferFrom(merklePath, 'merklePath', '`Buffer`, `Uint8Array` or hex string')
+
+  const spendDescription = Buffer.from(
+    sapling.spendDescriptionFromPak(
+      context,
+      pakBuffer,
+      addressBuffer,
+      rcmBuffer,
+      arBuffer,
+      valueString,
+      anchorBuffer,
+      merklePathBuffer
+    )
+  )
+
+  return {
+    cv: spendDescription.slice(0, 32) /* 32 bytes */,
+    rt: spendDescription.slice(32, 64) /* 32 bytes */,
+    nf: spendDescription.slice(64, 96) /* 32 bytes */,
+    rk: spendDescription.slice(96, 128) /* 32 bytes */,
+    proof: spendDescription.slice(128, 320) /* 48 + 96 + 48 bytes */
+  }
+}
+
 export function __wasm__signSpendDescriptionWithXsk(
   sapling: WasmSapling,
   description: SaplingUnsignedSpendDescription,
