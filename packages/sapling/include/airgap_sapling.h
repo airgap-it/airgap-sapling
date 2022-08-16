@@ -10,7 +10,7 @@ extern "C" {
 #endif // __cplusplus
     /******** Authorizing Key ********/
 
-    unsigned char *c_pak_from_xsk(const unsigned char *xsk, size_t xsk_len, size_t *pak_len)
+    unsigned char *c_pak_from_xsk(const unsigned char *xsk, size_t xsk_len, size_t *pak_len);
 
     /******** Commitment ********/
 
