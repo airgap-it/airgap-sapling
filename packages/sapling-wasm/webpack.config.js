@@ -3,18 +3,22 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const path = require('path')
 
 const WasmPreloadPlugin = require('./plugins/WasmPreloadPlugin')
+const WebpackPatchPlugin = require('./plugins/WebpackPatchPlugin')
 
 const nodeModules = path.resolve(__dirname, 'node_modules')
 const packageJson = path.resolve(__dirname, 'package.json')
 const dist = path.resolve(__dirname, 'dist')
 
-const baseConfig = {
-  entry: path.resolve(__dirname, 'src/index.ts'),
+const commonConfig = {
+  entry: {
+    browser: path.resolve(__dirname, 'src/index.ts'),
+    node: path.resolve(__dirname, 'src/index.ts')
+  },
   devtool: 'inline-source-map',
   target: ['es2020', 'node'],
   output: {
     path: dist,
-    filename: 'index.js',
+    filename: 'index.[name].js',
     libraryTarget: 'commonjs'
   },
   resolve: {
@@ -30,7 +34,8 @@ const baseConfig = {
         loader: 'ts-loader',
         exclude: nodeModules
       }
-    ]
+    ],
+    exprContextCritical: false
   },
   plugins: [
     new WasmPackPlugin({
@@ -41,7 +46,10 @@ const baseConfig = {
       extraArgs: '--target bundler --mode normal -- --features wasm_bindings'
     }),
     new WasmPreloadPlugin({
-      outputFile: 'index.js'
+      targetFiles: ['index.browser.js', 'index.node.js']
+    }),
+    new WebpackPatchPlugin({
+        targetFiles: ['index.node.js']
     })
   ],
   experiments: {
@@ -49,17 +57,22 @@ const baseConfig = {
   }
 }
 
-const prodConfig = baseConfig
+const prodConfig = commonConfig
 
 const devConfig = {
-  ...baseConfig,
+  ...commonConfig,
   plugins: [
-    ...baseConfig.plugins,
+    ...commonConfig.plugins,
     new CopyWebpackPlugin({
       patterns: [
         {
           from: packageJson,
-          to: dist
+          to: dist,
+          transform(content) {
+            return content.toString()
+              .replace(/\/dist/g, ".")
+              .replace(/dist\//g, "")
+          }
         }
       ]
     })
