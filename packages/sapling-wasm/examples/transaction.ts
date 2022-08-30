@@ -69,7 +69,7 @@ async function createTransaction(account: Account, inputs: Input[], outputs: Out
   const transaction: Transaction = await sapling.withProvingContext(async (context: number) => {
     const spendDescriptions: SaplingSpendDescription[] = await Promise.all(
       inputs.map(async (input: Input) => {
-        const unsignedDescription: SaplingUnsignedSpendDescription = await sapling.prepareSpendDescription(
+        const unsignedDescription: SaplingUnsignedSpendDescription = await sapling.prepareSpendDescriptionWithSpendingKey(
           context,
           account.spendingKey,
           input.address,
