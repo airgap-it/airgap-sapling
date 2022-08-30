@@ -8,7 +8,7 @@ const extensions = {
 
 class WasmPreloadPlugin {
   constructor(options) {
-    this.outputFile = options.outputFile
+    this.targetFiles = options.targetFiles
 
     this.fixWbgRequire = this.fixWbgRequire.bind(this)
     this.fixWasmImport = this.fixWasmImport.bind(this)
@@ -22,11 +22,13 @@ class WasmPreloadPlugin {
             stage: Compilation.PROCESS_ASSETS_STAGE_DERIVED
           }, 
           (assets) => {
-            const outputAsset = assets[this.outputFile]
-            if (outputAsset) {
-              this.prepareLoadedWasmSources(assets, compilation)
-              assets[this.outputFile] = this.adjustSource(assets, outputAsset, [this.fixWbgRequire, this.fixWasmImport])
-            }
+            this.targetFiles.forEach((targetFile) => {
+              const source = assets[targetFile]
+              if (source) {
+                this.prepareLoadedWasmSources(assets, compilation)
+                assets[targetFile] = this.adjustSource(assets, source, [this.fixWbgRequire, this.fixWasmImport])
+              }
+            })
           }
         )
       })
