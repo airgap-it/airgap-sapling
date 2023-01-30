@@ -11,7 +11,7 @@ use zcash_proofs::ZcashParameters;
 
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::utils::c_utils::{c_dereference, c_deserialize, c_deserialize_slice, c_serialize_res, c_ptr_catch_result};
-use crate::State;
+use crate::{c_init_lib, State};
 use crate::transaction::{derive_epk, OutputDetails, prepare_output_description, prepare_partial_output_description};
 
 #[no_mangle]
@@ -26,6 +26,8 @@ pub extern "C" fn c_output_description_from_xfvk(
     value: u64,
     description_len: *mut size_t,
 ) -> *mut c_uchar {
+    c_init_lib();
+
     c_ptr_catch_result(|| {
         let xfvk: ExtendedFullViewingKey = unsafe { c_deserialize(xfvk, xfvk_len) }?;
         let address: PaymentAddress = unsafe { c_deserialize(to, to_len) }?;

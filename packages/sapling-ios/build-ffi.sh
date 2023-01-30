@@ -141,9 +141,9 @@ function manual_build () {
     local target
 
     target=$(rust_target "$1")
-    echo "  cargo build --manifest-path $CORE_MANIFEST_PATH --release --features \"c_bindings\" --target $target"
+    echo "  RUSTFLAGS='--cfg target_os=\"ios\"' cargo build --manifest-path $CORE_MANIFEST_PATH --release --features \"c_bindings\" --target $target"
 
-    cargo build --manifest-path "$CORE_MANIFEST_PATH" --release --features "c_bindings" --target ""
+    RUSTFLAGS='--cfg target_os="ios"' cargo build --manifest-path "$CORE_MANIFEST_PATH" --release --features "c_bindings" --target ""
   }
 
   build $ARM_64
@@ -195,7 +195,7 @@ function lipo_build () {
   ### COMPILE begin ###
 
   echo -e "\nCompiling..."
-  cargo lipo --release
+  RUSTFLAGS='--cfg target_os="ios"' cargo lipo --manifest-path "$CORE_MANIFEST_PATH" --release --features "c_bindings"
 
   ### COMPILE end ###
 }

@@ -130,7 +130,7 @@ public class Sapling {
     /******** Proving Context ********/
 
     public fun initProvingContext(): Long = extInitProvingContext()
-    public fun dropProvingContext(context: Long) = extDropProvingContext(context)
+    public fun dropProvingContext(context: Long): Unit = extDropProvingContext(context)
 
     private external fun extInitProvingContext(): Long
     private external fun extDropProvingContext(context: Long)
@@ -144,6 +144,7 @@ public class Sapling {
 
     /******** Signature ********/
 
+    @Throws(SaplingException::class)
     public fun createBindingSignature(context: Long, balance: Long, sighash: ByteArray): ByteArray =
         extCreateBindingSignature(context, balance, sighash) ?: throw SaplingException("Failed to create binding signature")
 

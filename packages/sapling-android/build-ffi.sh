@@ -221,9 +221,9 @@ function manual_build () {
     local target
 
     target=$(rust_target "$1")
-    echo "  cargo build --manifest-path $CORE_MANIFEST_PATH --release --features \"c_bindings\" --target $target"
+    echo "  RUSTFLAGS='--cfg target_os=\"android\"' cargo build --manifest-path $CORE_MANIFEST_PATH --release --features \"c_bindings\" --target $target"
 
-    cargo build --manifest-path "$CORE_MANIFEST_PATH" --release --features "c_bindings" --target "$target"
+    RUSTFLAGS='--cfg target_os="android"' cargo build --manifest-path "$CORE_MANIFEST_PATH" --release --features "c_bindings" --target "$target"
   }
 
   build $ARM_64
