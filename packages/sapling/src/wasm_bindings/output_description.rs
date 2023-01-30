@@ -12,11 +12,11 @@ use zcash_proofs::ZcashParameters;
 use crate::common::utils::wasm_utils::{js_dereference, js_deserialize, js_error_from, js_result_from, js_serialize_res};
 use crate::State;
 use crate::transaction::{derive_epk, OutputDetails, prepare_output_description, prepare_partial_output_description};
-use crate::wasm_bindings::init::init_lib;
+use crate::wasm_bindings::init::wasm_init_lib;
 
 #[wasm_bindgen(catch, js_name = "outputDescriptionFromXfvk")]
 pub fn wasm_output_description_from_xfvk(ctx: u32, xfvk: &[u8], to: &[u8], rcm: &[u8], value: &str) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
 
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let address: PaymentAddress = js_deserialize(to)?;
@@ -42,7 +42,7 @@ pub fn wasm_output_description_from_xfvk(ctx: u32, xfvk: &[u8], to: &[u8], rcm: 
 
 #[wasm_bindgen(catch, js_name = "outputDescriptionFromXfvkWithMemo")]
 pub fn wasm_output_description_from_xfvk_with_memo(ctx: u32, xfvk: &[u8], to: &[u8], rcm: &[u8], value: &str, memo: &[u8]) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
 
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let address: PaymentAddress = js_deserialize(to)?;
@@ -68,7 +68,7 @@ pub fn wasm_output_description_from_xfvk_with_memo(ctx: u32, xfvk: &[u8], to: &[
 
 #[wasm_bindgen(catch, js_name = "outputDescriptionFromOvk")]
 pub fn wasm_output_description_from_ovk(ctx: u32, ovk: &[u8], to: &[u8], rcm: &[u8], value: &str) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
 
     let ovk: OutgoingViewingKey = js_deserialize(ovk)?;
     let address: PaymentAddress = js_deserialize(to)?;
@@ -94,7 +94,7 @@ pub fn wasm_output_description_from_ovk(ctx: u32, ovk: &[u8], to: &[u8], rcm: &[
 
 #[wasm_bindgen(catch, js_name = "partialOutputDescription")]
 pub fn wasm_partial_output_description(ctx: u32, to: &[u8], rcm: &[u8], esk: &[u8], value: &str) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
 
     let address: PaymentAddress = js_deserialize(to)?;
     let rcm: jubjub::Scalar = js_deserialize(rcm)?;
@@ -119,7 +119,7 @@ pub fn wasm_partial_output_description(ctx: u32, to: &[u8], rcm: &[u8], esk: &[u
 
 #[wasm_bindgen(catch, js_name = "deriveEpkFromEsk")]
 pub fn wasm_derive_epk_from_esk(diversifier: &[u8], esk: &[u8]) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
 
     let diversifier: [u8; 11] = diversifier.try_into()
         .or_else(|_| js_result_from("deriveEpkFromEsk: index must be an array of 11 bytes"))?;

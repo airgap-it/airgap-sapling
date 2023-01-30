@@ -2,6 +2,7 @@ use std::convert::TryInto;
 
 use libc::{c_uchar, size_t};
 use zcash_proofs::sapling::SaplingProvingContext;
+use crate::c_init_lib;
 
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::utils::c_utils::{c_dereference, c_deserialize_slice, c_serialize_res, c_ptr_catch_result};
@@ -15,6 +16,8 @@ pub extern "C" fn c_binding_signature(
     sighash_len: size_t,
     signature_len: *mut size_t,
 ) -> *mut c_uchar {
+    c_init_lib();
+
     c_ptr_catch_result(|| {
         let ctx: &mut SaplingProvingContext = unsafe { c_dereference(ctx) };
         let sighash: [u8; 32] = unsafe { c_deserialize_slice(sighash, sighash_len) }.try_into()

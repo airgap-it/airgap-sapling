@@ -12,7 +12,7 @@ use zcash_proofs::ZcashParameters;
 
 use crate::common::errors::{CausedBy, SaplingError};
 use crate::common::utils::c_utils::{c_dereference, c_deserialize, c_deserialize_slice, c_serialize_res, c_ptr_catch_result};
-use crate::State;
+use crate::{c_init_lib, State};
 use crate::transaction::{prepare_spend_description, sign_spend_description, SpendDetails, SpendParameters, UnsignedSpendDescription};
 
 #[allow(clippy::too_many_arguments)]
@@ -34,6 +34,8 @@ pub extern "C" fn c_spend_description_from_xsk(
     merkle_path_len: size_t,
     description_len: *mut size_t,
 ) -> *mut c_uchar {
+    c_init_lib();
+
     c_ptr_catch_result(|| {
         let xsk: ExtendedSpendingKey = unsafe { c_deserialize(xsk, xsk_len) }?;
         let payment_address: PaymentAddress = unsafe { c_deserialize(address, address_len) }?;
@@ -81,6 +83,8 @@ pub extern "C" fn c_spend_description_from_pak(
     merkle_path_len: size_t,
     description_len: *mut size_t,
 ) -> *mut c_uchar {
+    c_init_lib();
+
     c_ptr_catch_result(|| {
         let pak: ProofGenerationKey = unsafe { c_deserialize(pak, pak_len) }?;
         let payment_address: PaymentAddress = unsafe { c_deserialize(address, address_len) }?;
@@ -121,6 +125,8 @@ pub extern "C" fn c_sign_spend_description_with_xsk(
     sighash_len: size_t,
     description_len: *mut size_t,
 ) -> *mut c_uchar {
+    c_init_lib();
+
     c_ptr_catch_result(|| {
         let spend_description: UnsignedSpendDescription = unsafe { c_deserialize(spend_description, spend_description_len) }?;
         let xks: ExtendedSpendingKey = unsafe { c_deserialize(xsk, xsk_len) }?;

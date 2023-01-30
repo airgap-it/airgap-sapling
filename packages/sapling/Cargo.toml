@@ -20,7 +20,14 @@ wasm_bindings = [
     "zcash_proofs/local-prover"
 ]
 
-c_bindings = ["bellman/default", "zcash_proofs/default", "libc", "log"]
+c_bindings = [
+    "bellman/default",
+    "zcash_proofs/default",
+    "libc",
+    "log",
+    "android_logger",
+    "oslog"
+]
 
 [dependencies]
 bellman = { version = "0.8.1", default-features = false }
@@ -44,6 +51,12 @@ libc = { version = "0.2.86", optional = true }
 log = { version = "0.4.14", optional = true }
 wasm-bindgen = { version = "0.2.69", optional = true }
 web-sys = { version = "0.3.46", features = ["console"], optional = true }
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = { version = "0.12", optional = true }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+oslog = { version = "0.2.0", optional = true }
 
 [dev-dependencies]
 hex = "0.4.2"

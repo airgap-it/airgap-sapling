@@ -1,5 +1,6 @@
 use libc::{c_char, c_uchar, size_t};
 use zcash_primitives::zip32::ExtendedSpendingKey;
+use crate::c_init_lib;
 
 use crate::common::utils::c_utils::{c_deserialize_slice, c_deserialize_str, c_serialize_res, c_ptr_catch_result};
 use crate::key::SaplingKey;
@@ -11,6 +12,8 @@ pub extern "C" fn c_xsk(
     derivation_path: *const c_char,
     xsk_len: *mut size_t,
 ) -> *mut c_uchar {
+    c_init_lib();
+
     c_ptr_catch_result(|| {
         let seed: &[u8] = unsafe { c_deserialize_slice(seed, seed_len) };
         let derivation_path: &str = unsafe { c_deserialize_str(derivation_path) };

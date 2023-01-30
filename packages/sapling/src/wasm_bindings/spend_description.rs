@@ -13,7 +13,7 @@ use zcash_proofs::ZcashParameters;
 use crate::common::utils::wasm_utils::{js_dereference, js_deserialize, js_error_from, js_result_from, js_serialize_res};
 use crate::State;
 use crate::transaction::{prepare_spend_description, sign_spend_description, SpendDetails, SpendParameters, UnsignedSpendDescription};
-use crate::wasm_bindings::init::init_lib;
+use crate::wasm_bindings::init::wasm_init_lib;
 
 #[allow(clippy::too_many_arguments)]
 #[wasm_bindgen(catch, js_name = "spendDescriptionFromXsk")]
@@ -27,7 +27,7 @@ pub fn wasm_spend_description_from_xsk(
     anchor: &[u8],
     merkle_path: &[u8],
 ) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
 
     let xsk: ExtendedSpendingKey = js_deserialize(xsk)?;
     let payment_address: PaymentAddress = js_deserialize(address)?;
@@ -68,7 +68,7 @@ pub fn wasm_spend_description_from_pak(
     anchor: &[u8],
     merkle_path: &[u8],
 ) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
 
     let pak: ProofGenerationKey = js_deserialize(pak)?;
     let payment_address: PaymentAddress = js_deserialize(address)?;
@@ -99,7 +99,7 @@ pub fn wasm_spend_description_from_pak(
 
 #[wasm_bindgen(catch, js_name = "signSpendDescriptionWithXsk")]
 pub fn wasm_sign_spend_description_with_xsk(spend_description: &[u8], xsk: &[u8], ar: &[u8], sighash: &[u8]) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
 
     let spend_description: UnsignedSpendDescription = js_deserialize(spend_description)?;
     let xks: ExtendedSpendingKey = js_deserialize(xsk)?;
