@@ -4,11 +4,11 @@ use zcash_primitives::zip32::ExtendedFullViewingKey;
 
 use crate::common::utils::wasm_utils::{js_deserialize, js_result_from};
 use crate::transaction::compute_nullifier;
-use crate::wasm_bindings::init::init_lib;
+use crate::wasm_bindings::init::wasm_init_lib;
 
 #[wasm_bindgen(catch, js_name = "computeNullifier")]
 pub fn wasm_compute_nullifier_with_xfvk(xfvk: &[u8], address: &[u8], value: &str, rcm: &[u8], position: &str) -> Result<Vec<u8>, JsValue> {
-    init_lib();
+    wasm_init_lib();
     
     let xfvk: ExtendedFullViewingKey = js_deserialize(xfvk)?;
     let payment_address: PaymentAddress = js_deserialize(address)?;
