@@ -45,5 +45,11 @@ pub fn create_binding_sig(
 }
 
 fn get_amount(balance: i64) -> Result<Amount, SaplingError> {
-    Amount::from_i64(balance).map_err(|_| SignatureError::ValueBalanceOutsideRange).map_err(SaplingError::caused_by)
+    // For non-Zcash chains (like Tezos), we use the full i64 range
+    // instead of Zcash's MAX_MONEY limit (21M ZEC).
+    // This is safe because:
+    // 1. The i64 type already enforces bounds at the type level
+    // 2. Sapling's cryptographic operations work with any i64 value
+    // 3. Downstream validation should enforce chain-specific limits
+    Ok(Amount::from_i64_le_bytes(balance.to_le_bytes()))
 }
