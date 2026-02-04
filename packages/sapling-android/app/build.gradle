@@ -1,16 +1,20 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
     id 'maven-publish'
+    id 'org.mozilla.rust-android-gradle.rust-android'
 }
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    compileSdkVersion 36
+    buildToolsVersion "33.0.0"
 
     defaultConfig {
+        namespace "it.airgap.sapling"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 36
         versionCode 1
         versionName "0.0.7"
 
@@ -28,32 +32,48 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
-            version "3.10.2"
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
-        freeCompilerArgs += '-Xexplicit-api=warning'
+
+    kotlin {
+        jvmToolchain(17)
+        explicitApi(ExplicitApiMode.Warning)
+    }
+
+    cargo {
+        module = '../../sapling'
+        libname = 'libairgap_sapling'
+        targets = ['arm', 'arm64', 'x86', 'x86_64']
+        profile = 'release'
+        prebuiltToolchains = true
+
+        exec { spec, toolchain ->
+            // Support 16KB page sizes
+            // https://developer.android.com/guide/practices/page-sizes#other-build-systems
+            spec.environment("RUST_ANDROID_GRADLE_CC_LINK_ARG", "-Wl,-z,max-page-size=16384,-soname,lib${libname}.so")
+        }
+
+        features {
+            defaultAnd("c_bindings")
+        }
     }
 }
 
 dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.core:core-ktx:1.3.2'
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'com.google.android.material:material:1.3.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 
 afterEvaluate {
