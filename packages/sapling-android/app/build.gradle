@@ -8,13 +8,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 36
-    buildToolsVersion "33.0.0"
+    compileSdk = 36
+    ndkVersion = "29.0.14206865"
 
     defaultConfig {
         namespace "it.airgap.sapling"
-        minSdkVersion 21
-        targetSdkVersion 36
+        minSdk 21
+        targetSdk 36
         versionCode 1
         versionName "0.0.11-beta00"
 
@@ -55,12 +55,13 @@ android {
         targets = ['arm', 'arm64', 'x86', 'x86_64']
         profile = 'release'
         prebuiltToolchains = true
+        apiLevel = 29
 
-        exec { spec, toolchain ->
-            // Support 16KB page sizes
-            // https://developer.android.com/guide/practices/page-sizes#other-build-systems
-            spec.environment("RUST_ANDROID_GRADLE_CC_LINK_ARG", "-Wl,-z,max-page-size=16384,-soname,lib${libname}.so")
-        }
+         exec { spec, toolchain ->
+             // Support 16KB page sizes
+             // https://developer.android.com/guide/practices/page-sizes#other-build-systems
+             spec.environment("RUST_ANDROID_GRADLE_CC_LINK_ARG", "-Wl,-z,max-page-size=16384,-soname,lib${libname}.so")
+         }
 
         features {
             defaultAnd("c_bindings")
