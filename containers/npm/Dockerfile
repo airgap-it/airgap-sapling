@@ -1,6 +1,6 @@
-FROM node:15-slim
+FROM node:24-slim
 
-RUN apt-get update && apt-get install -yq git python build-essential curl
+RUN apt-get update && apt-get install -yq git python3 build-essential curl
 
 # install rustup
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
