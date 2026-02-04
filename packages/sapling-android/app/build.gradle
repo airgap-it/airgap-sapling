@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
@@ -6,12 +8,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 36
     buildToolsVersion "33.0.0"
 
     defaultConfig {
+        namespace "it.airgap.sapling"
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 36
         versionCode 1
         versionName "0.0.10"
 
@@ -37,13 +40,13 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = '1.8'
-        freeCompilerArgs += '-Xexplicit-api=warning'
+    kotlin {
+        jvmToolchain(17)
+        explicitApi(ExplicitApiMode.Warning)
     }
 
     cargo {
@@ -52,6 +55,12 @@ android {
         targets = ['arm', 'arm64', 'x86', 'x86_64']
         profile = 'release'
         prebuiltToolchains = true
+
+        exec { spec, toolchain ->
+            // Support 16KB page sizes
+            // https://developer.android.com/guide/practices/page-sizes#other-build-systems
+            spec.environment("RUST_ANDROID_GRADLE_CC_LINK_ARG", "-Wl,-z,max-page-size=16384,-soname,lib${libname}.so")
+        }
 
         features {
             defaultAnd("c_bindings")
