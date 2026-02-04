@@ -16,7 +16,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 36
         versionCode 1
-        versionName "0.0.10"
+        versionName "0.0.11-beta00"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
