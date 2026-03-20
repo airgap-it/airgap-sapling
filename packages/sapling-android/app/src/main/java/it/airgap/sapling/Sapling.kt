@@ -71,6 +71,10 @@ public class Sapling {
     public fun preparePartialOutputDescription(context: Long, address: ByteArray, rcm: ByteArray, esk: ByteArray, value: Long): ByteArray =
         extPartialOutputDescription(context, address, rcm, esk, value) ?: throw SaplingException("Failed to prepare output description")
 
+    @Throws(SaplingException::class)
+    public fun deriveEpkFromEsk(diversifier: ByteArray, esk: ByteArray): ByteArray =
+        extDeriveEpkFromEsk(diversifier, esk) ?: throw SaplingException("Failed to derive epk from esk")
+
     private external fun extOutputDescriptionFromXfvk(
         context: Long,
         xfvk: ByteArray,

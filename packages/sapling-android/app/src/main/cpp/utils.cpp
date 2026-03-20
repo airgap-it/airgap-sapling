@@ -23,7 +23,7 @@ jbyteArray uchar_to_jbyteArray(JNIEnv *env, unsigned char *uchar_arr, size_t uch
 }
 
 void local_clean(const unsigned char *arr) {
-    delete arr;
+    delete[] arr;
 }
 
 void ffi_clean(unsigned char *arr) {

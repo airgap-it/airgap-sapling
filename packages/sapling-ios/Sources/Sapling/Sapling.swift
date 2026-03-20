@@ -113,6 +113,15 @@ public struct Sapling {
         return description
     }
 
+    public func deriveEpkFromEsk(with diversifier: Diversifier, withEsk esk: Esk) throws -> [UInt8] {
+        var epkCount = 0
+        guard let epk = c_derive_epk_from_esk(diversifier, diversifier.count, esk, esk.count, &epkCount)?.toArray(count: epkCount) else {
+            throw Error.deriveKeyFailed
+        }
+
+        return epk
+    }
+
     // MARK: Payment Address
 
     public func getPaymentAddress(from viewingKey: ExtendedFullViewingKey, at index: Index) throws -> [UInt8] {
