@@ -430,7 +430,7 @@ Java_it_airgap_sapling_Sapling_extPaymentAddressFromIvk(
     const unsigned char *div = jbyteArray_to_uchar(env, jdiv, &div_len);
 
     size_t addr_len;
-    unsigned char *addr = c_payment_address_from_xfvk(ivk, ivk_len, div, div_len, &addr_len);
+    unsigned char *addr = c_payment_address_from_ivk(ivk, ivk_len, div, div_len, &addr_len);
     jbyteArray jaddr = uchar_to_jbyteArray(env, addr, addr_len);
 
     local_clean(ivk);
@@ -469,7 +469,7 @@ Java_it_airgap_sapling_Sapling_extPkdFromPaymentAddress(
     const unsigned char *addr = jbyteArray_to_uchar(env, jaddr, &addr_len);
 
     size_t pkd_len;
-    unsigned char *pkd = c_diversifier_from_payment_address(addr, addr_len, &pkd_len);
+    unsigned char *pkd = c_pkd_from_payment_address(addr, addr_len, &pkd_len);
     jbyteArray jpkd = uchar_to_jbyteArray(env, pkd, pkd_len);
 
     local_clean(addr);
@@ -733,6 +733,7 @@ Java_it_airgap_sapling_Sapling_extXsk(
     unsigned char *xsk = c_xsk(seed, seed_len, d_path, &xsk_len);
     jbyteArray jxsk = uchar_to_jbyteArray(env, xsk, xsk_len);
 
+    env->ReleaseStringUTFChars(jd_path, d_path);
     local_clean(seed);
     ffi_clean(xsk);
 
@@ -757,6 +758,7 @@ Java_it_airgap_sapling_Sapling_extXfvk(
     unsigned char *xfvk = c_xfvk(seed, seed_len, d_path, &xfvk_len);
     jbyteArray jxfvk = uchar_to_jbyteArray(env, xfvk, xfvk_len);
 
+    env->ReleaseStringUTFChars(jd_path, d_path);
     local_clean(seed);
     ffi_clean(xfvk);
 
@@ -789,7 +791,7 @@ Java_it_airgap_sapling_Sapling_extOvkFromXfvk(JNIEnv *env, jobject /* this */, j
     const unsigned char *xfvk = jbyteArray_to_uchar(env, jxfvk, &xfvk_len);
 
     size_t ovk_len;
-    unsigned char *ovk = c_xfvk_from_xsk(xfvk, xfvk_len, &ovk_len);
+    unsigned char *ovk = c_ovk_from_xfvk(xfvk, xfvk_len, &ovk_len);
     jbyteArray jovk = uchar_to_jbyteArray(env, ovk, ovk_len);
 
     local_clean(xfvk);
